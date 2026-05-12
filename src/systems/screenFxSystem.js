@@ -20,6 +20,13 @@ function resetFx(world) {
   world.screenFx.shakeAmplitude = 0;
   world.screenFx.shakeX = 0;
   world.screenFx.shakeY = 0;
+  world.screenFx.fusionImpactSlowT = 0;
+  world.screenFx.fusionImpactT = 0;
+  world.screenFx.fusionImpactDuration = CONFIG.fusion.impactRingDuration;
+  world.screenFx.fusionImpactX = CONFIG.canvas.width / 2;
+  world.screenFx.fusionImpactY = CONFIG.canvas.height / 2;
+  world.screenFx.fusionImpactParticleCursor = 0;
+  for (const p of world.screenFx.fusionImpactParticles) p.life = 0;
   world.screenFx.ignitionEntryT = 0;
   world.screenFx.selfSustainBurstT = 0;
   world.screenFx.selfSustainVignetteT = 0;
@@ -60,6 +67,28 @@ function spawnSelfSustainParticles(fx) {
   }
 }
 
+function spawnFusionImpactParticles(fx, x, y) {
+  const cfg = CONFIG.fusion;
+  const particles = fx.fusionImpactParticles;
+  if (!particles.length) return;
+
+  for (let i = 0; i < cfg.impactBurstParticleCount; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 95 + Math.random() * 115;
+    const length = 8 + Math.random() * 13;
+    const p = particles[fx.fusionImpactParticleCursor % particles.length];
+    fx.fusionImpactParticleCursor++;
+    p.x = x;
+    p.y = y;
+    p.vx = Math.cos(angle) * speed;
+    p.vy = Math.sin(angle) * speed;
+    p.length = length;
+    p.life = cfg.impactBurstLifetime;
+    p.maxLife = cfg.impactBurstLifetime;
+    p.color = Math.random() < 0.42 ? '#ffffff' : '#ffcc44';
+  }
+}
+
 function canFlash(now, flashTimes, cfg) {
   while (flashTimes.length && now - flashTimes[0] > cfg.whiteFlashLimitWindow) {
     flashTimes.shift();
@@ -94,12 +123,25 @@ function updateBurstParticles(fx, dt) {
   }
 }
 
+function updateFusionImpactParticles(fx, dt) {
+  for (const p of fx.fusionImpactParticles) {
+    if (p.life <= 0) continue;
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.vx *= 1 - Math.min(0.5, dt * 4.5);
+    p.vy *= 1 - Math.min(0.5, dt * 4.5);
+    p.life = Math.max(0, p.life - dt);
+  }
+}
+
 function updateTimeScale(world) {
   const fx = world.screenFx;
   if (fx.selfSustainBurstT > 0) {
     world.timeScale = CONFIG.ignitionPhase.selfSustainSlowTimeScale;
   } else if (fx.ignitionEntryT > 0) {
     world.timeScale = CONFIG.ignitionPhase.enterSlowTimeScale;
+  } else if (fx.fusionImpactSlowT > 0) {
+    world.timeScale = CONFIG.fusion.impactTimeScale;
   } else {
     world.timeScale = 1;
   }
@@ -109,9 +151,18 @@ export function createScreenFxSystem(eventBus, world) {
   const flashTimes = [];
   let fxElapsed = 0;
 
-  eventBus.on(EV.FUSION_TRIGGERED, ({ combo }) => {
+  eventBus.on(EV.FUSION_TRIGGERED, ({ combo, x, y }) => {
     const fx = world.screenFx;
     const cfg = CONFIG.combo.screenFx;
+    const impactX = Number.isFinite(x) ? x : CONFIG.canvas.width / 2;
+    const impactY = Number.isFinite(y) ? y : CONFIG.canvas.height / 2;
+    fx.fusionImpactSlowT = CONFIG.fusion.impactDuration;
+    fx.fusionImpactT = CONFIG.fusion.impactRingDuration;
+    fx.fusionImpactDuration = CONFIG.fusion.impactRingDuration;
+    fx.fusionImpactX = impactX;
+    fx.fusionImpactY = impactY;
+    spawnFusionImpactParticles(fx, impactX, impactY);
+
     if (combo < 2) return;
 
     fx.cornerGlowT = Math.max(fx.cornerGlowT, cfg.glowDuration);
@@ -165,10 +216,13 @@ export function createScreenFxSystem(eventBus, world) {
       fx.radialPulseT = Math.max(0, fx.radialPulseT - dt);
       fx.whiteFlashT = Math.max(0, fx.whiteFlashT - dt);
       fx.shakeT = Math.max(0, fx.shakeT - dt);
+      fx.fusionImpactSlowT = Math.max(0, fx.fusionImpactSlowT - dt);
+      fx.fusionImpactT = Math.max(0, fx.fusionImpactT - dt);
       fx.ignitionEntryT = Math.max(0, fx.ignitionEntryT - dt);
       fx.selfSustainBurstT = Math.max(0, fx.selfSustainBurstT - dt);
       fx.selfSustainVignetteT = Math.max(0, fx.selfSustainVignetteT - dt);
       updateShake(fx);
+      updateFusionImpactParticles(fx, dt);
       updateBurstParticles(fx, dt);
       updateTimeScale(world);
     },

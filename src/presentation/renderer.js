@@ -14,6 +14,7 @@ import {
 } from '../content.js';
 
 export function createRenderer(ctx, world) {
+  getFusionImpactSprite();
   scheduleTextSpritePrewarm();
   onLocaleChange(() => {
     textSpriteCache.clear();
@@ -52,6 +53,7 @@ export function createRenderer(ctx, world) {
       }
 
       drawScreenBurstParticles(ctx, world);
+      drawFusionImpactFx(ctx, world);
       for (const p of world.particles) drawParticle(ctx, p);
       ctx.restore();
 
@@ -256,6 +258,104 @@ function drawScreenBurstParticles(ctx, world) {
   ctx.restore();
 }
 
+function drawFusionImpactFx(ctx, world) {
+  const fx = world.screenFx;
+  if (!fx) return;
+  const hasRing = fx.fusionImpactT > 0 && fx.fusionImpactDuration > 0;
+  const hasParticles = fx.fusionImpactParticles?.some((p) => p.life > 0);
+  if (!hasRing && !hasParticles) return;
+
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+
+  if (hasRing) {
+    const progress = clamp(1 - fx.fusionImpactT / Math.max(0.001, fx.fusionImpactDuration), 0, 1);
+    const eased = easeOutCubic(progress);
+    const x = fx.fusionImpactX;
+    const y = fx.fusionImpactY;
+    const radius = lerp(12, CONFIG.fusion.impactRingMaxRadius, eased);
+    const alpha = (1 - progress) * 0.62;
+    const sprite = getFusionImpactSprite();
+    const size = radius * 2.3;
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(sprite.canvas, x - size / 2, y - size / 2, size, size);
+    ctx.restore();
+  }
+
+  if (hasParticles) {
+    ctx.lineCap = 'round';
+    for (const p of fx.fusionImpactParticles) {
+      if (p.life <= 0) continue;
+      const alpha = clamp(p.life / p.maxLife, 0, 1);
+      const speed = Math.hypot(p.vx, p.vy) || 1;
+      const nx = p.vx / speed;
+      const ny = p.vy / speed;
+      ctx.globalAlpha = alpha * 0.85;
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x - nx * p.length, p.y - ny * p.length);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.restore();
+}
+
+let fusionImpactSprite = null;
+
+function getFusionImpactSprite() {
+  const maxRadius = CONFIG.fusion.impactRingMaxRadius * 1.15;
+  const padding = 8;
+  const logicalSize = Math.ceil(maxRadius * 2 + padding * 2);
+  const renderScale = CONFIG.canvas.renderScale || 1;
+
+  if (fusionImpactSprite?.logicalSize === logicalSize && fusionImpactSprite?.renderScale === renderScale) {
+    return fusionImpactSprite;
+  }
+
+  const canvas = createScratchCanvas(
+    Math.ceil(logicalSize * renderScale),
+    Math.ceil(logicalSize * renderScale),
+  );
+  const c = canvas.getContext('2d');
+  c.setTransform(renderScale, 0, 0, renderScale, 0, 0);
+
+  const cx = logicalSize / 2;
+  const cy = logicalSize / 2;
+  const outerRadius = CONFIG.fusion.impactRingMaxRadius * 1.15;
+  const ringRadius = CONFIG.fusion.impactRingMaxRadius;
+
+  c.globalCompositeOperation = 'lighter';
+  const core = c.createRadialGradient(cx, cy, 0, cx, cy, outerRadius);
+  core.addColorStop(0, 'rgba(255, 255, 255, 0.28)');
+  core.addColorStop(0.35, 'rgba(255, 204, 68, 0.20)');
+  core.addColorStop(1, 'rgba(255, 204, 68, 0)');
+  c.fillStyle = core;
+  c.beginPath();
+  c.arc(cx, cy, outerRadius, 0, Math.PI * 2);
+  c.fill();
+
+  c.lineWidth = 3.25;
+  c.strokeStyle = 'rgba(255, 255, 255, 1)';
+  c.beginPath();
+  c.arc(cx, cy, ringRadius, 0, Math.PI * 2);
+  c.stroke();
+
+  c.lineWidth = 1.6;
+  c.strokeStyle = 'rgba(255, 204, 68, 0.9)';
+  c.beginPath();
+  c.arc(cx, cy, ringRadius * 0.68, 0, Math.PI * 2);
+  c.stroke();
+
+  fusionImpactSprite = { canvas, logicalSize, renderScale };
+  return fusionImpactSprite;
+}
+
 function drawScreenFxOverlay(ctx, world, W, H) {
   const fx = world.screenFx;
   if (!fx) return;
@@ -383,10 +483,12 @@ function drawParticle(ctx, p) {
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    ctx.fillStyle = THEME.colors.text;
-    ctx.font = THEME.font.particleLabel;
-    ctx.textAlign = 'left';
-    ctx.fillText(p.text, p.pos.x + 8, p.pos.y - 4);
+    if (p.text) {
+      ctx.fillStyle = THEME.colors.text;
+      ctx.font = THEME.font.particleLabel;
+      ctx.textAlign = 'left';
+      ctx.fillText(p.text, p.pos.x + 8, p.pos.y - 4);
+    }
   } else if (p.kind === 'text') {
     drawTextParticle(ctx, p);
   } else if (p.kind === 'comboText') {

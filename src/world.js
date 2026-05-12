@@ -5,6 +5,20 @@
 import { CONFIG } from './config.js';
 import { createPlasma } from './entities/plasma.js';
 
+function createFusionImpactParticlePool() {
+  const size = CONFIG.fusion.impactBurstParticleCount * CONFIG.fusion.impactBurstMaxActiveBursts;
+  return Array.from({ length: size }, () => ({
+    x: 0,
+    y: 0,
+    vx: 0,
+    vy: 0,
+    length: 0,
+    life: 0,
+    maxLife: CONFIG.fusion.impactBurstLifetime,
+    color: '#ffcc44',
+  }));
+}
+
 export function createWorld() {
   const world = {};
   resetWorld(world);
@@ -48,6 +62,13 @@ export function resetWorld(world) {
     shakeAmplitude: 0,
     shakeX: 0,
     shakeY: 0,
+    fusionImpactSlowT: 0,
+    fusionImpactT: 0,
+    fusionImpactDuration: CONFIG.fusion.impactRingDuration,
+    fusionImpactX: CONFIG.canvas.width / 2,
+    fusionImpactY: CONFIG.canvas.height / 2,
+    fusionImpactParticleCursor: 0,
+    fusionImpactParticles: createFusionImpactParticlePool(),
     ignitionEntryT: 0,
     ignitionEntryDuration: CONFIG.ignitionPhase.enterFreezeDuration,
     selfSustainBurstT: 0,

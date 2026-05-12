@@ -194,6 +194,8 @@ when x < -150 → cleanup
 1. 立即触发聚变特效:
    - 光球瞬间放大 1.3×,白色闪光 0.1 秒
    - 飞出 1 个红色 He4 粒子(向左下飘) + 1 个白色中性子粒子(向右上飘),自带文字标签 "He⁴" / "n"
+   - 额外生成少量金白粒子簇与局部 radial burst,并在聚变点绘制 0.3 秒内消退的金白冲击环
+   - 游戏内时间短暂降到 0.80×,持续 0.30 秒;若同时处于点火进入或自维持慢动作,以后者优先
    - +5 分,屏幕得分数字短暂金色高亮
 2. 扣除 1D + 1T(`collectedD -= 1; collectedT -= 1`)
 3. `world.fusionCount += 1`
@@ -597,6 +599,14 @@ export const CONFIG = {
     burstWindow: 3.0,              // §6.6 聚变高潮窗持续秒数
     burstDtSpawnChance: 0.9,       // 窗口内 D/T spawn 概率
     burstParticleMultiplier: 2.0,  // 窗口内粒子云刷新率倍率
+    impactTimeScale: 0.80,         // §6.3 聚变卡肉倍率
+    impactDuration: 0.15,          // 聚变卡肉持续秒数
+    impactRingDuration: 0.30,      // 局部冲击环/爆发持续秒数
+    impactRingMaxRadius: 54,
+    impactParticleCount: 6,        // 额外小粒子簇数量
+    impactBurstParticleCount: 12,  // 局部 radial burst 线粒子数量
+    impactBurstMaxActiveBursts: 3, // radial burst 对象池容量 = 每次数量 × 此值
+    impactBurstLifetime: 0.32,
   },
 
   combo: {

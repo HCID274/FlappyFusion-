@@ -163,15 +163,15 @@ Boost = {
 | `ignitionPhaseSystem.js` | `EV.PHASE_CHANGED`、`EV.PLASMA_DEAD` | 维护 20 秒点火持续期,发 `EV.IGNITION_TICK` / `EV.SELF_SUSTAIN_ACHIEVED` |
 | `difficultySystem.js` | `EV.TEMP_CHANGED` | `world.scrollSpeed`、SpawnSystem 间距 |
 | `fusionSystem.js` | `EV.COLLECTIBLE_HIT` (D/T/Li6;Li6 视作"自动 +1 T")、`EV.PHASE_CHANGED` | 维护 `collectedD/T` / `world.combo` / `world.fusionBurst`,发 `EV.COMBO_INCREMENT` / `EV.FUSION_TRIGGERED` |
-| `particleSystem.js` | `EV.FUSION_TRIGGERED`、`EV.COMBO_INCREMENT`、`EV.PARTICLE_COLLECTED`、`EV.PHASE_CHANGED`、`EV.IGNITION_TICK`、`EV.SELF_SUSTAIN_ACHIEVED` 等 | 维护粒子与飘字生命周期;Combo 大字读取 `world.plasma.pos.y` 做上下半屏避让,并 clamp 到 HUD / 点火条之外 |
-| `screenFxSystem.js` | `EV.FUSION_TRIGGERED`、`EV.PHASE_CHANGED`、`EV.SELF_SUSTAIN_ACHIEVED`、`EV.GAME_RESET` | 维护 `world.screenFx` / `world.timeScale`,提供屏幕辉光、震屏、闪白、慢动作、自维持迸射粒子 |
+| `particleSystem.js` | `EV.FUSION_TRIGGERED`、`EV.COMBO_INCREMENT`、`EV.PARTICLE_COLLECTED`、`EV.PHASE_CHANGED`、`EV.IGNITION_TICK`、`EV.SELF_SUSTAIN_ACHIEVED` 等 | 维护粒子与飘字生命周期;聚变事件生成受配置限制的小粒子簇;Combo 大字读取 `world.plasma.pos.y` 做上下半屏避让,并 clamp 到 HUD / 点火条之外 |
+| `screenFxSystem.js` | `EV.FUSION_TRIGGERED`、`EV.PHASE_CHANGED`、`EV.SELF_SUSTAIN_ACHIEVED`、`EV.GAME_RESET` | 维护 `world.screenFx` / `world.timeScale`,提供聚变卡肉、局部冲击环、屏幕辉光、震屏、闪白、慢动作、自维持迸射粒子;高频聚变 burst 使用固定对象池 |
 | `cleanupSystem.js` | 所有滚动实体 | 移除离屏对象 |
 
 ### 4.4 Presentation
 
 | 模块 | 职责 |
 |---|---|
-| `renderer.js` | 按 z-order 把所有 `Renderable` 画到 Canvas:背景板 → 阶段辉光 → 视差磁力线 → 障碍/粒子云/收集物/Boost/Hazard → 等离子体 → 前景粒子/飘字 → 屏幕级 FX overlay。主画布与离屏文字 sprite 均按 `canvas.renderScale` 生成物理像素,绘制坐标仍是 800×600 逻辑坐标 |
+| `renderer.js` | 按 z-order 把所有 `Renderable` 画到 Canvas:背景板 → 阶段辉光 → 视差磁力线 → 障碍/粒子云/收集物/Boost/Hazard → 等离子体 → 前景粒子/飘字 → 屏幕级 FX overlay。主画布、离屏文字 sprite、聚变冲击环 sprite 均按 `canvas.renderScale` 生成物理像素,绘制坐标仍是 800×600 逻辑坐标 |
 | `hud.js` | DOM 元素显示温度/得分/磁场环/燃料舱/顶部中央 Combo 圆环/点火持续条。订阅事件更新离散状态,每帧只刷新时间与倒计时 |
 | `screens.js` | `MenuScreen` / `DeathCardScreen` / `TutorialScreen`,DOM overlay |
 
@@ -286,6 +286,8 @@ Boost = {
  *   fusionBurst: { active: boolean, remaining: number },
  *   ignitionPhase: { active: boolean, elapsed: number, entered: boolean, elapsedAtDeath: number },
  *   selfSustained: boolean,
+ *   timeScale: number,           // 由 screenFxSystem 统一写入;自维持 > 点火进入 > 聚变卡肉 > 默认
+ *   screenFx: object,            // draw-only FX 状态,包含 phase glow / combo FX / fusion impact / self sustain burst
  *   collectedD: number,         // 当前 D 库存,无逻辑硬上限
  *   collectedT: number,         // 当前 T 库存,无逻辑硬上限
  *   plasma: Plasma,
@@ -323,23 +325,30 @@ Boost = {
 每帧 System 执行顺序(硬编码,不通过事件决定):
 
 ```
-1. inputSystem       (将本帧按键 flush 成事件)
-2. spawnSystem       (生成新实体)
-3. particleStreamSystem (生成自由电子粒子串)
-4. physicsSystem     (移动)
-5. collisionSystem   (检测,可能触发 plasma_dead)
-6. fusionSystem      (D+T 配对、combo、聚变高潮窗)
-7. scoreSystem       (累加得分)
-8. temperatureSystem (温度推进)
-9. phaseSystem       (温度阶段相)
-10. ignitionPhaseSystem (点火持续期)
-11. difficultySystem  (调速)
-12. particleSystem   (特效寿命)
-13. cleanupSystem    (移除离屏)
-14. renderer         (绘制)
+1. screenFxSystem   (真实时间更新 FX,写入 timeScale)
+2. inputSystem       (将本帧按键 flush 成事件)
+3. spawnSystem       (生成新实体)
+4. particleStreamSystem (生成自由电子粒子串)
+5. physicsSystem     (移动)
+6. collisionSystem   (检测,可能触发 plasma_dead)
+7. fusionSystem      (D+T 配对、combo、聚变高潮窗)
+8. scoreSystem       (累加得分)
+9. temperatureSystem (温度推进)
+10. phaseSystem       (温度阶段相)
+11. ignitionPhaseSystem (点火持续期)
+12. difficultySystem  (调速)
+13. particleSystem   (特效寿命)
+14. cleanupSystem    (移除离屏)
+15. renderer         (绘制)
 ```
 
-顺序 rationale:输入要先于物理;碰撞要在物理后、聚变前;难度要在温度后;清理要在所有逻辑后、渲染前。
+顺序 rationale:输入要先于物理;碰撞要在物理后、聚变前;难度要在温度后;清理要在所有逻辑后、渲染前。`screenFxSystem` 在主循环里用真实 `dt` 先更新,再由 `world.timeScale` 缩放游戏逻辑 `dt`,因此 UI/屏幕 FX 不会被慢动作拖慢。
+
+`timeScale` 优先级固定为:
+- 自维持成功慢动作(`selfSustainBurstT`)最高
+- 点火进入慢动作(`ignitionEntryT`)第二
+- 聚变卡肉(`fusionImpactSlowT`)第三
+- 否则为 1
 
 ---
 

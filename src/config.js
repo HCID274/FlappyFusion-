@@ -59,6 +59,14 @@ export const CONFIG = {
     burstWindow: 3.0,
     burstDtSpawnChance: 0.9,
     burstParticleMultiplier: 2.0,
+    impactTimeScale: 0.80,
+    impactDuration: 0.15,
+    impactRingDuration: 0.30,
+    impactRingMaxRadius: 54,
+    impactParticleCount: 6,
+    impactBurstParticleCount: 12,
+    impactBurstMaxActiveBursts: 3,
+    impactBurstLifetime: 0.32,
   },
 
   hazards: {

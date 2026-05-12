@@ -149,18 +149,36 @@ function makeSelfSustainText() {
   };
 }
 
-function makeFusionParticle(x, y, label, color, vx, vy) {
+function makeFusionParticle(x, y, label, color, vx, vy, radius = 4, life = CONFIG.particle.fusionLifetime) {
   return {
     id: `pt${nextId++}`,
     kind: 'fusion',
     pos: { x, y },
     vel: { x: vx, y: vy },
-    life: CONFIG.particle.fusionLifetime,
-    maxLife: CONFIG.particle.fusionLifetime,
+    life,
+    maxLife: life,
     text: label,
     color,
-    radius: 4,
+    radius,
   };
+}
+
+function makeFusionSpark(x, y) {
+  const angle = Math.random() * Math.PI * 2;
+  const speed = 85 + Math.random() * 115;
+  const radius = 1.8 + Math.random() * 2.2;
+  const life = 0.32 + Math.random() * 0.18;
+  const color = Math.random() < 0.5 ? THEME.colors.fusionGold : THEME.colors.text;
+  return makeFusionParticle(
+    x,
+    y,
+    '',
+    color,
+    Math.cos(angle) * speed,
+    Math.sin(angle) * speed,
+    radius,
+    life,
+  );
 }
 
 export function createParticleSystem(eventBus, world) {
@@ -170,8 +188,13 @@ export function createParticleSystem(eventBus, world) {
   });
 
   eventBus.on(EV.FUSION_TRIGGERED, ({ x, y }) => {
-    world.particles.push(makeFusionParticle(x, y, getParticleLabel('he4'), THEME.colors.he4, -90, 60));
-    world.particles.push(makeFusionParticle(x, y, getParticleLabel('neutron'), THEME.colors.neutron, 120, -80));
+    const fx = Number.isFinite(x) ? x : CONFIG.canvas.width / 2;
+    const fy = Number.isFinite(y) ? y : CONFIG.canvas.height / 2;
+    world.particles.push(makeFusionParticle(fx, fy, getParticleLabel('he4'), THEME.colors.he4, -90, 60));
+    world.particles.push(makeFusionParticle(fx, fy, getParticleLabel('neutron'), THEME.colors.neutron, 120, -80));
+    for (let i = 0; i < CONFIG.fusion.impactParticleCount; i++) {
+      world.particles.push(makeFusionSpark(fx, fy));
+    }
   });
 
   eventBus.on(EV.PARTICLE_COLLECTED, ({ x, y }) => {
