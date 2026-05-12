@@ -1,0 +1,16 @@
+// Event name constants. All cross-module communication uses these.
+// Adding new events: add a constant here, document who emits and who subscribes.
+
+export const EV = {
+  INPUT_PULSE: 'input:pulse',
+  PLASMA_DEAD: 'plasma:dead',
+  OBSTACLE_PASSED: 'obstacle:passed',
+  COLLECTIBLE_HIT: 'collectible:hit',
+  FUSION_TRIGGERED: 'fusion:triggered',
+  TEMP_CHANGED: 'temp:changed',
+  TEMP_MILESTONE: 'temp:milestone',
+  SCORE_CHANGED: 'score:changed',
+  STATE_CHANGED: 'state:changed',
+  GAME_RESET: 'game:reset',
+  INSTABILITY_SPAWNED: 'instability:spawned',
+};

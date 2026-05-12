@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>磁约束生存挑战 — 糟谷研究室</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; min-height: 100vh;
+      background: #050818;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .game-wrap {
+      position: relative;
+      width: 800px; height: 600px;
+    }
+    #game {
+      display: block;
+      width: 800px; height: 600px;
+      background: #0a0e27;
+      border-radius: 12px;
+      outline: none;
+    }
+
+    /* HUD */
+    .hud {
+      position: absolute; top: 12px; left: 12px; right: 12px;
+      display: flex; justify-content: space-between;
+      pointer-events: none;
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 13px;
+    }
+    .hud-col { display: flex; flex-direction: column; gap: 6px; }
+    .hud-col.right { align-items: flex-end; }
+    .hud-item {
+      background: rgba(0, 0, 0, 0.45);
+      padding: 5px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .pulse-ring {
+      position: absolute;
+      top: 12px; left: 50%; transform: translateX(-50%);
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 2px solid #44ddff;
+      opacity: 0.4;
+      pointer-events: none;
+    }
+    .pulse-ring.active {
+      animation: pulse 0.4s ease-out;
+    }
+    @keyframes pulse {
+      0%   { transform: translateX(-50%) scale(1); opacity: 1; box-shadow: 0 0 16px #44ddff; }
+      100% { transform: translateX(-50%) scale(1.4); opacity: 0; box-shadow: 0 0 0 #44ddff; }
+    }
+
+    /* Overlays */
+    .overlay {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: rgba(10, 14, 39, 0.88);
+      border-radius: 12px;
+      text-align: center; padding: 2rem;
+      backdrop-filter: blur(2px);
+    }
+    .overlay h1 {
+      margin: 0 0 0.5rem;
+      font-size: 30px; font-weight: 600;
+      color: #ff88cc;
+      letter-spacing: 1px;
+    }
+    .overlay h2 {
+      margin: 0 0 1rem;
+      font-size: 22px; font-weight: 500;
+      color: #ff88cc;
+    }
+    .subtitle {
+      margin: 0 0 1.5rem;
+      color: rgba(255, 255, 255, 0.55);
+      font-size: 14px;
+      letter-spacing: 2px;
+    }
+    .tutorial {
+      margin: 0.5rem 0 1.8rem;
+      color: rgba(255, 255, 255, 0.85);
+      line-height: 1.8;
+      font-size: 14px;
+      white-space: pre-line;
+    }
+    .key {
+      display: inline-block;
+      padding: 1px 8px;
+      border: 1px solid #ff88cc;
+      border-radius: 4px;
+      color: #ff88cc;
+      font-family: ui-monospace, monospace;
+    }
+    .start-hint {
+      font-size: 16px;
+      color: #ff88cc;
+      margin-top: 0.5rem;
+      animation: blink 1.4s ease-in-out infinite;
+    }
+    @keyframes blink { 50% { opacity: 0.5; } }
+    .lab {
+      position: absolute;
+      bottom: 14px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.4);
+      letter-spacing: 1.5px;
+    }
+
+    .stats {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.95);
+      line-height: 1.7;
+      white-space: pre-line;
+      margin-bottom: 1rem;
+    }
+    .body {
+      max-width: 480px;
+      font-size: 14px;
+      line-height: 1.75;
+      color: rgba(255, 255, 255, 0.85);
+      white-space: pre-line;
+      margin-bottom: 0.7rem;
+    }
+    .footer {
+      max-width: 460px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.55);
+      line-height: 1.6;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      padding-top: 0.7rem;
+      margin-top: 0.5rem;
+    }
+    .actions {
+      display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
+      margin-top: 1.2rem;
+    }
+    .btn {
+      padding: 8px 22px;
+      background: transparent;
+      color: #ff88cc;
+      border: 1px solid #ff88cc;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+    .btn:hover { background: rgba(255, 136, 204, 0.15); }
+    .btn:disabled { opacity: 0.3; cursor: default; }
+    .btn-primary {
+      background: #ff4488;
+      color: #fff;
+      border-color: #ff4488;
+    }
+    .btn-primary:hover { background: #ff5599; }
+
+    /* Modal */
+    .modal-content {
+      max-width: 540px;
+    }
+    .modal-nav {
+      display: flex; align-items: center; gap: 1rem; margin-top: 1rem;
+    }
+    .page-indicator { color: rgba(255,255,255,0.5); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="game-wrap">
+    <canvas id="game" tabindex="0"></canvas>
+
+    <div class="pulse-ring" id="hud-pulse-ring"></div>
+
+    <div class="hud">
+      <div class="hud-col">
+        <div class="hud-item" id="hud-temp">🌡 1000 万度</div>
+        <div class="hud-item" id="hud-inv">D:0  T:0</div>
+      </div>
+      <div class="hud-col right">
+        <div class="hud-item" id="hud-score">★ 0</div>
+        <div class="hud-item" id="hud-time">⏱ 0 s</div>
+      </div>
+    </div>
+
+    <div class="overlay" id="screen-menu">
+      <h1 id="menu-title">磁约束生存挑战</h1>
+      <div class="subtitle" id="menu-subtitle">— Tokamak Plasma Confinement —</div>
+      <div class="tutorial" id="menu-tutorial"></div>
+      <div class="start-hint" id="menu-start">按 [空格] 开始</div>
+      <div class="lab" id="menu-lab">糟谷研究室 · 校园开放日</div>
+    </div>
+
+    <div class="overlay" id="screen-death" style="display:none">
+      <h2 id="death-title">💥</h2>
+      <div class="stats" id="death-stats"></div>
+      <div class="body" id="death-body"></div>
+      <div class="footer" id="death-footer"></div>
+      <div class="actions">
+        <div class="start-hint" id="death-restart">按 [空格] 再来一次</div>
+        <button class="btn" id="death-learnmore-btn"><span id="death-learnmore">了解更多 ↗</span></button>
+      </div>
+    </div>
+
+    <div class="overlay" id="screen-learn" style="display:none">
+      <div class="modal-content">
+        <h2 id="learn-heading"></h2>
+        <div class="body" id="learn-body"></div>
+        <div class="modal-nav">
+          <button class="btn" id="learn-prev">← 上一页</button>
+          <span class="page-indicator" id="learn-page"></span>
+          <button class="btn" id="learn-next">下一页 →</button>
+        </div>
+        <button class="btn btn-primary" id="learn-close-btn" style="margin-top: 1rem;"><span id="learn-close">关闭</span></button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

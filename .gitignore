@@ -1,0 +1,65 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+yarn.lock
+pnpm-lock.yaml
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+
+# OS junk
+# Windows
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+# Linux
+*~
+.directory
+.Trash-*
+
+# IDE / editors
+.vscode/
+.idea/
+*.suo
+*.user
+*.swp
+*.swo
+*.iml
+*.sublime-workspace
+*.sublime-project
+
+# Logs & runtime
+*.log
+logs/
+*.pid
+*.seed
+
+# Build outputs
+dist/
+build/
+out/
+.cache/
+
+# Photoshop / 美术工作文件(只追踪最终 PNG,中间 PSD 不进库)
+*.psd
+*.psb
+*.ai
+*.xcf
+*.sketch
+src/assets/_wip/
+
+# 本地杂物
+TODO.local.md
+NOTES.local.md
+.scratch/

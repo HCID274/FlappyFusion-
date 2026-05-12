@@ -1,0 +1,48 @@
+// Applies drift to plasma, consumes pulse impulses, scrolls all moving entities.
+// Only acts during 'playing' status.
+
+import { EV } from '../engine/events.js';
+import { CONFIG } from '../config.js';
+
+export function createPhysicsSystem(eventBus, world) {
+  let pendingPulse = false;
+
+  eventBus.on(EV.INPUT_PULSE, () => {
+    if (world.status !== 'playing') return;
+    if (world.plasma.pulseCooldown <= 0) {
+      pendingPulse = true;
+    }
+  });
+
+  eventBus.on(EV.GAME_RESET, () => { pendingPulse = false; });
+
+  return {
+    update(dt) {
+      if (world.status !== 'playing') return;
+      const p = world.plasma;
+
+      if (pendingPulse) {
+        p.vel.y = CONFIG.plasma.pulseImpulse;
+        p.pulseCooldown = CONFIG.plasma.pulseCooldownTime;
+        p.pulseFlashT = 1;
+        pendingPulse = false;
+      }
+      if (p.pulseCooldown > 0) p.pulseCooldown = Math.max(0, p.pulseCooldown - dt);
+      if (p.pulseFlashT > 0) p.pulseFlashT = Math.max(0, p.pulseFlashT - dt * 3);
+
+      p.vel.y += CONFIG.plasma.drift * dt;
+      if (p.vel.y > CONFIG.plasma.maxFallSpeed) p.vel.y = CONFIG.plasma.maxFallSpeed;
+      if (p.vel.y < CONFIG.plasma.maxRiseSpeed) p.vel.y = CONFIG.plasma.maxRiseSpeed;
+      p.pos.y += p.vel.y * dt;
+
+      // trail history
+      p.trail.push({ x: p.pos.x, y: p.pos.y });
+      if (p.trail.length > CONFIG.plasma.trailLength) p.trail.shift();
+
+      // scroll obstacles and collectibles
+      const dx = -world.scrollSpeed * dt;
+      for (const ob of world.obstacles) ob.move(dx);
+      for (const c of world.collectibles) c.move(dx);
+    },
+  };
+}
