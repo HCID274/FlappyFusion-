@@ -59,13 +59,22 @@ export function createScreens(eventBus, world) {
     const seconds = Math.floor(world.elapsed);
     const cause = world.deathCause || 'wall';
     const maxTemp = world.maxTemperature;
-    const { body, footer } = getDeathBody({ seconds, fusionCount: world.fusionCount, maxTemp });
+    const ignitionSeconds = Math.floor(world.ignitionPhase?.elapsedAtDeath || 0);
+    const { body, footer } = getDeathBody({
+      seconds,
+      fusionCount: world.fusionCount,
+      maxTemp,
+      maxCombo: world.maxCombo,
+      ignitionSeconds,
+      selfSustained: world.selfSustained,
+    });
 
     document.getElementById('death-title').textContent = '💥 ' + getDeathTitle(cause);
     document.getElementById('death-stats').innerText = getDeathStats({
       seconds,
       fusionCount: world.fusionCount,
       maxTemp,
+      maxCombo: world.maxCombo,
     });
     document.getElementById('death-body').innerText = body;
     const footEl = document.getElementById('death-footer');

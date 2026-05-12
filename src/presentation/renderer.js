@@ -172,10 +172,20 @@ function drawParticle(ctx, p) {
     }
   } else if (p.kind === 'comboText') {
     drawComboText(ctx, p);
+  } else if (p.kind === 'phaseText') {
+    drawPhaseText(ctx, p);
+  } else if (p.kind === 'ignitionIntroText') {
+    drawIgnitionIntroText(ctx, p);
+  } else if (p.kind === 'ignitionMilestoneText') {
+    drawIgnitionMilestoneText(ctx, p);
+  } else if (p.kind === 'selfSustainText') {
+    drawSelfSustainText(ctx, p);
   }
 
   ctx.globalAlpha = 1;
 }
+
+const DISPLAY_FONT = '"Inter", "Space Grotesk", "Noto Sans SC", "Noto Sans JP", "PingFang SC", "Hiragino Sans", system-ui, sans-serif';
 
 function drawComboText(ctx, p) {
   const age = p.maxLife - p.life;
@@ -184,7 +194,6 @@ function drawComboText(ctx, p) {
   const y = p.pos.y - easeOutCubic(progressOut) * 80;
   const scale = getComboScale(age, spec.overshoot);
   const alpha = age < 0.85 ? 1 : 1 - easeInQuad(progressOut);
-  const fontFamily = '"Inter", "Space Grotesk", "Noto Sans SC", "Noto Sans JP", "PingFang SC", "Hiragino Sans", system-ui, sans-serif';
 
   ctx.save();
   ctx.globalAlpha = alpha;
@@ -192,7 +201,7 @@ function drawComboText(ctx, p) {
   ctx.scale(scale, scale);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.font = `${spec.weight} ${spec.fontSize}px ${fontFamily}`;
+  ctx.font = `${spec.weight} ${spec.fontSize}px ${DISPLAY_FONT}`;
   ctx.lineJoin = 'round';
   ctx.strokeStyle = spec.stroke;
   ctx.lineWidth = spec.strokeWidth;
@@ -207,6 +216,142 @@ function drawComboText(ctx, p) {
     ctx.shadowBlur = 18;
     ctx.fillText(p.text, 0, 0);
   }
+  ctx.restore();
+}
+
+function drawPhaseText(ctx, p) {
+  const age = p.maxLife - p.life;
+  const fadeIn = clamp(age / 0.25, 0, 1);
+  const fadeOut = clamp((age - 1.45) / 0.35, 0, 1);
+  const alpha = fadeIn * (1 - fadeOut);
+  const scale = age < 0.25
+    ? lerp(1.1, 1, easeOutBack(age / 0.25))
+    : lerp(1, 0.95, easeOutCubic(fadeOut));
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(p.pos.x, p.pos.y);
+  ctx.scale(scale, scale);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.lineJoin = 'round';
+  ctx.font = `900 60px ${DISPLAY_FONT}`;
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.72)';
+  ctx.lineWidth = 4;
+  ctx.shadowColor = p.color;
+  ctx.shadowBlur = 18;
+  ctx.strokeText(p.title, 0, 0);
+  ctx.fillStyle = p.color;
+  ctx.fillText(p.title, 0, 0);
+
+  if (p.subtitle) {
+    ctx.shadowBlur = 0;
+    ctx.font = `600 22px ${DISPLAY_FONT}`;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.fillText(p.subtitle, 0, 54);
+  }
+  ctx.restore();
+}
+
+function drawIgnitionIntroText(ctx, p) {
+  const age = p.maxLife - p.life;
+  const out = clamp((age - 1.4) / 0.3, 0, 1);
+  const y = p.pos.y - easeOutCubic(out) * 60;
+  const alpha = (1 - out) * clamp(age / 0.18, 0, 1);
+  let scale = 1;
+  if (age < 0.4) scale = lerp(0.5, 1.25, easeOutBack(age / 0.4));
+  else if (age < 0.62) scale = lerp(1.25, 1, easeOutCubic((age - 0.4) / 0.22));
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(p.pos.x, y);
+  ctx.scale(scale, scale);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `900 72px ${DISPLAY_FONT}`;
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.75)';
+  ctx.lineWidth = 5;
+  ctx.shadowColor = THEME.colors.fusionGold;
+  ctx.shadowBlur = 26;
+  ctx.strokeText(p.title, 0, 0);
+  ctx.fillStyle = THEME.colors.fusionGold;
+  ctx.fillText(p.title, 0, 0);
+
+  const subtitleAlpha = clamp((age - 0.3) / 0.3, 0, 1) * (1 - out);
+  ctx.globalAlpha = subtitleAlpha;
+  ctx.shadowBlur = 8;
+  ctx.font = `800 36px ${DISPLAY_FONT}`;
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
+  ctx.lineWidth = 3;
+  ctx.strokeText(p.subtitle, 0, 62);
+  ctx.fillStyle = THEME.colors.text;
+  ctx.fillText(p.subtitle, 0, 62);
+  ctx.restore();
+}
+
+function drawIgnitionMilestoneText(ctx, p) {
+  const age = p.maxLife - p.life;
+  const out = clamp((age - 1) / 0.3, 0, 1);
+  const scale = age < 0.3 ? lerp(1.4, 1, easeOutBack(age / 0.3)) : 1;
+  const fontSize = p.milestone >= 15 ? 24 : p.milestone >= 10 ? 22 : 20;
+
+  ctx.save();
+  ctx.globalAlpha = 1 - out;
+  ctx.translate(p.pos.x, p.pos.y);
+  ctx.scale(scale, scale);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `800 ${fontSize}px ${DISPLAY_FONT}`;
+  ctx.strokeStyle = p.milestone >= 15 ? THEME.colors.fusionGold : 'rgba(0, 0, 0, 0.7)';
+  ctx.lineWidth = p.milestone >= 15 ? 3 : 2;
+  ctx.shadowColor = THEME.colors.fusionGold;
+  ctx.shadowBlur = 14;
+  ctx.strokeText(p.text, 0, 0);
+  ctx.fillStyle = p.color;
+  ctx.fillText(p.text, 0, 0);
+  ctx.restore();
+}
+
+function drawSelfSustainText(ctx, p) {
+  const age = p.maxLife - p.life;
+  const out = clamp((age - 2) / 0.5, 0, 1);
+  const y = p.pos.y - easeOutCubic(out) * 100;
+  const alpha = (1 - out) * clamp(age / 0.2, 0, 1);
+  let titleScale = 1;
+  if (age < 0.5) titleScale = lerp(0.3, 1.4, easeOutBack(age / 0.5));
+  else if (age < 0.75) titleScale = lerp(1.4, 1, easeOutCubic((age - 0.5) / 0.25));
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.lineJoin = 'round';
+  ctx.translate(p.pos.x, y);
+  ctx.scale(titleScale, titleScale);
+  ctx.font = `900 96px ${DISPLAY_FONT}`;
+  ctx.strokeStyle = THEME.colors.fusionGold;
+  ctx.lineWidth = 4;
+  ctx.shadowColor = THEME.colors.text;
+  ctx.shadowBlur = 28;
+  ctx.strokeText(p.title, 0, 0);
+  ctx.fillStyle = THEME.colors.text;
+  ctx.fillText(p.title, 0, 0);
+  ctx.restore();
+
+  ctx.save();
+  ctx.globalAlpha = alpha * clamp((age - 0.4) / 0.3, 0, 1);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `900 64px ${DISPLAY_FONT}`;
+  ctx.shadowColor = THEME.colors.fusionGold;
+  ctx.shadowBlur = 18;
+  ctx.fillStyle = THEME.colors.fusionGold;
+  ctx.fillText(p.subtitle, p.pos.x, y + 78);
+  ctx.globalAlpha = alpha * 0.7 * clamp((age - 0.8) / 0.3, 0, 1);
+  ctx.font = `700 18px ${DISPLAY_FONT}`;
+  ctx.fillStyle = THEME.colors.text;
+  ctx.fillText(p.footnote, p.pos.x, y + 122);
   ctx.restore();
 }
 

@@ -1,6 +1,6 @@
 // DOM-based HUD. Updates via events for changes; reads world.elapsed each refresh for time.
 
-import { hud, onLocaleChange } from '../content.js';
+import { getIgnitionProgressText, hud, onLocaleChange } from '../content.js';
 import { EV } from '../engine/events.js';
 import { CONFIG } from '../config.js';
 import { THEME } from '../theme.js';
@@ -14,6 +14,9 @@ export function createHUD(eventBus, world) {
     score: document.getElementById('hud-score'),
     time: document.getElementById('hud-time'),
     pulseRing: document.getElementById('hud-pulse-ring'),
+    ignitionBar: document.getElementById('hud-ignition-bar'),
+    ignitionLabel: document.getElementById('hud-ignition-label'),
+    ignitionFill: document.getElementById('hud-ignition-fill'),
   };
   let suppressNextCollectibleRefresh = false;
   const ringCircumference = 2 * Math.PI * 14;
@@ -37,14 +40,31 @@ export function createHUD(eventBus, world) {
     }
 
     const elapsed = world.elapsed - world.combo.lastTime;
-    const remaining = Math.max(0, CONFIG.combo.window - elapsed);
-    const progress = Math.max(0, Math.min(1, remaining / CONFIG.combo.window));
+    const comboWindow = world.combo.window || CONFIG.combo.window;
+    const remaining = Math.max(0, comboWindow - elapsed);
+    const progress = Math.max(0, Math.min(1, remaining / comboWindow));
     const spec = THEME.combo[Math.min(comboCount, THEME.combo.length) - 1];
     el.comboRing.style.setProperty('--combo-color', spec.color);
     progressEl.style.strokeDashoffset = `${ringCircumference * (1 - progress)}`;
     countEl.textContent = String(Math.min(comboCount, CONFIG.combo.maxCount));
     el.comboRing.classList.add('active');
     el.comboRing.classList.toggle('urgent', remaining <= 0.4);
+  }
+  function refreshIgnitionBar() {
+    if (!el.ignitionBar || !el.ignitionFill || !el.ignitionLabel) return;
+    if (!world.ignitionPhase?.active) {
+      if (el.ignitionBar.classList.contains('complete')) return;
+      el.ignitionBar.classList.remove('active', 'bump');
+      el.ignitionFill.style.width = '0%';
+      el.ignitionLabel.textContent = '';
+      return;
+    }
+
+    const elapsed = Math.min(CONFIG.ignitionPhase.duration, world.ignitionPhase.elapsed);
+    const progress = Math.max(0, Math.min(1, elapsed / CONFIG.ignitionPhase.duration));
+    el.ignitionBar.classList.add('active');
+    el.ignitionFill.style.width = `${progress * 100}%`;
+    el.ignitionLabel.textContent = getIgnitionProgressText(elapsed);
   }
   function refreshFuelBay(snapshot = world) {
     if (!el.fuelBay) return;
@@ -163,11 +183,38 @@ export function createHUD(eventBus, world) {
     el.comboRing.classList.add('bump');
     refreshComboRing();
   });
+  eventBus.on(EV.PHASE_CHANGED, ({ to }) => {
+    if (!el.ignitionBar) return;
+    if (to === 'IGNITION_BURST') {
+      el.ignitionBar.classList.remove('complete');
+      refreshIgnitionBar();
+      el.ignitionBar.classList.add('active');
+    } else {
+      el.ignitionBar.classList.remove('active');
+    }
+  });
+  eventBus.on(EV.IGNITION_TICK, ({ milestone }) => {
+    refreshIgnitionBar();
+    if (milestone && el.ignitionBar) {
+      el.ignitionBar.classList.remove('bump');
+      void el.ignitionBar.offsetWidth;
+      el.ignitionBar.classList.add('bump');
+    }
+  });
+  eventBus.on(EV.SELF_SUSTAIN_ACHIEVED, () => {
+    if (!el.ignitionBar) return;
+    el.ignitionBar.classList.remove('bump');
+    el.ignitionBar.classList.add('complete');
+    window.setTimeout(() => {
+      el.ignitionBar.classList.remove('active', 'complete');
+      refreshIgnitionBar();
+    }, 320);
+  });
   eventBus.on(EV.GAME_RESET, () => {
-    refreshTemp(); refreshFuelBay(); refreshScore(); refreshTime(); refreshComboRing();
+    refreshTemp(); refreshFuelBay(); refreshScore(); refreshTime(); refreshComboRing(); refreshIgnitionBar();
   });
   onLocaleChange(() => {
-    refreshTemp(); refreshFuelBay(); refreshScore(); refreshTime(); refreshComboRing();
+    refreshTemp(); refreshFuelBay(); refreshScore(); refreshTime(); refreshComboRing(); refreshIgnitionBar();
   });
   eventBus.on(EV.INPUT_PULSE, () => {
     if (!el.pulseRing) return;
@@ -177,9 +224,9 @@ export function createHUD(eventBus, world) {
   });
 
   // initial paint
-  refreshTemp(); refreshFuelBay(); refreshScore(); refreshTime(); refreshComboRing();
+  refreshTemp(); refreshFuelBay(); refreshScore(); refreshTime(); refreshComboRing(); refreshIgnitionBar();
 
   return {
-    refresh() { refreshTime(); refreshComboRing(); },
+    refresh() { refreshTime(); refreshComboRing(); refreshIgnitionBar(); },
   };
 }

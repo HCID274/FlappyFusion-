@@ -156,12 +156,14 @@ Boost = {
 | `physicsSystem.js` | `EV.INPUT_PULSE`、`world.scrollSpeed` | 改 Plasma 速度、推进所有滚动实体 x |
 | `collisionSystem.js` | Plasma + 所有 Collidable | 发 `EV.PLASMA_DEAD` / `EV.COLLECTIBLE_HIT` / `EV.PARTICLE_COLLECTED` / `EV.HAZARD_HIT` / `EV.BOOST_TRIGGERED` |
 | `spawnSystem.js` | `world.scrollSpeed`、节奏计时 | 向 world 添加新 Obstacle / Hazard / Collectible / Boost(主线掷骰 + 额外掷骰独立处理) |
-| `particleStreamSystem.js` | `world.fusionBurst.active`、独立计时 | 向 `world.particleStream` 添加自由电子粒子串 |
-| `scoreSystem.js` | `EV.OBSTACLE_PASSED`、`EV.COLLECTIBLE_HIT`、`EV.PARTICLE_COLLECTED`、`EV.FUSION_TRIGGERED` | `world.score`、发 `EV.SCORE_CHANGED` |
+| `particleStreamSystem.js` | `world.fusionBurst.active`、`EV.PHASE_CHANGED`、独立计时 | 向 `world.particleStream` 添加自由电子粒子串 |
+| `scoreSystem.js` | `EV.OBSTACLE_PASSED`、`EV.COLLECTIBLE_HIT`、`EV.PARTICLE_COLLECTED`、`EV.FUSION_TRIGGERED`、`EV.SELF_SUSTAIN_ACHIEVED`、`EV.PHASE_CHANGED` | `world.score`、发 `EV.SCORE_CHANGED` |
 | `temperatureSystem.js` | `EV.OBSTACLE_PASSED`、`EV.HAZARD_HIT`(扣)、`EV.BOOST_TRIGGERED`(加) | `world.temperature`、发 `EV.TEMP_CHANGED` / `EV.TEMP_MILESTONE` |
+| `phaseSystem.js` | `EV.TEMP_CHANGED`、`EV.SELF_SUSTAIN_ACHIEVED` | 维护 `world.phase`,发 `EV.PHASE_CHANGED` |
+| `ignitionPhaseSystem.js` | `EV.PHASE_CHANGED`、`EV.PLASMA_DEAD` | 维护 20 秒点火持续期,发 `EV.IGNITION_TICK` / `EV.SELF_SUSTAIN_ACHIEVED` |
 | `difficultySystem.js` | `EV.TEMP_CHANGED` | `world.scrollSpeed`、SpawnSystem 间距 |
-| `fusionSystem.js` | `EV.COLLECTIBLE_HIT` (D/T/Li6;Li6 视作"自动 +1 T") | 维护 `collectedD/T` / `world.combo` / `world.fusionBurst`,发 `EV.COMBO_INCREMENT` / `EV.FUSION_TRIGGERED` |
-| `particleSystem.js` | `EV.FUSION_TRIGGERED`、`EV.COMBO_INCREMENT`、`EV.PARTICLE_COLLECTED`、`EV.HAZARD_HIT`、`EV.BOOST_TRIGGERED`、`EV.COLLECTIBLE_HIT`(Li6) 等 | 维护粒子与飘字生命周期 |
+| `fusionSystem.js` | `EV.COLLECTIBLE_HIT` (D/T/Li6;Li6 视作"自动 +1 T")、`EV.PHASE_CHANGED` | 维护 `collectedD/T` / `world.combo` / `world.fusionBurst`,发 `EV.COMBO_INCREMENT` / `EV.FUSION_TRIGGERED` |
+| `particleSystem.js` | `EV.FUSION_TRIGGERED`、`EV.COMBO_INCREMENT`、`EV.PARTICLE_COLLECTED`、`EV.PHASE_CHANGED`、`EV.IGNITION_TICK`、`EV.SELF_SUSTAIN_ACHIEVED` 等 | 维护粒子与飘字生命周期 |
 | `cleanupSystem.js` | 所有滚动实体 | 移除离屏对象 |
 
 ### 4.4 Presentation
@@ -169,7 +171,7 @@ Boost = {
 | 模块 | 职责 |
 |---|---|
 | `renderer.js` | 按 z-order 把所有 `Renderable` 画到 Canvas:背景 → 障碍 → 粒子云 → 收集物 → 等离子体 → 飘字/粒子 → 调试层 |
-| `hud.js` | DOM 元素显示温度/得分/磁场环/燃料舱/Combo 圆环。订阅事件更新离散状态,每帧只刷新时间与倒计时 |
+| `hud.js` | DOM 元素显示温度/得分/磁场环/燃料舱/Combo 圆环/点火持续条。订阅事件更新离散状态,每帧只刷新时间与倒计时 |
 | `screens.js` | `MenuScreen` / `DeathCardScreen` / `TutorialScreen`,DOM overlay |
 
 ### 4.5 Infrastructure
@@ -278,8 +280,11 @@ Boost = {
  *   scrollSpeed: number,
  *   obstaclesPassed: number,
  *   fusionCount: number,
- *   combo: { count: number, lastTime: number },
+ *   phase: 'IGNITION_PREP' | 'HEATING' | 'CRITICAL' | 'IGNITION_BURST' | 'RECORD',
+ *   combo: { count: number, lastTime: number, window: number },
  *   fusionBurst: { active: boolean, remaining: number },
+ *   ignitionPhase: { active: boolean, elapsed: number, entered: boolean, elapsedAtDeath: number },
+ *   selfSustained: boolean,
  *   collectedD: number,         // 当前 D 库存,无逻辑硬上限
  *   collectedT: number,         // 当前 T 库存,无逻辑硬上限
  *   plasma: Plasma,
@@ -325,10 +330,12 @@ Boost = {
 6. fusionSystem      (D+T 配对、combo、聚变高潮窗)
 7. scoreSystem       (累加得分)
 8. temperatureSystem (温度推进)
-9. difficultySystem  (调速)
-10. particleSystem   (特效寿命)
-11. cleanupSystem    (移除离屏)
-12. renderer         (绘制)
+9. phaseSystem       (温度阶段相)
+10. ignitionPhaseSystem (点火持续期)
+11. difficultySystem  (调速)
+12. particleSystem   (特效寿命)
+13. cleanupSystem    (移除离屏)
+14. renderer         (绘制)
 ```
 
 顺序 rationale:输入要先于物理;碰撞要在物理后、聚变前;难度要在温度后;清理要在所有逻辑后、渲染前。
@@ -437,6 +444,8 @@ openCampus/
 | 新加成通道 | 加 `entities/boosts/X.js`,在 `spawnSystem` 加额外掷骰、相关 System 订阅 `EV.BOOST_TRIGGERED` |
 | 新美术素材 | 在 `docs/assets.md` 加规格,在 `assetLoader.js` 注册 key,缺图自动占位 |
 | 调难度曲线 | 只改 `config.js`(权威来源是 `game-design.md` §11) |
+| 新温度阶段规则 | 改 `config.js` 的 `phases.rules`,由 `phaseSystem` 发事件、各 System 缓存 patch |
+| 新点火持续期反馈 | 订阅 `EV.IGNITION_TICK` / `EV.SELF_SUSTAIN_ACHIEVED`,不要让 HUD 直接驱动游戏状态 |
 | 改文案 | 只改 `content.js` 的 `zh`/`ja` 双语 catalog(权威来源是 `content.md`) |
 | 新玩家可见文字 | 必须同时添加 `zh` 与 `ja` 两份;业务代码只能通过 `t()` 或内容函数读取 |
 | 换视觉风格 | 只改 `theme.js`(必要时改 Renderer 内部细节) |

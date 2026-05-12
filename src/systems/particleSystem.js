@@ -3,7 +3,15 @@
 import { EV } from '../engine/events.js';
 import { CONFIG } from '../config.js';
 import { THEME } from '../theme.js';
-import { getComboLabel, getParticleLabel } from '../content.js';
+import { scoreForPhase } from '../scoreMath.js';
+import {
+  getComboLabel,
+  getIgnitionIntroText,
+  getIgnitionMilestoneText,
+  getParticleLabel,
+  getPhaseText,
+  getSelfSustainText,
+} from '../content.js';
 
 let nextId = 0;
 
@@ -21,7 +29,7 @@ function makeFloatingText(x, y, text, life, color, font) {
   };
 }
 
-function makeParticleScoreText(x, y) {
+function makeParticleScoreText(x, y, score) {
   return {
     id: `pt${nextId++}`,
     kind: 'text',
@@ -29,7 +37,7 @@ function makeParticleScoreText(x, y) {
     vel: { x: 0, y: -75 },
     life: 0.4,
     maxLife: 0.4,
-    text: '+1',
+    text: `+${score}`,
     color: THEME.colors.electron,
     font: 'bold 20px ui-monospace, "SF Mono", Menlo, monospace',
   };
@@ -46,6 +54,66 @@ function makeComboText(x, y, combo, score) {
     text: getComboLabel(combo, score),
     combo,
     score,
+  };
+}
+
+function makePhaseText(phase) {
+  const text = getPhaseText(phase);
+  return {
+    id: `pt${nextId++}`,
+    kind: 'phaseText',
+    pos: { x: CONFIG.canvas.width / 2, y: CONFIG.canvas.height * 0.3 },
+    vel: { x: 0, y: 0 },
+    life: 1.8,
+    maxLife: 1.8,
+    title: text.title,
+    subtitle: text.subtitle,
+    color: THEME.phase[phase] || THEME.colors.fusionGold,
+  };
+}
+
+function makeIgnitionIntroText() {
+  const text = getIgnitionIntroText();
+  return {
+    id: `pt${nextId++}`,
+    kind: 'ignitionIntroText',
+    pos: { x: CONFIG.canvas.width / 2, y: CONFIG.canvas.height * 0.34 },
+    vel: { x: 0, y: 0 },
+    life: 1.7,
+    maxLife: 1.7,
+    title: text.title,
+    subtitle: text.subtitle,
+  };
+}
+
+function makeIgnitionMilestoneText(milestone) {
+  const text = getIgnitionMilestoneText(milestone);
+  if (!text) return null;
+  return {
+    id: `pt${nextId++}`,
+    kind: 'ignitionMilestoneText',
+    pos: { x: CONFIG.canvas.width / 2, y: CONFIG.canvas.height - 78 },
+    vel: { x: 0, y: -8 },
+    life: 1.3,
+    maxLife: 1.3,
+    text,
+    milestone,
+    color: milestone >= 15 ? THEME.colors.text : THEME.colors.fusionGold,
+  };
+}
+
+function makeSelfSustainText() {
+  const text = getSelfSustainText();
+  return {
+    id: `pt${nextId++}`,
+    kind: 'selfSustainText',
+    pos: { x: CONFIG.canvas.width / 2, y: CONFIG.canvas.height * 0.34 },
+    vel: { x: 0, y: 0 },
+    life: 2.5,
+    maxLife: 2.5,
+    title: text.title,
+    subtitle: text.subtitle,
+    footnote: text.footnote,
   };
 }
 
@@ -74,7 +142,27 @@ export function createParticleSystem(eventBus, world) {
   });
 
   eventBus.on(EV.PARTICLE_COLLECTED, ({ x, y }) => {
-    world.particles.push(makeParticleScoreText(x, y));
+    world.particles.push(makeParticleScoreText(x, y, scoreForPhase(CONFIG.score.perParticle, world.phase)));
+  });
+
+  eventBus.on(EV.PHASE_CHANGED, ({ to }) => {
+    if (to === 'IGNITION_PREP') return;
+    if (to === 'RECORD' && world.selfSustained) return;
+    if (to === 'IGNITION_BURST') {
+      world.particles.push(makeIgnitionIntroText());
+      return;
+    }
+    world.particles.push(makePhaseText(to));
+  });
+
+  eventBus.on(EV.IGNITION_TICK, ({ milestone }) => {
+    if (!milestone) return;
+    const p = makeIgnitionMilestoneText(milestone);
+    if (p) world.particles.push(p);
+  });
+
+  eventBus.on(EV.SELF_SUSTAIN_ACHIEVED, () => {
+    world.particles.push(makeSelfSustainText());
   });
 
   eventBus.on(EV.TEMP_MILESTONE, ({ text }) => {
@@ -103,7 +191,7 @@ export function createParticleSystem(eventBus, world) {
     world.particles.push(makeFloatingText(
       CONFIG.canvas.width / 2,
       CONFIG.canvas.height * 0.36,
-      getParticleLabel('lithiumBreeding'),
+      getParticleLabel('lithiumBreeding', { score: scoreForPhase(CONFIG.score.perLithium, world.phase) }),
       CONFIG.particle.sceneTextLifetime,
       THEME.colors.lithium6,
       THEME.font.floatSm,

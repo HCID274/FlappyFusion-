@@ -42,6 +42,14 @@ export const THEME = {
     { fontSize: 72, color: '#ffffff', stroke: '#ff44dd', strokeWidth: 4, shadowBlur: 30, overshoot: 1.40, weight: 900 },
   ],
 
+  phase: {
+    IGNITION_PREP: '#5566aa',
+    HEATING: '#ff44aa',
+    CRITICAL: '#ff5544',
+    IGNITION_BURST: '#ffcc44',
+    RECORD: '#ffffff',
+  },
+
   size: {
     plasmaGlow: 1.7,
     instabilityR: 36,

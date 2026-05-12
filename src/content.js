@@ -56,7 +56,7 @@ export const CONTENT = {
       he4: 'He⁴',
       neutron: 'n',
       fusionScore: '+5',
-      lithiumBreeding: '⁶Li → T 增殖\n+2',
+      lithiumBreeding: '⁶Li → T 增殖\n+{score}',
       tungstenCooling: '钨杂质溅射\n等离子体冷却 −1 档',
       nbiHeating: '中性束加热!\n+1 档',
     },
@@ -66,6 +66,28 @@ export const CONTENT = {
       label3: '⚡⚡ COMBO ×3   +{score}',
       label4: '⚡⚡⚡ COMBO ×4   +{score}',
       label5: '⚡⚡⚡⚡ MAX COMBO   +{score}',
+    },
+    phases: {
+      IGNITION_PREP: { title: '启动', subtitle: '—' },
+      HEATING: { title: '主动加热', subtitle: '偏滤器变频繁,小心钨碎片' },
+      CRITICAL: { title: '临界点', subtitle: '接近 1 亿度 —— 准备点火' },
+      IGNITION_BURST: { title: '点火成功', subtitle: '—' },
+      RECORD: { title: '突破纪录', subtitle: '现役实验最高区间 —— 表演时间' },
+    },
+    ignition: {
+      introTitle: '🎉 点火成功!',
+      introSubtitle: '持续聚变开始 — 20 秒',
+      progress: '点火持续 {elapsed} / 20 s',
+      milestones: {
+        5: '5 / 20',
+        10: '10 / 20  ← 一半了!',
+        15: '15 / 20  ← 即将自维持!',
+      },
+    },
+    selfSustain: {
+      title: '自维持成功!',
+      subtitle: '+200',
+      footnote: '— self-sustained burn',
     },
     milestones: {
       50: '已超过太阳核心温度',
@@ -81,14 +103,19 @@ export const CONTENT = {
         instability: 'MHD 不稳定性失控',
       },
       stats: '你坚持了 {seconds} 秒,达到了 {temperature}\n完成 {fusionCount} 次聚变反应',
+      maxComboLine: '最高 COMBO ×{maxCombo}',
       iterFooter: 'ITER 用 13 T 的超导磁场约束 1.5 亿度等离子体,目标维持 400 秒以上的聚变反应。',
+      ignitionLines: {
+        selfSustained: '你撑满了 20 秒 —— 一次自维持燃烧。\n现实中目前没有任何托卡马克达到过这一点。',
+        partial: '你在点火持续期内撑了 {ignitionSeconds} 秒,差一点就自维持了。',
+      },
       bodies: {
         t1: '等离子体非常脆弱——哪怕是最初的 1000 万度,\n也已经把任何固体材料瞬间汽化。\n这就是为什么我们需要磁场把它"悬空"住,\n让它一刻都不接触炉壁。',
         t2: '不错的开局!你已经把等离子体加热到了 {temperature}。\n作为参考:太阳核心约 1500 万度,\n你已经远远超过它了——只是比起聚变反应需要的温度\n还差一些。',
         t3: '{temperature} —— 你已经超过太阳核心了。\n但要让氘氚发生足够多的聚变反应,\n人类需要的是太阳核心 5–10 倍的温度。\n原因很简单:地球上没有太阳那样的引力压力,\n我们只能靠"更高温度"来弥补。',
         t4: '{temperature} —— 你触到了"劳森判据"的门口。\n这是工程上判断聚变能否净产能的指标:\n温度、密度、约束时间三者乘积要够大。\n你已经搞定了温度,真实的 ITER 还得搞定后两个。',
-        t5: '🎉 {temperature} —— 你点火了!\n\n聚变点火温度是 1 亿度。这是地球上人为创造的\n最极端环境之一。\n你坚持了 {seconds} 秒、完成了 {fusionCount} 次聚变。\n现实中 ITER 的目标是稳定维持 400 秒以上。',
-        t6: '{temperature} —— 已经超越 ITER 的设计参数了。\n你大概是研究室的人,或者天赋异禀。\n我们办公室在 3 楼,欢迎来聊。',
+        t5: '🎉 {temperature} —— 你点火了!\n\n聚变点火温度是 1 亿度。这是地球上人为创造的\n最极端环境之一。\n你坚持了 {seconds} 秒、完成了 {fusionCount} 次聚变,\n最高 COMBO ×{maxCombo}。\n现实中 ITER 的目标是稳定维持 400 秒以上。\n\n{ignitionLine}',
+        t6: '{temperature} —— 已经超越 ITER 的设计参数了。\n你大概是研究室的人,或者天赋异禀。\n\n{ignitionLine}\n\n我们办公室在 3 楼,欢迎来聊。',
       },
     },
     instabilityNames: ['撕裂模', '气球模', '锯齿模'],
@@ -148,7 +175,7 @@ export const CONTENT = {
       he4: 'He⁴',
       neutron: 'n',
       fusionScore: '+5',
-      lithiumBreeding: '⁶Li → T 増殖\n+2',
+      lithiumBreeding: '⁶Li → T 増殖\n+{score}',
       tungstenCooling: 'タングステン混入\nプラズマ冷却 −1 段',
       nbiHeating: '中性粒子ビーム加熱!\n+1 段',
     },
@@ -158,6 +185,28 @@ export const CONTENT = {
       label3: '⚡⚡ COMBO ×3   +{score}',
       label4: '⚡⚡⚡ COMBO ×4   +{score}',
       label5: '⚡⚡⚡⚡ MAX COMBO   +{score}',
+    },
+    phases: {
+      IGNITION_PREP: { title: '起動', subtitle: '—' },
+      HEATING: { title: '加熱開始', subtitle: 'ダイバータ密集,タングステン注意' },
+      CRITICAL: { title: '臨界点', subtitle: '1 億度に接近 —— 点火準備' },
+      IGNITION_BURST: { title: '点火成功', subtitle: '—' },
+      RECORD: { title: '記録更新', subtitle: '現役最高領域 —— 自由演舞' },
+    },
+    ignition: {
+      introTitle: '🎉 点火成功!',
+      introSubtitle: '持続核融合開始 — 20 秒',
+      progress: '点火持続 {elapsed} / 20 s',
+      milestones: {
+        5: '5 / 20',
+        10: '10 / 20  ← 半分達成!',
+        15: '15 / 20  ← まもなく自己点火!',
+      },
+    },
+    selfSustain: {
+      title: '自己点火成功!',
+      subtitle: '+200',
+      footnote: '— self-sustained burn',
     },
     milestones: {
       50: '太陽中心温度を超えた',
@@ -173,14 +222,19 @@ export const CONTENT = {
         instability: 'MHD 不安定性が制御不能',
       },
       stats: '{seconds} 秒間持ちこたえ,最高温度は {temperature}\n核融合反応を {fusionCount} 回起こしました',
+      maxComboLine: '最高 COMBO ×{maxCombo}',
       iterFooter: 'ITER は 13 T の超伝導磁場で 1.5 億度のプラズマを閉じ込め,400 秒以上の核融合反応維持を目標にしています。',
+      ignitionLines: {
+        selfSustained: '20 秒間持ちこたえました —— 自己点火燃焼です。\n現実にはまだどのトカマクも達成していません。',
+        partial: '点火持続期で {ignitionSeconds} 秒間持ちこたえました。自己点火まであと少しでした。',
+      },
       bodies: {
         t1: 'プラズマはとても繊細です。最初の 1000 万度でさえ,\nどんな固体材料も一瞬で蒸発させます。\nだから磁場で「浮かせ」,\n炉壁に一瞬も触れさせない必要があります。',
         t2: 'よい立ち上がりです!プラズマを {temperature} まで加熱できました。\n参考までに,太陽中心は約 1500 万度。\nすでに大きく超えていますが,核融合反応に必要な温度には\nまだ少し届いていません。',
         t3: '{temperature} —— 太陽中心を超えました。\nただし重水素と三重水素を十分に核融合させるには,\n人類には太陽中心の 5–10 倍の温度が必要です。\n理由は単純です。地球には太陽のような重力圧がないため,\n「より高い温度」で補うしかありません。',
         t4: '{temperature} —— 「ローソン条件」の入り口に届きました。\nこれは核融合で正味のエネルギーを出せるかを判断する工学指標です。\n温度・密度・閉じ込め時間の積を十分大きくする必要があります。\n温度は達成しました。実際の ITER では残り 2 つも必要です。',
-        t5: '🎉 {temperature} —— 点火しました!\n\n核融合点火温度は 1 億度。地球上で人類が作る\n最も極端な環境の一つです。\n{seconds} 秒間維持し,{fusionCount} 回の核融合に成功しました。\n現実の ITER は 400 秒以上の安定維持を目指しています。',
-        t6: '{temperature} —— すでに ITER の設計値を超えています。\nあなたは研究室の人か,かなり才能があります。\n私たちのオフィスは 3 階です。ぜひ話しに来てください。',
+        t5: '🎉 {temperature} —— 点火しました!\n\n核融合点火温度は 1 億度。地球上で人類が作る\n最も極端な環境の一つです。\n{seconds} 秒間維持し,{fusionCount} 回の核融合に成功しました。\n最高 COMBO ×{maxCombo}。\n現実の ITER は 400 秒以上の安定維持を目指しています。\n\n{ignitionLine}',
+        t6: '{temperature} —— すでに ITER の設計値を超えています。\nあなたは研究室の人か,かなり才能があります。\n\n{ignitionLine}\n\n私たちのオフィスは 3 階です。ぜひ話しに来てください。',
       },
     },
     instabilityNames: ['テアリングモード', 'バルーニングモード', '鋸歯状振動'],
@@ -238,18 +292,36 @@ export function getDeathTitle(cause) {
   return titles[cause] || titles.wall;
 }
 
-export function getDeathStats({ seconds, fusionCount, maxTemp }) {
-  return t('death.stats', {
+export function getDeathStats({ seconds, fusionCount, maxTemp, maxCombo = 0 }) {
+  let stats = t('death.stats', {
     seconds,
     fusionCount,
     temperature: formatTemperature(maxTemp),
   });
+  const tier = getDeathTier(maxTemp);
+  if (tier === 't4' || tier === 't6') {
+    stats += `\n${t('death.maxComboLine', { maxCombo })}`;
+  }
+  return stats;
 }
 
-export function getDeathBody({ seconds, fusionCount, maxTemp }) {
+export function getDeathBody({
+  seconds,
+  fusionCount,
+  maxTemp,
+  maxCombo = 0,
+  ignitionSeconds = 0,
+  selfSustained = false,
+}) {
   const temperature = formatTemperature(maxTemp);
   const tier = getDeathTier(maxTemp);
-  const body = t(`death.bodies.${tier}`, { temperature, seconds, fusionCount });
+  const body = t(`death.bodies.${tier}`, {
+    temperature,
+    seconds,
+    fusionCount,
+    maxCombo,
+    ignitionLine: getIgnitionLine({ ignitionSeconds, selfSustained }),
+  });
   return {
     body,
     footer: shouldShowIterFooter(tier) ? t('death.iterFooter') : null,
@@ -265,13 +337,50 @@ export function getLearnMorePages() {
   return valueFromCatalog(CONTENT, 'learnMore');
 }
 
-export function getParticleLabel(name) {
-  return t(`particleLabels.${name}`);
+export function getParticleLabel(name, values = {}) {
+  return t(`particleLabels.${name}`, values);
 }
 
 export function getComboLabel(combo, score) {
   const key = Math.min(Math.max(combo, 1), 5);
   return t(`combo.label${key}`, { score });
+}
+
+export function getPhaseText(phase) {
+  const phases = valueFromCatalog(CONTENT, 'phases');
+  return phases[phase] || phases.IGNITION_PREP;
+}
+
+export function getIgnitionIntroText() {
+  return {
+    title: t('ignition.introTitle'),
+    subtitle: t('ignition.introSubtitle'),
+  };
+}
+
+export function getIgnitionProgressText(elapsed) {
+  return t('ignition.progress', { elapsed: Math.floor(elapsed) });
+}
+
+export function getIgnitionMilestoneText(milestone) {
+  const milestones = valueFromCatalog(CONTENT, 'ignition.milestones');
+  return milestones[milestone] || null;
+}
+
+export function getSelfSustainText() {
+  return {
+    title: t('selfSustain.title'),
+    subtitle: t('selfSustain.subtitle'),
+    footnote: t('selfSustain.footnote'),
+  };
+}
+
+function getIgnitionLine({ ignitionSeconds, selfSustained }) {
+  if (selfSustained) return t('death.ignitionLines.selfSustained');
+  if (ignitionSeconds > 0) {
+    return t('death.ignitionLines.partial', { ignitionSeconds });
+  }
+  return '';
 }
 
 function getDeathTier(maxTemp) {

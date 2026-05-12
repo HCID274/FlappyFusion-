@@ -2,17 +2,41 @@
 
 import { EV } from '../engine/events.js';
 import { CONFIG } from '../config.js';
+import { scoreForPhase } from '../scoreMath.js';
 
 export function createFusionSystem(eventBus, world) {
+  let comboWindow = CONFIG.combo.window;
+  let phase = 'IGNITION_PREP';
+
   function resetCombo() {
     world.combo.count = 0;
     world.combo.lastTime = -Infinity;
+    world.combo.window = comboWindow;
   }
 
   eventBus.on(EV.PLASMA_DEAD, () => {
     resetCombo();
     world.fusionBurst.active = false;
     world.fusionBurst.remaining = 0;
+  });
+
+  eventBus.on(EV.PHASE_CHANGED, ({ to }) => {
+    phase = to;
+    const phaseRules = CONFIG.phases.rules[to] || CONFIG.phases.rules.IGNITION_PREP;
+    comboWindow = phaseRules.comboWindow ?? CONFIG.combo.window;
+    world.combo.window = comboWindow;
+    resetCombo();
+    if (to === 'IGNITION_BURST') {
+      world.fusionBurst.active = false;
+      world.fusionBurst.remaining = 0;
+    }
+  });
+
+  eventBus.on(EV.GAME_RESET, () => {
+    phase = 'IGNITION_PREP';
+    comboWindow = CONFIG.combo.window;
+    world.combo.window = comboWindow;
+    resetCombo();
   });
 
   eventBus.on(EV.COLLECTIBLE_HIT, ({ collectible }) => {
@@ -26,19 +50,21 @@ export function createFusionSystem(eventBus, world) {
       world.collectedD -= need.D;
       world.collectedT -= need.T;
       world.fusionCount += 1;
-      const withinWindow = world.elapsed - world.combo.lastTime <= CONFIG.combo.window;
+      const withinWindow = world.elapsed - world.combo.lastTime <= comboWindow;
       world.combo.count = withinWindow ? world.combo.count + 1 : 1;
       world.combo.lastTime = world.elapsed;
       world.maxCombo = Math.max(world.maxCombo, world.combo.count);
       world.fusionBurst.active = true;
       world.fusionBurst.remaining = CONFIG.fusion.burstWindow;
       const tableIndex = Math.min(world.combo.count, CONFIG.combo.scoreTable.length) - 1;
-      const score = CONFIG.combo.scoreTable[tableIndex];
+      const baseScore = CONFIG.combo.scoreTable[tableIndex];
+      const score = scoreForPhase(baseScore, phase);
       const payload = {
         x: world.plasma.pos.x,
         y: world.plasma.pos.y,
         count: world.fusionCount,
         combo: world.combo.count,
+        baseScore,
         score,
       };
       eventBus.emit(EV.COMBO_INCREMENT, payload);
@@ -55,7 +81,7 @@ export function createFusionSystem(eventBus, world) {
         world.fusionBurst.remaining = Math.max(0, world.fusionBurst.remaining - dt);
         if (world.fusionBurst.remaining <= 0) world.fusionBurst.active = false;
       }
-      if (world.combo.count > 0 && world.elapsed - world.combo.lastTime > CONFIG.combo.window) {
+      if (world.combo.count > 0 && world.elapsed - world.combo.lastTime > comboWindow) {
         resetCombo();
       }
     },

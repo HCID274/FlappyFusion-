@@ -25,24 +25,18 @@ function pickCollectible(cx, cy) {
   return createLithium6(cx, cy);
 }
 
-function getPhaseNameForTemperature(temperature) {
-  const thresholds = CONFIG.phases.thresholds;
-  if (temperature >= thresholds.RECORD) return 'RECORD';
-  if (temperature >= thresholds.IGNITION_BURST) return 'IGNITION_BURST';
-  if (temperature >= thresholds.CRITICAL) return 'CRITICAL';
-  if (temperature >= thresholds.HEATING) return 'HEATING';
-  return 'IGNITION_PREP';
-}
-
-function getSpawnRules(world) {
-  const phaseName = world.phase || getPhaseNameForTemperature(world.temperature);
-  return CONFIG.phases.rules[phaseName] || CONFIG.phases.rules.IGNITION_PREP;
-}
-
 export function createSpawnSystem(eventBus, world) {
   let nextSpawnAt = 0; // distance counter
+  let phaseRules = CONFIG.phases.rules.IGNITION_PREP;
 
-  eventBus.on(EV.GAME_RESET, () => { nextSpawnAt = 0; });
+  eventBus.on(EV.PHASE_CHANGED, ({ to }) => {
+    phaseRules = CONFIG.phases.rules[to] || CONFIG.phases.rules.IGNITION_PREP;
+  });
+
+  eventBus.on(EV.GAME_RESET, () => {
+    nextSpawnAt = 0;
+    phaseRules = CONFIG.phases.rules.IGNITION_PREP;
+  });
 
   return {
     update(dt) {
@@ -51,19 +45,18 @@ export function createSpawnSystem(eventBus, world) {
       world.spawnDistance += world.scrollSpeed * dt;
 
       while (world.spawnDistance >= nextSpawnAt) {
-        spawnOne(world, eventBus);
+        spawnOne(world, eventBus, phaseRules);
         const spacing = rand(CONFIG.obstacle.spacingMin, CONFIG.obstacle.spacingMax);
-        nextSpawnAt += spacing;
+        nextSpawnAt += spacing * (phaseRules.obstacleSpacingMul ?? 1);
       }
     },
   };
 }
 
-function spawnOne(world, eventBus) {
+function spawnOne(world, eventBus, phaseRules) {
   const W = CONFIG.canvas.width;
   const H = CONFIG.canvas.height;
   const margin = CONFIG.obstacle.wallMargin;
-  const phaseRules = getSpawnRules(world);
   const useInstability = !world.lastWasInstability && Math.random() < CONFIG.obstacle.instabilityChance;
 
   if (useInstability) {

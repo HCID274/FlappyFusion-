@@ -88,14 +88,23 @@ function spawnBurst(world) {
 
 export function createParticleStreamSystem(eventBus, world) {
   let nextBurstIn = INITIAL_BURST_DELAY;
+  let phaseRules = CONFIG.phases.rules.IGNITION_PREP;
 
-  eventBus.on(EV.GAME_RESET, () => { nextBurstIn = INITIAL_BURST_DELAY; });
+  eventBus.on(EV.PHASE_CHANGED, ({ to }) => {
+    phaseRules = CONFIG.phases.rules[to] || CONFIG.phases.rules.IGNITION_PREP;
+  });
+
+  eventBus.on(EV.GAME_RESET, () => {
+    nextBurstIn = INITIAL_BURST_DELAY;
+    phaseRules = CONFIG.phases.rules.IGNITION_PREP;
+  });
 
   return {
     update(dt) {
       if (world.status !== 'playing' || !CONFIG.particleStream.enabled) return;
 
-      const rateMul = world.fusionBurst.active ? CONFIG.fusion.burstParticleMultiplier : 1;
+      const rateMul = (phaseRules.particleRateMul ?? 1)
+        * (world.fusionBurst.active ? CONFIG.fusion.burstParticleMultiplier : 1);
       nextBurstIn -= dt * rateMul;
       while (nextBurstIn <= 0) {
         spawnBurst(world);

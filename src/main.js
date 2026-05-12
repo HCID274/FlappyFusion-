@@ -17,6 +17,8 @@ import { createCollisionSystem } from './systems/collisionSystem.js';
 import { createFusionSystem } from './systems/fusionSystem.js';
 import { createScoreSystem } from './systems/scoreSystem.js';
 import { createTemperatureSystem } from './systems/temperatureSystem.js';
+import { createPhaseSystem } from './systems/phaseSystem.js';
+import { createIgnitionPhaseSystem } from './systems/ignitionPhaseSystem.js';
 import { createDifficultySystem } from './systems/difficultySystem.js';
 import { createParticleSystem } from './systems/particleSystem.js';
 import { createCleanupSystem } from './systems/cleanupSystem.js';
@@ -35,7 +37,7 @@ const ctx = canvas.getContext('2d');
 const eventBus = createEventBus();
 const world = createWorld();
 
-// Order matters: input → spawn → particle stream → physics → collision → fusion → score/temp → difficulty → particles → cleanup
+// Order matters: input → spawn → particle stream → physics → collision → fusion → score/temp → phase/ignition → difficulty → particles → cleanup
 const systems = [
   createInputSystem(eventBus, world),
   createSpawnSystem(eventBus, world),
@@ -45,6 +47,8 @@ const systems = [
   createFusionSystem(eventBus, world),
   createScoreSystem(eventBus, world),
   createTemperatureSystem(eventBus, world),
+  createPhaseSystem(eventBus, world),
+  createIgnitionPhaseSystem(eventBus, world),
   createDifficultySystem(eventBus, world),
   createParticleSystem(eventBus, world),
   createCleanupSystem(eventBus, world),
