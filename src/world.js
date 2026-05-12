@@ -29,10 +29,14 @@ export function resetWorld(world) {
   world.lastGapY = CONFIG.canvas.height / 2;
   world.lastWasInstability = false;
   world.wallTouchTimer = 0;
+  world.redFlashT = 0;
+  world.nbiGlowT = 0;
   if (world.inputBlocked === undefined) world.inputBlocked = false;
 
   world.plasma = createPlasma();
   world.obstacles = [];
+  world.hazards = [];
   world.collectibles = [];
+  world.boosts = [];
   world.particles = [];
 }

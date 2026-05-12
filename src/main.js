@@ -2,6 +2,7 @@
 // Composition root — the only place that knows about every layer.
 
 import { CONFIG } from './config.js';
+import { preloadAssets } from './assetLoader.js';
 import { createWorld } from './world.js';
 import { initLocale } from './content.js';
 import { createEventBus } from './engine/eventBus.js';
@@ -25,6 +26,7 @@ import { createScreens } from './presentation/screens.js';
 
 const canvas = document.getElementById('game');
 initLocale();
+await preloadAssets();
 canvas.width = CONFIG.canvas.width;
 canvas.height = CONFIG.canvas.height;
 const ctx = canvas.getContext('2d');

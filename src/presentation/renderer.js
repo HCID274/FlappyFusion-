@@ -17,16 +17,20 @@ export function createRenderer(ctx, world) {
       drawWalls(ctx, W, H);
 
       for (const ob of world.obstacles) ob.render(ctx);
+      for (const b of world.boosts) b.render(ctx);
+      for (const h of world.hazards) h.render(ctx);
       for (const c of world.collectibles) if (!c.collected) c.render(ctx);
 
       if (world.status === 'playing' && world.plasma.alive) {
         drawWallWarning(ctx, world, W, H);
+        drawNbiGlow(ctx, world);
         world.plasma.render(ctx);
       } else if (world.status === 'dead') {
         drawDeathFlash(ctx, world);
       }
 
       for (const p of world.particles) drawParticle(ctx, p);
+      drawRedFlash(ctx, world, W, H);
     },
   };
 }
@@ -94,6 +98,28 @@ function drawDeathFlash(ctx, world) {
   ctx.globalAlpha = 1;
 }
 
+function drawNbiGlow(ctx, world) {
+  if (world.nbiGlowT <= 0) return;
+  const p = world.plasma;
+  const alpha = Math.min(0.45, world.nbiGlowT / CONFIG.boosts.nbi.glowDuration);
+  const r = p.radius * 3.2;
+  const grad = ctx.createRadialGradient(p.pos.x, p.pos.y, 0, p.pos.x, p.pos.y, r);
+  grad.addColorStop(0, `rgba(255, 204, 68, ${alpha})`);
+  grad.addColorStop(1, 'rgba(255, 204, 68, 0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(p.pos.x, p.pos.y, r, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawRedFlash(ctx, world, W, H) {
+  if (world.redFlashT <= 0) return;
+  ctx.fillStyle = THEME.colors.danger;
+  ctx.globalAlpha = Math.min(0.28, world.redFlashT / CONFIG.hazards.tungsten.redFlashDuration * 0.28);
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalAlpha = 1;
+}
+
 function drawParticle(ctx, p) {
   const alpha = Math.max(0, p.life / p.maxLife);
   ctx.globalAlpha = alpha;
@@ -115,7 +141,13 @@ function drawParticle(ctx, p) {
     ctx.fillStyle = p.color;
     ctx.font = p.font;
     ctx.textAlign = 'center';
-    ctx.fillText(p.text, p.pos.x, p.pos.y);
+    ctx.textBaseline = 'middle';
+    const lines = String(p.text).split('\n');
+    const lineHeight = 20;
+    const startY = p.pos.y - ((lines.length - 1) * lineHeight) / 2;
+    for (let i = 0; i < lines.length; i++) {
+      ctx.fillText(lines[i], p.pos.x, startY + i * lineHeight);
+    }
   }
 
   ctx.globalAlpha = 1;

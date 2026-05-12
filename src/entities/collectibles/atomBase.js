@@ -1,31 +1,44 @@
 // Shared factory for D / T atoms. Variants differ only in color and inner-dot count.
 
 import { CONFIG } from '../../config.js';
+import { getImage } from '../../assetLoader.js';
 
 let nextId = 0;
 
-export function createAtomEntity(type, x, y, color, dotCount) {
+export function createAtomEntity(type, x, y, color, dotCount, imageKey, label = type) {
   const r = CONFIG.collectible.radius;
+  const hitR = CONFIG.collectible.hitRadius;
   const c = {
     id: `${type}${nextId++}`,
     type,
     pos: { x, y },
-    hitBox: { x: x - r, y: y - r, w: r * 2, h: r * 2 },
+    hitBox: { x: x - hitR, y: y - hitR, w: hitR * 2, h: hitR * 2 },
     collected: false,
     bob: Math.random() * Math.PI * 2,
     radius: r,
+    hitRadius: hitR,
   };
   c.move = (dx) => {
     c.pos.x += dx;
     c.hitBox.x += dx;
   };
-  c.render = (ctx) => drawAtom(ctx, c, color, dotCount);
+  c.render = (ctx) => drawAtom(ctx, c, color, dotCount, imageKey, label);
   return c;
 }
 
-function drawAtom(ctx, c, color, dots) {
+function drawAtom(ctx, c, color, dots, imageKey, label) {
   c.bob += 0.05;
   const yo = Math.sin(c.bob) * 3;
+  const img = imageKey ? getImage(imageKey) : null;
+
+  if (img) {
+    const size = 42;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 10;
+    ctx.drawImage(img, c.pos.x - size / 2, c.pos.y + yo - size / 2, size, size);
+    ctx.shadowBlur = 0;
+    return;
+  }
 
   ctx.shadowColor = color;
   ctx.shadowBlur = 12;
@@ -44,4 +57,10 @@ function drawAtom(ctx, c, color, dots) {
     ctx.arc(c.pos.x + dx, c.pos.y + yo + dy, 2.2, 0, Math.PI * 2);
     ctx.fill();
   }
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 10px ui-monospace, monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, c.pos.x, c.pos.y + yo);
 }

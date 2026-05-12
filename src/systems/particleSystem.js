@@ -63,6 +63,42 @@ export function createParticleSystem(eventBus, world) {
     ));
   });
 
+  eventBus.on(EV.COLLECTIBLE_HIT, ({ collectible }) => {
+    if (collectible.type !== 'Li6') return;
+    world.particles.push(makeFloatingText(
+      CONFIG.canvas.width / 2,
+      CONFIG.canvas.height * 0.36,
+      getParticleLabel('lithiumBreeding'),
+      CONFIG.particle.sceneTextLifetime,
+      THEME.colors.lithium6,
+      THEME.font.floatSm,
+    ));
+  });
+
+  eventBus.on(EV.HAZARD_HIT, ({ type }) => {
+    if (type !== 'tungsten') return;
+    world.particles.push(makeFloatingText(
+      CONFIG.canvas.width / 2,
+      CONFIG.canvas.height * 0.36,
+      getParticleLabel('tungstenCooling'),
+      CONFIG.particle.sceneTextLifetime,
+      THEME.colors.tungsten,
+      THEME.font.floatSm,
+    ));
+  });
+
+  eventBus.on(EV.BOOST_TRIGGERED, ({ type }) => {
+    if (type !== 'nbi') return;
+    world.particles.push(makeFloatingText(
+      CONFIG.canvas.width / 2,
+      CONFIG.canvas.height * 0.36,
+      getParticleLabel('nbiHeating'),
+      CONFIG.particle.sceneTextLifetime,
+      THEME.colors.fusionGold,
+      THEME.font.floatSm,
+    ));
+  });
+
   return {
     update(dt) {
       for (let i = world.particles.length - 1; i >= 0; i--) {

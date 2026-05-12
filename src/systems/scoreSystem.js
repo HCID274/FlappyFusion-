@@ -8,8 +8,10 @@ export function createScoreSystem(eventBus, world) {
   }
 
   eventBus.on(EV.OBSTACLE_PASSED, () => bump(CONFIG.score.perObstacle));
-  eventBus.on(EV.COLLECTIBLE_HIT, () => bump(CONFIG.score.perCollectible));
-  eventBus.on(EV.FUSION_TRIGGERED, () => bump(CONFIG.score.perFusion));
+  eventBus.on(EV.COLLECTIBLE_HIT, ({ collectible }) => {
+    bump(collectible.type === 'Li6' ? CONFIG.score.perLithium : CONFIG.score.perCollectible);
+  });
+  eventBus.on(EV.FUSION_TRIGGERED, () => bump(CONFIG.score.perFusionBase));
 
   return { update(_dt) {} };
 }

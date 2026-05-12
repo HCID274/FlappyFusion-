@@ -7,11 +7,37 @@ import { createDivertor } from '../entities/obstacles/divertor.js';
 import { createInstability } from '../entities/obstacles/instability.js';
 import { createDeuterium } from '../entities/collectibles/deuterium.js';
 import { createTritium } from '../entities/collectibles/tritium.js';
+import { createLithium6 } from '../entities/collectibles/lithium6.js';
+import { createTungsten } from '../entities/hazards/tungsten.js';
+import { createNbi } from '../entities/boosts/nbi.js';
 import { pickInstabilityName } from '../content.js';
 
 function rand(a, b) { return a + Math.random() * (b - a); }
 
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+function pickCollectible(cx, cy) {
+  const weights = CONFIG.collectible.typeWeights;
+  const total = weights.D + weights.T + weights.Li6;
+  const roll = Math.random() * total;
+  if (roll < weights.D) return createDeuterium(cx, cy);
+  if (roll < weights.D + weights.T) return createTritium(cx, cy);
+  return createLithium6(cx, cy);
+}
+
+function getPhaseNameForTemperature(temperature) {
+  const thresholds = CONFIG.phases.thresholds;
+  if (temperature >= thresholds.RECORD) return 'RECORD';
+  if (temperature >= thresholds.IGNITION_BURST) return 'IGNITION_BURST';
+  if (temperature >= thresholds.CRITICAL) return 'CRITICAL';
+  if (temperature >= thresholds.HEATING) return 'HEATING';
+  return 'IGNITION_PREP';
+}
+
+function getSpawnRules(world) {
+  const phaseName = world.phase || getPhaseNameForTemperature(world.temperature);
+  return CONFIG.phases.rules[phaseName] || CONFIG.phases.rules.IGNITION_PREP;
+}
 
 export function createSpawnSystem(eventBus, world) {
   let nextSpawnAt = 0; // distance counter
@@ -37,6 +63,7 @@ function spawnOne(world, eventBus) {
   const W = CONFIG.canvas.width;
   const H = CONFIG.canvas.height;
   const margin = CONFIG.obstacle.wallMargin;
+  const phaseRules = getSpawnRules(world);
   const useInstability = !world.lastWasInstability && Math.random() < CONFIG.obstacle.instabilityChance;
 
   if (useInstability) {
@@ -63,11 +90,21 @@ function spawnOne(world, eventBus) {
     world.lastWasInstability = false;
 
     // collectible in gap
-    if (Math.random() < CONFIG.collectible.spawnChance) {
+    const fuelSpawnChance = phaseRules.dtSpawnChance ?? CONFIG.collectible.spawnChance;
+    if (Math.random() < fuelSpawnChance) {
       const cy = gapY + (Math.random() - 0.5) * CONFIG.collectible.yJitter;
       const cx = W + 60 + 28 + Math.random() * 20;
-      const c = Math.random() < 0.5 ? createDeuterium(cx, cy) : createTritium(cx, cy);
-      world.collectibles.push(c);
+      world.collectibles.push(pickCollectible(cx, cy));
     }
+  }
+
+  if (Math.random() < phaseRules.tungstenSpawn) {
+    const y = rand(80, H - 80);
+    world.hazards.push(createTungsten(W + 120, y));
+  }
+
+  if (Math.random() < phaseRules.nbiSpawn) {
+    const y = rand(CONFIG.boosts.nbi.yMargin, H - CONFIG.boosts.nbi.yMargin);
+    world.boosts.push(createNbi(W + 160, y));
   }
 }

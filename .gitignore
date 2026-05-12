@@ -11,6 +11,7 @@ pnpm-lock.yaml
 .env.local
 .env.*.local
 
+.claude/
 # OS junk
 # Windows
 Thumbs.db

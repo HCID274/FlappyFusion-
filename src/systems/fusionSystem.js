@@ -6,7 +6,9 @@ import { CONFIG } from '../config.js';
 export function createFusionSystem(eventBus, world) {
   eventBus.on(EV.COLLECTIBLE_HIT, ({ collectible }) => {
     if (collectible.type === 'D') world.collectedD += 1;
-    else if (collectible.type === 'T') world.collectedT += 1;
+    else if (collectible.type === 'T' || collectible.type === 'Li6') {
+      world.collectedT += 1;
+    }
 
     const need = CONFIG.fusion.requires;
     while (world.collectedD >= need.D && world.collectedT >= need.T) {

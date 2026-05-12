@@ -42,6 +42,118 @@
       border-radius: 8px;
       border: 1px solid rgba(255, 255, 255, 0.12);
     }
+    .fuel-bay {
+      width: 184px;
+      padding: 8px 10px 9px;
+      background: rgba(4, 8, 24, 0.72);
+      border: 1px solid rgba(68, 221, 255, 0.18);
+      box-shadow: 0 0 24px rgba(68, 221, 255, 0.08), inset 0 0 18px rgba(255, 68, 170, 0.06);
+    }
+    .fuel-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 11px;
+      letter-spacing: 0;
+    }
+    .fuel-he4 {
+      color: #ffcc44;
+      font-variant-numeric: tabular-nums;
+    }
+    .fuel-he4.bump {
+      animation: he4-bump 0.28s ease-out;
+    }
+    .fuel-row {
+      display: grid;
+      grid-template-columns: 16px 1fr;
+      align-items: center;
+      gap: 7px;
+      margin: 5px 0;
+      min-height: 28px;
+    }
+    .fuel-label {
+      color: rgba(255, 255, 255, 0.76);
+      font-weight: 800;
+    }
+    .fuel-slots {
+      position: relative;
+      height: 28px;
+      min-width: 1px;
+      max-width: 132px;
+    }
+    .fuel-slot {
+      position: absolute;
+      top: 0;
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: transform 0.18s ease, filter 0.18s ease, opacity 0.18s ease, box-shadow 0.18s ease;
+    }
+    .fuel-slot img {
+      width: 25px;
+      height: 25px;
+      object-fit: contain;
+      display: block;
+    }
+    .fuel-slot.filled {
+      filter: none;
+      opacity: 1;
+      transform: scale(1);
+    }
+    .fuel-slot.filled.d {
+      box-shadow: 0 0 12px rgba(68, 221, 255, 0.42);
+    }
+    .fuel-slot.filled.t {
+      box-shadow: 0 0 12px rgba(102, 255, 153, 0.36);
+    }
+    .fuel-slot.pop {
+      animation: fuel-pop 0.26s cubic-bezier(.2,1.4,.4,1);
+    }
+    .fuel-slot.burst {
+      animation: fuel-burst 0.32s ease-out;
+    }
+    .fuel-fallback {
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .fusion-ready {
+      min-height: 16px;
+      margin-top: 6px;
+      color: #ffcc44;
+      font-size: 11px;
+      text-align: center;
+      opacity: 0;
+      transform: scale(0.95);
+      transition: opacity 0.14s ease, transform 0.14s ease;
+    }
+    .fusion-ready.active {
+      opacity: 1;
+      transform: scale(1);
+      animation: ready-pulse 0.6s ease-in-out infinite;
+    }
+    @keyframes fuel-pop {
+      0% { transform: scale(0.75); }
+      70% { transform: scale(1.5); }
+      100% { transform: scale(1); }
+    }
+    @keyframes fuel-burst {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1.5) rotate(15deg); opacity: 0; }
+    }
+    @keyframes he4-bump {
+      0% { transform: scale(1); }
+      55% { transform: scale(1.4); }
+      100% { transform: scale(1); }
+    }
+    @keyframes ready-pulse {
+      50% { transform: scale(1.08); text-shadow: 0 0 12px #ffcc44; }
+    }
     .pulse-ring {
       position: absolute;
       top: 12px; left: 50%; transform: translateX(-50%);
@@ -234,7 +346,7 @@
     <div class="hud">
       <div class="hud-col">
         <div class="hud-item" id="hud-temp"></div>
-        <div class="hud-item" id="hud-inv"></div>
+        <div class="hud-item fuel-bay" id="hud-fuel-bay"></div>
       </div>
       <div class="hud-col right">
         <div class="hud-item" id="hud-score"></div>

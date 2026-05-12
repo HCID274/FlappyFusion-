@@ -158,7 +158,7 @@ Boost = {
 | `scoreSystem.js` | `EV.OBSTACLE_PASSED`、`EV.COLLECTIBLE_HIT`、`EV.FUSION_TRIGGERED` | `world.score`、发 `EV.SCORE_CHANGED` |
 | `temperatureSystem.js` | `EV.OBSTACLE_PASSED`、`EV.HAZARD_HIT`(扣)、`EV.BOOST_TRIGGERED`(加) | `world.temperature`、发 `EV.TEMP_CHANGED` / `EV.TEMP_MILESTONE` |
 | `difficultySystem.js` | `EV.TEMP_CHANGED` | `world.scrollSpeed`、SpawnSystem 间距 |
-| `fusionSystem.js` | `EV.COLLECTIBLE_HIT` (D/T/Li6;Li6 视作"自动 +1 T") | 维护 `collectedD/T`(夹到 fuelBaySlots 上限)、发 `EV.FUSION_TRIGGERED` |
+| `fusionSystem.js` | `EV.COLLECTIBLE_HIT` (D/T/Li6;Li6 视作"自动 +1 T") | 维护 `collectedD/T`、发 `EV.FUSION_TRIGGERED` |
 | `particleSystem.js` | `EV.FUSION_TRIGGERED`、`EV.PLASMA_DEAD`、`EV.HAZARD_HIT`、`EV.BOOST_TRIGGERED`、`EV.COLLECTIBLE_HIT`(Li6) 等 | 维护粒子与飘字生命周期 |
 | `cleanupSystem.js` | 所有滚动实体 | 移除离屏对象 |
 
@@ -178,7 +178,7 @@ Boost = {
 | `content.js` | 中文/日语文案 catalog 与查询函数:`t(key)` / `getMilestoneText(temp)` / `getDeathBody(...)` |
 | `i18n.js` | 语言选择(默认日语)、catalog 结构校验、缺 key 抛错、语言切换事件 |
 | `theme.js` | 颜色、字号、尺寸 |
-| `assetLoader.js` | 启动时预加载 `src/assets/*.png`(规格见 `docs/assets.md`)。暴露 `getImage(key)` 给 entity / HUD 用。**缺图回退**:返回一个特殊占位标志,Entity 在 render 时检测到则改用纯色色块绘制 — 这样部分图缺失也能跑通游戏 |
+| `assetLoader.js` | 启动时预加载当前 gameplay / HUD 必需 PNG(规格见 `docs/assets.md`)。背景板等屏幕级素材由对应任务注册或延迟加载。暴露 `getImage(key)` 给 entity / HUD 用。**缺图回退**:返回 `null`,Entity 在 render 时检测到则改用纯色色块绘制 — 这样部分图缺失也能跑通游戏 |
 
 ---
 
@@ -268,8 +268,8 @@ Boost = {
  *   scrollSpeed: number,
  *   obstaclesPassed: number,
  *   fusionCount: number,
- *   collectedD: number,         // 夹到 CONFIG.fusion.fuelBaySlots.D
- *   collectedT: number,         // 夹到 CONFIG.fusion.fuelBaySlots.T
+ *   collectedD: number,         // 当前 D 库存,无逻辑硬上限
+ *   collectedT: number,         // 当前 T 库存,无逻辑硬上限
  *   plasma: Plasma,
  *   obstacles: Obstacle[],
  *   hazards: Hazard[],

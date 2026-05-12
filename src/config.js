@@ -7,14 +7,14 @@ export const CONFIG = {
   plasma: {
     startX: 200,
     startY: 300,
-    drift: 70,
-    pulseImpulse: -75,
+    drift: 140,
+    pulseImpulse: -150,
     pulseCooldownTime: 0,
     radius: 14,
     trailLength: 10,
     wallWarningDistance: 30,
-    maxFallSpeed: 115,
-    maxRiseSpeed: -120,
+    maxFallSpeed: 230,
+    maxRiseSpeed: -240,
   },
 
   obstacle: {
@@ -30,36 +30,119 @@ export const CONFIG = {
   },
 
   scroll: {
-    baseSpeed: 55,
-    speedPerTempStep: 4,
+    baseSpeed: 110,
+    speedPerTempStep: 8,
   },
 
   temperature: {
     start: 10,
-    stepEveryNObstacles: 2,
+    stepEveryNObstacles: 4,
     increment: 10,
   },
 
   score: {
     perObstacle: 1,
     perCollectible: 1,
-    perFusion: 5,
+    perLithium: 2,
+    perParticle: 1,
+    perFusionBase: 5,
+    selfSustainBonus: 200,
   },
 
   fusion: {
     requires: { D: 1, T: 1 },
+    fuelBayDisplay: { spreadCount: 3, overlapPx: 14 },
+    burstWindow: 3.0,
+    burstDtSpawnChance: 0.9,
+    burstParticleMultiplier: 2.0,
+  },
+
+  hazards: {
+    tungsten: {
+      tempStepPenalty: 1,
+      redFlashDuration: 0.3,
+      hitBoxSize: 80,
+      hitBoxPadding: 10,
+    },
+  },
+
+  boosts: {
+    nbi: {
+      tempStepBonus: 1,
+      glowDuration: 0.5,
+      width: 240,
+      height: 72,
+      hitBoxPaddingX: 20,
+      hitBoxPaddingY: 16,
+      yMargin: 120,
+    },
+  },
+
+  combo: {
+    window: 2.0,
+    scoreTable: [5, 10, 25, 50, 100],
+    maxCount: 99,
+    timerRingDiameter: 36,
   },
 
   collectible: {
     spawnChance: 0.7,
-    radius: 10,
+    typeWeights: { D: 0.45, T: 0.45, Li6: 0.10 },
+    radius: 8,
+    hitRadius: 24,
     yJitter: 40,
+  },
+
+  particleStream: {
+    enabled: true,
+    burstIntervalMin: 0.25,
+    burstIntervalMax: 0.45,
+    particlesPerBurstMin: 3,
+    particlesPerBurstMax: 6,
+    radius: 4,
+    patterns: ['arc', 'wave', 'diagonal', 'line'],
+    yMargin: 80,
+    yJitterBetweenBursts: 80,
+    avoidObstacleLookahead: 200,
+    avoidObstacleYOffset: 60,
+  },
+
+  phases: {
+    thresholds: {
+      IGNITION_PREP: 10,
+      HEATING: 30,
+      CRITICAL: 80,
+      IGNITION_BURST: 100,
+      RECORD: 150,
+    },
+    rules: {
+      IGNITION_PREP: { obstacleSpacingMul: 1.0, particleRateMul: 1.0, dtSpawnChance: 0.7, comboWindow: 2.0, scoreMul: 1, tungstenSpawn: 0, nbiSpawn: 0, glow: 'deep' },
+      HEATING: { obstacleSpacingMul: 1.0, particleRateMul: 1.0, dtSpawnChance: 0.7, comboWindow: 2.0, scoreMul: 1, tungstenSpawn: 0.08, nbiSpawn: 0.05, glow: 'magenta' },
+      CRITICAL: { obstacleSpacingMul: 0.9, particleRateMul: 1.5, dtSpawnChance: 0.7, comboWindow: 2.0, scoreMul: 1, tungstenSpawn: 0.08, nbiSpawn: 0.05, glow: 'redOrange' },
+      IGNITION_BURST: { obstacleSpacingMul: 0.75, particleRateMul: 3.0, dtSpawnChance: 0.9, comboWindow: 4.0, scoreMul: 2, tungstenSpawn: 0, nbiSpawn: 0.10, glow: 'gold' },
+      RECORD: { obstacleSpacingMul: 0.8, particleRateMul: 2.0, dtSpawnChance: 0.7, comboWindow: 2.5, scoreMul: 1.5, tungstenSpawn: 0.05, nbiSpawn: 0.05, glow: 'whiteHot' },
+    },
+  },
+
+  ignitionPhase: {
+    duration: 20,
+    enterFreezeDuration: 0.6,
+    enterFlashDuration: 0.15,
+    progressMilestones: [5, 10, 15],
+    progressBar: {
+      width: 480,
+      height: 18,
+      bottomMargin: 24,
+      slideInDuration: 0.3,
+    },
+    exitBurstParticleCount: 200,
   },
 
   particle: {
     fusionLifetime: 1.5,
     milestoneLifetime: 1.5,
     instabilityLabelLifetime: 0.8,
+    sceneTextLifetime: 0.75,
   },
 
   deathCardDelaySec: 0.6,

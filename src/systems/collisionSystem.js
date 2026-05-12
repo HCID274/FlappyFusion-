@@ -53,6 +53,22 @@ export function createCollisionSystem(eventBus, world) {
           eventBus.emit(EV.COLLECTIBLE_HIT, { collectible: c });
         }
       }
+
+      for (const h of world.hazards) {
+        if (h.triggered) continue;
+        if (circleHitsAABB(p.pos.x, p.pos.y, p.radius, h.hitBox)) {
+          h.triggered = true;
+          eventBus.emit(EV.HAZARD_HIT, { hazard: h, type: h.type, x: h.pos.x, y: h.pos.y });
+        }
+      }
+
+      for (const b of world.boosts) {
+        if (b.triggered) continue;
+        if (circleHitsAABB(p.pos.x, p.pos.y, p.radius, b.hitBox)) {
+          b.triggered = true;
+          eventBus.emit(EV.BOOST_TRIGGERED, { boost: b, type: b.type, x: b.pos.x, y: b.pos.y });
+        }
+      }
     },
   };
 }

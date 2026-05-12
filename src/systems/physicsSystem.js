@@ -29,6 +29,8 @@ export function createPhysicsSystem(eventBus, world) {
       }
       if (p.pulseCooldown > 0) p.pulseCooldown = Math.max(0, p.pulseCooldown - dt);
       if (p.pulseFlashT > 0) p.pulseFlashT = Math.max(0, p.pulseFlashT - dt * 3);
+      if (world.redFlashT > 0) world.redFlashT = Math.max(0, world.redFlashT - dt);
+      if (world.nbiGlowT > 0) world.nbiGlowT = Math.max(0, world.nbiGlowT - dt);
 
       p.vel.y += CONFIG.plasma.drift * dt;
       if (p.vel.y > CONFIG.plasma.maxFallSpeed) p.vel.y = CONFIG.plasma.maxFallSpeed;
@@ -42,7 +44,9 @@ export function createPhysicsSystem(eventBus, world) {
       // scroll obstacles and collectibles
       const dx = -world.scrollSpeed * dt;
       for (const ob of world.obstacles) ob.move(dx);
+      for (const h of world.hazards) h.move(dx);
       for (const c of world.collectibles) c.move(dx);
+      for (const b of world.boosts) b.move(dx);
     },
   };
 }

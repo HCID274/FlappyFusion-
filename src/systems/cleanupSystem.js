@@ -19,6 +19,14 @@ export function createCleanupSystem(_eventBus, world) {
           world.collectibles.splice(i, 1);
         }
       }
+      for (let i = world.hazards.length - 1; i >= 0; i--) {
+        const h = world.hazards[i];
+        if (h.pos.x + h.radius < CULL_X) world.hazards.splice(i, 1);
+      }
+      for (let i = world.boosts.length - 1; i >= 0; i--) {
+        const b = world.boosts[i];
+        if (b.pos.x + b.radius < CULL_X) world.boosts.splice(i, 1);
+      }
     },
   };
 }

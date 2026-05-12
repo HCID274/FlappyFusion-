@@ -6,6 +6,8 @@ export const EV = {
   PLASMA_DEAD: 'plasma:dead',
   OBSTACLE_PASSED: 'obstacle:passed',
   COLLECTIBLE_HIT: 'collectible:hit',
+  HAZARD_HIT: 'hazard:hit',
+  BOOST_TRIGGERED: 'boost:triggered',
   FUSION_TRIGGERED: 'fusion:triggered',
   TEMP_CHANGED: 'temp:changed',
   TEMP_MILESTONE: 'temp:milestone',

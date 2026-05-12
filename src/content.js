@@ -46,11 +46,19 @@ export const CONTENT = {
       inventory: 'D:{d}  T:{t}',
       score: '★ {score}',
       time: '⏱ {seconds} s',
+      fuelBay: {
+        label: '燃料舱',
+        fusionReady: '⚡ 聚变就绪 ⚡',
+        he4: 'He⁴ ×{fusionCount}',
+      },
     },
     particleLabels: {
       he4: 'He⁴',
       neutron: 'n',
       fusionScore: '+5',
+      lithiumBreeding: '⁶Li → T 增殖\n+2',
+      tungstenCooling: '钨杂质溅射\n等离子体冷却 −1 档',
+      nbiHeating: '中性束加热!\n+1 档',
     },
     milestones: {
       50: '已超过太阳核心温度',
@@ -123,11 +131,19 @@ export const CONTENT = {
       inventory: 'D:{d}  T:{t}',
       score: '★ {score}',
       time: '⏱ {seconds} s',
+      fuelBay: {
+        label: '燃料ベイ',
+        fusionReady: '⚡ 核融合準備完了 ⚡',
+        he4: 'He⁴ ×{fusionCount}',
+      },
     },
     particleLabels: {
       he4: 'He⁴',
       neutron: 'n',
       fusionScore: '+5',
+      lithiumBreeding: '⁶Li → T 増殖\n+2',
+      tungstenCooling: 'タングステン混入\nプラズマ冷却 −1 段',
+      nbiHeating: '中性粒子ビーム加熱!\n+1 段',
     },
     milestones: {
       50: '太陽中心温度を超えた',
@@ -186,6 +202,9 @@ export const hud = {
   inventory: (d, tritium) => t('hud.inventory', { d, t: tritium }),
   score: (score) => t('hud.score', { score }),
   time: (seconds) => t('hud.time', { seconds: Math.floor(seconds) }),
+  fuelBayLabel: () => t('hud.fuelBay.label'),
+  fusionReady: () => t('hud.fuelBay.fusionReady'),
+  he4: (fusionCount) => t('hud.fuelBay.he4', { fusionCount }),
 };
 
 export function formatTemperature(M) {

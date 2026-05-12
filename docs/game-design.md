@@ -111,7 +111,7 @@
 
 ### 5.3 钨碎片(TungstenDebris)— 软障碍(不致死,温度倒退)
 **视觉**:破碎金属碎片簇,工业冷灰色,锐利棱角(贴图见 `docs/assets.md` `hazard_tungsten.png`)。
-**碰撞**:1 个 AABB hitbox(80×80)。撞到后:
+**碰撞**:1 个 AABB hitbox,比 80×80 sprite 四周各外扩 10 px。撞到后:
 - **不死**,等离子体继续飞行
 - 温度倒退 1 档(`world.temperature -= CONFIG.temperature.increment`,不低于 start)
 - 屏幕红闪 0.3 秒,等离子体短暂闪烁
@@ -123,7 +123,7 @@
 
 ### 5.4 NBI 中性束(NeutralBeamInjection)— 加成通道(温度奖励)
 **视觉**:横向洋红粒子流带,两端羽化(贴图见 `docs/assets.md` `boost_nbi.png`,240×72)。
-**判定**:1 个 AABB hitbox。等离子体接触后:
+**判定**:1 个 AABB hitbox,比 240×72 sprite 横向各外扩 20 px、纵向各外扩 16 px。等离子体接触后:
 - 立即温度 +1 档(`world.temperature += CONFIG.temperature.increment`,可触发 TEMP_MILESTONE)
 - 等离子体 0.5 秒金光高亮
 - 飘字 `中性束加热!+1 档`(见 `content.md` §6.4)
@@ -176,13 +176,13 @@ when x < -150 → cleanup
 **视觉**:D 蓝色发光小球(直径 16 px),内部画 1 个白点;T 绿色发光小球,内部画 2 个白点。区分度要高,色弱也能分辨(蓝 vs 绿 + 形状差异)。
 **生成**:每对 Divertor 之间的间隙中,**70% 概率**飘 1 个原子,D/T 各 50% 概率。
 **位置**:在间隙中心 ±40 px 随机偏移。
-**碰撞**:吃到 +1 分,光球 +0.5 圈短暂高亮,记录到 `world.collectedD/T`。
+**碰撞**:使用 24 px 宽容半径;吃到 +1 分,光球 +0.5 圈短暂高亮,记录到 `world.collectedD/T`。
 
 ### 6.2 锂-6 原子(⁶Li)— 增殖物(稀有)
 **视觉**:紫银色发光原子,**辉光明显比 D/T 强**,中央叠白色 `⁶Li` 标签(贴图见 `docs/assets.md` `atom_li6.png`,96×96)。
 **生成**:与 D/T 共用收集物 spawn 通道,但权重很低(10%,见 §11 `collectible.typeWeights`)。位置同 D/T。
 **碰撞**:吃到立即:
-- `world.collectedT += 1`(若 T 槽未满,直接增殖出 1 个 T;槽满则吃到也 +2 分但不入库)
+- `world.collectedT += 1`(直接增殖出 1 个 T,进入燃料舱库存)
 - +2 分(比 D/T 多一倍,体现稀有)
 - 飘字 `⁶Li → T 增殖`(见 `content.md` §6.2)
 **设计意图**:
@@ -200,10 +200,11 @@ when x < -150 → cleanup
 
 **设计目的**:让玩家意识到"我刚刚做了一次聚变反应",而不只是收集数字。HUD 应该用**视觉化燃料舱**实时显示 D / T 库存与聚变就绪状态(详见 §10.2)。
 
-### 6.4 燃料舱库存上限
-- D / T 各有上限(`config.fusion.fuelBaySlots = { D: 3, T: 3 }`),与左上角 HUD 槽位 1:1 对应
-- **超过上限的 D/T 拾取仍 +1 分**(避免浪费惩罚 / 手感惩罚),但 `collectedD/T` 不再上涨
-- 上限的存在让"长时间不聚变"也不会无脑积压库存,鼓励即时消耗
+### 6.4 燃料舱库存展示
+- D / T 不设逻辑库存硬上限;每次拾取都会进入 `world.collectedD/T`,聚变时扣除 1D + 1T
+- HUD 不显示固定虚化空槽,只显示当前已有库存
+- 每种燃料前 3 个图标正常横向排列;第 4 个开始半遮叠放在第 3 个后方,且层级从左到右递减:第 3 个遮住第 4 个,第 4 个遮住第 5 个,以此类推
+- 这样既能表达库存超过 3,又不会把左上 HUD 拉得过宽
 
 ### 6.5 聚变 Combo — 连续聚变倍率
 
@@ -448,17 +449,19 @@ when x < -150 → cleanup
 ┌─ 燃料舱 ─────────────┐
 │ 🌡 5000 万度          │   ← 温度计独立一行
 ├──────────────────────┤
-│ D  ⬤  ◯  ◯           │   ← D 槽位 ×3:亮态/暗态视觉
-│ T  ⬤  ◯  ◯           │   ← T 槽位 ×3:同上
+│ D  ⬤  ⬤  ⬤◖◖        │   ← 只显示已有 D,第 4 个起半遮堆叠
+│ T  ⬤  ⬤              │   ← 只显示已有 T,没有空槽占位
 ├──────────────────────┤
 │ ⚡ 聚变就绪 ⚡       │   ← collectedD≥1 ∧ collectedT≥1 时显示
 │ He⁴ ×3                │   ← 已聚变次数(累计成就感)
 └──────────────────────┘
 ```
 
-**槽位状态切换**:
-- **暗态**:CSS `filter: grayscale(1) opacity(0.3)`,只用一张亮版图,不需要美术做两版
-- **亮态**:无 filter,加 `box-shadow` glow(色与 atom 主色一致),收集瞬间 1.5× → 1.0× 弹性弹动
+**燃料图标显示**:
+- 不显示灰色空槽;库存为 0 时该行只保留 D / T 标签
+- 前 3 个图标正常横向排列
+- 第 4 个开始以半个图标宽度向右偏移,并放在前一个图标后方;第 3 个遮住第 4 个,第 4 个遮住第 5 个,以此类推
+- 图标加 `box-shadow` glow(色与 atom 主色一致),收集瞬间 1.5× → 1.0× 弹性弹动
 
 **聚变就绪指示**:
 - 当 `collectedD ≥ 1 && collectedT ≥ 1` 时,立即显示 `⚡ 聚变就绪 ⚡` 行
@@ -469,7 +472,7 @@ when x < -150 → cleanup
 - 0.3 秒后槽位重新渲染为新的 D/T 数(已扣减 1 + 1)
 - He⁴ 计数 +1,数字弹跳(scale 1.0 → 1.4 → 1.0)
 
-**槽位上限**:D 3 + T 3。超出上限的拾取仍 +1 分,但库存不增(避免节奏惩罚,见 §6.4)。
+**库存展示**:不设逻辑库存上限;HUD 通过半遮堆叠节省空间(见 §6.4)。
 
 ### 10.3 右上 — 得分与时间
 | 字段 | 模板 | 何时更新 |
@@ -540,23 +543,24 @@ export const CONFIG = {
     instabilityNoConsecutive: true,
   },
 
-  // 独立于主线障碍的"额外滚动元素",每 spawn 周期独立掷骰
+  // 独立于主线障碍的"额外滚动元素",每 spawn 周期按 phases.rules 独立掷骰
   hazards: {
     tungsten: {
-      spawnChance: 0.08,       // 8% 概率追加一个钨碎片
       tempStepPenalty: 1,      // 撞到温度倒退 1 档(× CONFIG.temperature.increment)
       redFlashDuration: 0.3,   // 屏幕红闪秒数
       hitBoxSize: 80,          // 与 sprite 一致
+      hitBoxPadding: 10,       // 判定盒四周外扩,避免看起来碰到却没触发
     },
   },
 
   boosts: {
     nbi: {
-      spawnChance: 0.05,       // 5% 概率追加一个 NBI 加热带
       tempStepBonus: 1,        // 穿过温度 +1 档
       glowDuration: 0.5,       // 等离子体金光秒数
       width: 240,              // 与 sprite 一致
       height: 72,
+      hitBoxPaddingX: 20,
+      hitBoxPaddingY: 16,
       yMargin: 120,            // 上下避开炉壁警告区
     },
   },
@@ -583,7 +587,7 @@ export const CONFIG = {
 
   fusion: {
     requires: { D: 1, T: 1 },
-    fuelBaySlots: { D: 3, T: 3 },  // 燃料舱视觉槽位上限,超额拾取仍计分但不入库
+    fuelBayDisplay: { spreadCount: 3, overlapPx: 14 }, // 前 3 个展开,之后半遮堆叠
     burstWindow: 3.0,              // §6.6 聚变高潮窗持续秒数
     burstDtSpawnChance: 0.9,       // 窗口内 D/T spawn 概率
     burstParticleMultiplier: 2.0,  // 窗口内粒子云刷新率倍率
@@ -614,6 +618,7 @@ export const CONFIG = {
     spawnChance: 0.7,                              // 70% 间隙有收集物
     typeWeights: { D: 0.45, T: 0.45, Li6: 0.10 },  // Li-6 罕见
     radius: 8,
+    hitRadius: 24,                                 // 收集判定半径,比视觉半径更宽容
     yJitter: 40,
   },
 
@@ -627,7 +632,7 @@ export const CONFIG = {
       RECORD: 150,
     },
     rules: {
-      // 每阶段一个 patch 对象;PhaseSystem 在 EV.PHASE_CHANGED 时把这些 patch 应用到 world
+      // 每阶段一个 patch 对象;Task 1 的 spawnSystem 已按当前温度读取 dtSpawnChance / tungstenSpawn / nbiSpawn,完整 PhaseSystem 在 Task 3 接入
       IGNITION_PREP:    { obstacleSpacingMul: 1.0,  particleRateMul: 1.0, dtSpawnChance: 0.7, comboWindow: 2.0, scoreMul: 1, tungstenSpawn: 0,    nbiSpawn: 0,    glow: 'deep' },
       HEATING:          { obstacleSpacingMul: 1.0,  particleRateMul: 1.0, dtSpawnChance: 0.7, comboWindow: 2.0, scoreMul: 1, tungstenSpawn: 0.08, nbiSpawn: 0.05, glow: 'magenta' },
       CRITICAL:         { obstacleSpacingMul: 0.9,  particleRateMul: 1.5, dtSpawnChance: 0.7, comboWindow: 2.0, scoreMul: 1, tungstenSpawn: 0.08, nbiSpawn: 0.05, glow: 'redOrange' },
