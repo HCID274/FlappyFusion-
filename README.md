@@ -9,6 +9,7 @@
 - `docs/content.md` — 玩家可见的所有文案
 - `src/` — 游戏源码(权威实现,按架构文档组织)
 - `package.json` / `vite.config.js` — Vite 开发服务器与打包配置
+- `scripts/check-i18n.mjs` — 中日双语文案完整性校验
 
 ## 运行
 
@@ -30,6 +31,17 @@ npm install
 npm run dev
 ```
 Vite 会自动打开浏览器;也可以手动打开终端里显示的本地地址。
+
+## 多语言
+
+游戏支持中文 / 日语。画面右下角可切换语言,也可以用 URL 参数指定:
+
+```text
+http://localhost:8000/?lang=ja
+http://localhost:8000/?lang=zh
+```
+
+新增任何玩家可见文字时,必须在 `src/content.js` 同时补齐 `zh` 和 `ja`。`npm run build` 会先执行 `npm run check:i18n`,缺任意语言或在 `src/content.js` 外硬编码中日文字都会失败。
 
 ### 打包与预览
 ```powershell

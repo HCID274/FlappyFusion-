@@ -45,7 +45,7 @@ function drawPlasma(ctx, p) {
   ctx.arc(p.pos.x, p.pos.y, p.radius * 0.55, 0, Math.PI * 2);
   ctx.fill();
 
-  // pulse ripple (青色磁力线波纹)
+  // pulse ripple
   if (p.pulseFlashT > 0) {
     ctx.strokeStyle = THEME.colors.magneticLine;
     ctx.globalAlpha = p.pulseFlashT;

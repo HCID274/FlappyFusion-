@@ -3,7 +3,7 @@
 import { EV } from '../engine/events.js';
 import { CONFIG } from '../config.js';
 import { THEME } from '../theme.js';
-import { particleLabels } from '../content.js';
+import { getParticleLabel } from '../content.js';
 
 let nextId = 0;
 
@@ -37,9 +37,9 @@ function makeFusionParticle(x, y, label, color, vx, vy) {
 
 export function createParticleSystem(eventBus, world) {
   eventBus.on(EV.FUSION_TRIGGERED, ({ x, y }) => {
-    world.particles.push(makeFusionParticle(x, y, particleLabels.he4, THEME.colors.he4, -90, 60));
-    world.particles.push(makeFusionParticle(x, y, particleLabels.neutron, THEME.colors.neutron, 120, -80));
-    world.particles.push(makeFloatingText(x, y - 30, '+5', 0.8, THEME.colors.fusionGold, THEME.font.floatSm));
+    world.particles.push(makeFusionParticle(x, y, getParticleLabel('he4'), THEME.colors.he4, -90, 60));
+    world.particles.push(makeFusionParticle(x, y, getParticleLabel('neutron'), THEME.colors.neutron, 120, -80));
+    world.particles.push(makeFloatingText(x, y - 30, getParticleLabel('fusionScore'), 0.8, THEME.colors.fusionGold, THEME.font.floatSm));
   });
 
   eventBus.on(EV.TEMP_MILESTONE, ({ text }) => {

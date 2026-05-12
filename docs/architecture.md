@@ -76,7 +76,7 @@
 | 类别 | 唯一来源 |
 |---|---|
 | 数值参数(重力、推力、间距、温度阈值、得分) | `config.js` |
-| 对玩家可见的文案 | `content.js` |
+| 对玩家可见的文案 | `content.js` 双语 catalog,通过 `i18n.js` 读取 |
 | 视觉常量(颜色、字号、尺寸) | `theme.js` |
 | 事件名字符串 | `engine/events.js` 导出常量,禁止裸字符串 |
 
@@ -175,7 +175,8 @@ Boost = {
 | 模块 | 职责 |
 |---|---|
 | `config.js` | 所有可调数值常量,见 §8 |
-| `content.js` | 文案查询:`getMilestoneText(temp)` / `getDeathCard(seconds, temp)` |
+| `content.js` | 中文/日语文案 catalog 与查询函数:`t(key)` / `getMilestoneText(temp)` / `getDeathBody(...)` |
+| `i18n.js` | 语言选择、catalog 结构校验、缺 key 抛错、语言切换事件 |
 | `theme.js` | 颜色、字号、尺寸 |
 | `assetLoader.js` | 启动时预加载 `src/assets/*.png`(规格见 `docs/assets.md`)。暴露 `getImage(key)` 给 entity / HUD 用。**缺图回退**:返回一个特殊占位标志,Entity 在 render 时检测到则改用纯色色块绘制 — 这样部分图缺失也能跑通游戏 |
 
@@ -391,9 +392,12 @@ openCampus/
 │   │   └── screens.js
 │   ├── assetLoader.js       sprite 预加载,缺图占位
 │   ├── config.js
-│   ├── content.js
+│   ├── content.js           中日双语文案 catalog
+│   ├── i18n.js              双语读取与校验接口
 │   ├── theme.js
 │   └── world.js             createWorld / resetWorld
+├── scripts/
+│   └── check-i18n.mjs       build 前校验双语完整性和硬编码 CJK
 ├── start.bat                双击启动:安装依赖 + 跑 npm run dev
 ├── dist/                    npm run build 产物(不进 git)
 ├── .gitignore
@@ -418,7 +422,8 @@ openCampus/
 | 新加成通道 | 加 `entities/boosts/X.js`,在 `spawnSystem` 加额外掷骰、相关 System 订阅 `EV.BOOST_TRIGGERED` |
 | 新美术素材 | 在 `docs/assets.md` 加规格,在 `assetLoader.js` 注册 key,缺图自动占位 |
 | 调难度曲线 | 只改 `config.js`(权威来源是 `game-design.md` §11) |
-| 改文案 | 只改 `content.js`(权威来源是 `content.md`) |
+| 改文案 | 只改 `content.js` 的 `zh`/`ja` 双语 catalog(权威来源是 `content.md`) |
+| 新玩家可见文字 | 必须同时添加 `zh` 与 `ja` 两份;业务代码只能通过 `t()` 或内容函数读取 |
 | 换视觉风格 | 只改 `theme.js`(必要时改 Renderer 内部细节) |
 | 新事件 | 在 `events.js` 加常量 |
 
@@ -430,7 +435,7 @@ openCampus/
 - 飘字台词、死亡卡片文字、二维码 → `content.md`
 - 美术资源清单 → 暂不需要(纯几何 Canvas)
 - 单元测试 → 不做(展位小游戏 ROI 太低)
-- 多语言 → 仅中文
+- 多语言 → 支持中文 / 日语,禁止新增未校验语言
 - 移动端适配 → 不做
 
 ---
@@ -443,3 +448,4 @@ openCampus/
 4. **System 之间不直接调用**,通过 EventBus
 5. **Renderer 是只读的**,绝不修改 World
 6. **每个新模块只做一件事**,如果要写超过一类职责,拆文件
+7. **玩家可见文字必须双语完整**,`npm run build` 会先执行 `npm run check:i18n`;缺中文/日语、或在 `src/content.js` 外硬编码中日文字,都必须失败

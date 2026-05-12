@@ -1,6 +1,6 @@
 // DOM-based HUD. Updates via events for changes; reads world.elapsed each refresh for time.
 
-import { hud } from '../content.js';
+import { hud, onLocaleChange } from '../content.js';
 import { EV } from '../engine/events.js';
 
 export function createHUD(eventBus, world) {
@@ -22,6 +22,9 @@ export function createHUD(eventBus, world) {
   eventBus.on(EV.COLLECTIBLE_HIT, refreshInv);
   eventBus.on(EV.FUSION_TRIGGERED, refreshInv);
   eventBus.on(EV.GAME_RESET, () => {
+    refreshTemp(); refreshInv(); refreshScore(); refreshTime();
+  });
+  onLocaleChange(() => {
     refreshTemp(); refreshInv(); refreshScore(); refreshTime();
   });
   eventBus.on(EV.INPUT_PULSE, () => {

@@ -3,6 +3,7 @@
 
 import { CONFIG } from './config.js';
 import { createWorld } from './world.js';
+import { initLocale } from './content.js';
 import { createEventBus } from './engine/eventBus.js';
 import { createGameLoop } from './engine/gameLoop.js';
 import { createStateMachine } from './engine/stateMachine.js';
@@ -23,6 +24,7 @@ import { createHUD } from './presentation/hud.js';
 import { createScreens } from './presentation/screens.js';
 
 const canvas = document.getElementById('game');
+initLocale();
 canvas.width = CONFIG.canvas.width;
 canvas.height = CONFIG.canvas.height;
 const ctx = canvas.getContext('2d');
