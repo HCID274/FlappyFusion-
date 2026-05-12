@@ -10,7 +10,7 @@
 | 维度 | 约束 |
 |---|---|
 | 开发/部署 | 使用 Vite 启动本地开发服务器、打包 `dist/` 静态产物;禁止依赖 file:// 直开 |
-| 画布 | 800×600 Canvas,固定尺寸 |
+| 画布 | 800×600 逻辑坐标,Canvas backing store 按 `CONFIG.canvas.renderScale` 放大(当前 2x) |
 | 输入 | 仅键盘空格键 |
 | 单局时长 | 60–90 秒 |
 | 浏览器 | 现代 Chrome/Edge,通过 Vite/静态服务器加载 ES Modules |
@@ -171,7 +171,7 @@ Boost = {
 
 | 模块 | 职责 |
 |---|---|
-| `renderer.js` | 按 z-order 把所有 `Renderable` 画到 Canvas:背景板 → 阶段辉光 → 视差磁力线 → 障碍/粒子云/收集物/Boost/Hazard → 等离子体 → 前景粒子/飘字 → 屏幕级 FX overlay |
+| `renderer.js` | 按 z-order 把所有 `Renderable` 画到 Canvas:背景板 → 阶段辉光 → 视差磁力线 → 障碍/粒子云/收集物/Boost/Hazard → 等离子体 → 前景粒子/飘字 → 屏幕级 FX overlay。主画布与离屏文字 sprite 均按 `canvas.renderScale` 生成物理像素,绘制坐标仍是 800×600 逻辑坐标 |
 | `hud.js` | DOM 元素显示温度/得分/磁场环/燃料舱/Combo 圆环/点火持续条。订阅事件更新离散状态,每帧只刷新时间与倒计时 |
 | `screens.js` | `MenuScreen` / `DeathCardScreen` / `TutorialScreen`,DOM overlay |
 
@@ -183,7 +183,7 @@ Boost = {
 | `content.js` | 中文/日语文案 catalog 与查询函数:`t(key)` / `getMilestoneText(temp)` / `getDeathBody(...)` |
 | `i18n.js` | 语言选择(默认日语)、catalog 结构校验、缺 key 抛错、语言切换事件 |
 | `theme.js` | 颜色、字号、尺寸 |
-| `assetLoader.js` | 启动时预加载当前 gameplay / HUD / 背景板 PNG(规格见 `docs/assets.md`)。暴露 `getImage(key)` 给 entity / HUD / renderer 用。**缺图回退**:返回 `null`,Entity 或 renderer 在 render 时检测到则改用纯色/代码绘制兜底 — 这样部分图缺失也能跑通游戏 |
+| `assetLoader.js` | 启动时预加载 `src/assets/2x/` 高清 PNG(规格见 `docs/assets.md`)。暴露 `getImage(key)` 给 entity / HUD / renderer 用。**缺图回退**:返回 `null`,Entity 或 renderer 在 render 时检测到则改用纯色/代码绘制兜底 — 这样部分图缺失也能跑通游戏 |
 
 ---
 

@@ -2,7 +2,7 @@
 // See docs/game-design.md §11 for design rationale.
 
 export const CONFIG = {
-  canvas: { width: 800, height: 600 },
+  canvas: { width: 800, height: 600, renderScale: 2 },
 
   plasma: {
     startX: 200,

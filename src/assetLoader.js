@@ -1,22 +1,14 @@
 const IMAGE_SPECS = {
-  atomD: './assets/atom_d.png',
-  atomT: './assets/atom_t.png',
-  atomLi6: './assets/atom_li6.png',
-  hazardTungsten: './assets/hazard_tungsten.png',
-  boostNbi: './assets/boost_nbi.png',
-  hudHe4: './assets/hud_he4.png',
-  backgroundTokamak: './assets/background_tokamak.png',
+  atomD: './assets/2x/atom_d.png',
+  atomT: './assets/2x/atom_t.png',
+  atomLi6: './assets/2x/atom_li6.png',
+  hazardTungsten: './assets/2x/hazard_tungsten.png',
+  boostNbi: './assets/2x/boost_nbi.png',
+  hudHe4: './assets/2x/hud_he4.png',
+  backgroundTokamak: './assets/2x/background_tokamak.png',
 };
 
-const assetLoaders = import.meta.glob([
-  './assets/atom_d.png',
-  './assets/atom_t.png',
-  './assets/atom_li6.png',
-  './assets/hazard_tungsten.png',
-  './assets/boost_nbi.png',
-  './assets/hud_he4.png',
-  './assets/background_tokamak.png',
-], {
+const assetLoaders = import.meta.glob('./assets/2x/*.png', {
   query: '?url',
   import: 'default',
 });

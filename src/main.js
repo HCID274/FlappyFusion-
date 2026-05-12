@@ -31,9 +31,15 @@ import { createScreens } from './presentation/screens.js';
 const canvas = document.getElementById('game');
 initLocale();
 await preloadAssets();
-canvas.width = CONFIG.canvas.width;
-canvas.height = CONFIG.canvas.height;
+const renderScale = CONFIG.canvas.renderScale || 1;
+canvas.width = CONFIG.canvas.width * renderScale;
+canvas.height = CONFIG.canvas.height * renderScale;
+canvas.style.width = `${CONFIG.canvas.width}px`;
+canvas.style.height = `${CONFIG.canvas.height}px`;
 const ctx = canvas.getContext('2d');
+ctx.setTransform(renderScale, 0, 0, renderScale, 0, 0);
+ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = 'high';
 
 const eventBus = createEventBus();
 const world = createWorld();

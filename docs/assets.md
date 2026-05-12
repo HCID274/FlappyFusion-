@@ -40,16 +40,17 @@
 
 ```
 src/assets/
-  ├── background_tokamak.png  (必需,新)  ← 托卡马克环视角背景板
-  ├── atom_d.png              (必需)
-  ├── atom_t.png              (必需)
-  ├── atom_li6.png            (必需)
-  ├── hazard_tungsten.png     (必需)
-  ├── boost_nbi.png           (必需)
-  └── hud_he4.png             (可选,做了更带感)
+  └── 2x/                    (高清源图;代码只加载此目录)
+      ├── background_tokamak.png
+      ├── atom_d.png
+      ├── atom_t.png
+      ├── atom_li6.png
+      ├── hazard_tungsten.png
+      ├── boost_nbi.png
+      └── hud_he4.png
 ```
 
-文件名严格匹配上面的拼写,代码里硬编码了。
+文件名严格匹配上面的拼写,代码里硬编码了。`src/assets/2x/` 是唯一素材源目录:显示尺寸、碰撞盒、玩法坐标全部仍按 1x 逻辑尺寸计算,只提升渲染清晰度。若某张图缺失,代码会返回 `null` 并使用纯代码兜底绘制,不会再打包 1x fallback PNG。
 
 ---
 

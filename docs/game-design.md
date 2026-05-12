@@ -518,7 +518,8 @@ when x < -150 → cleanup
 
 ```js
 export const CONFIG = {
-  canvas: { width: 800, height: 600 },
+  // width/height 是玩法逻辑坐标;renderScale 只提升物理渲染精度,不改变碰撞/速度/生成。
+  canvas: { width: 800, height: 600, renderScale: 2 },
 
   plasma: {
     startX: 200,

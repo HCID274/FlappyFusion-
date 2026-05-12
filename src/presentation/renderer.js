@@ -431,6 +431,7 @@ function getTextSprite(key, commands) {
   const cached = textSpriteCache.get(key);
   if (cached) return cached;
 
+  const renderScale = CONFIG.canvas.renderScale || 1;
   const measure = getMeasureContext();
   let left = Infinity;
   let top = Infinity;
@@ -449,14 +450,17 @@ function getTextSprite(key, commands) {
   }
 
   if (!Number.isFinite(left)) {
-    return { canvas: createScratchCanvas(1, 1), x: 0, y: 0 };
+    return { canvas: createScratchCanvas(1, 1), x: 0, y: 0, width: 1, height: 1 };
   }
 
   const width = Math.max(1, Math.ceil(right - left));
   const height = Math.max(1, Math.ceil(bottom - top));
-  const canvas = createScratchCanvas(width, height);
+  const canvas = createScratchCanvas(
+    Math.max(1, Math.ceil(width * renderScale)),
+    Math.max(1, Math.ceil(height * renderScale)),
+  );
   const c = canvas.getContext('2d');
-  c.translate(-left, -top);
+  c.setTransform(renderScale, 0, 0, renderScale, -left * renderScale, -top * renderScale);
 
   for (const cmd of commands) {
     c.save();
@@ -479,13 +483,13 @@ function getTextSprite(key, commands) {
     c.restore();
   }
 
-  const sprite = { canvas, x: left, y: top };
+  const sprite = { canvas, x: left, y: top, width, height };
   textSpriteCache.set(key, sprite);
   return sprite;
 }
 
 function drawTextSprite(ctx, sprite) {
-  ctx.drawImage(sprite.canvas, sprite.x, sprite.y);
+  ctx.drawImage(sprite.canvas, sprite.x, sprite.y, sprite.width, sprite.height);
 }
 
 function scheduleTextSpritePrewarm() {
