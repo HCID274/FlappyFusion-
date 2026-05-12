@@ -1,8 +1,9 @@
 // Renders the canvas. Reads world state, never mutates.
-// Z-order: bg → walls → magnetic field → obstacles → particle stream → collectibles → plasma → particles → wall warning.
+// Z-order: background → phase glow → parallax field → playfield → foreground particles → screen overlays.
 
 import { CONFIG } from '../config.js';
 import { THEME } from '../theme.js';
+import { getImage } from '../assetLoader.js';
 import {
   getComboLabel,
   getIgnitionIntroText,
@@ -23,18 +24,24 @@ export function createRenderer(ctx, world) {
     render() {
       const W = CONFIG.canvas.width;
       const H = CONFIG.canvas.height;
+      const fx = world.screenFx;
 
       ctx.fillStyle = THEME.colors.bg;
       ctx.fillRect(0, 0, W, H);
 
-      drawMagneticGrid(ctx, world, W, H);
+      ctx.save();
+      if (fx) ctx.translate(fx.shakeX || 0, fx.shakeY || 0);
+
+      drawBackgroundPanel(ctx, world, W, H);
+      drawPhaseGlow(ctx, world, W, H);
+      drawParallaxMagneticLines(ctx, world, W, H);
       drawWalls(ctx, W, H);
 
       for (const ob of world.obstacles) ob.render(ctx);
-      for (const b of world.boosts) b.render(ctx);
-      for (const h of world.hazards) h.render(ctx);
       for (const e of world.particleStream) if (!e.collected) drawStreamParticle(ctx, e, world);
       for (const c of world.collectibles) if (!c.collected) c.render(ctx);
+      for (const b of world.boosts) b.render(ctx);
+      for (const h of world.hazards) h.render(ctx);
 
       if (world.status === 'playing' && world.plasma.alive) {
         drawWallWarning(ctx, world, W, H);
@@ -44,10 +51,102 @@ export function createRenderer(ctx, world) {
         drawDeathFlash(ctx, world);
       }
 
+      drawScreenBurstParticles(ctx, world);
       for (const p of world.particles) drawParticle(ctx, p);
+      ctx.restore();
+
       drawRedFlash(ctx, world, W, H);
+      drawScreenFxOverlay(ctx, world, W, H);
     },
   };
+}
+
+function drawBackgroundPanel(ctx, world, W, H) {
+  const bg = getImage('backgroundTokamak');
+  if (!bg) {
+    ctx.fillStyle = THEME.colors.bg;
+    ctx.fillRect(-12, -12, W + 24, H + 24);
+    drawFallbackMagneticLines(ctx, W, H);
+    return;
+  }
+
+  const scale = Math.max((W + 28) / bg.width, (H + 28) / bg.height);
+  const dw = bg.width * scale;
+  const dh = bg.height * scale;
+  const x = (W - dw) / 2 - 6;
+  const y = (H - dh) / 2 - 4;
+  ctx.drawImage(bg, x, y, dw, dh);
+
+  const scan = ctx.createLinearGradient(0, 0, W, H);
+  scan.addColorStop(0, 'rgba(3, 8, 24, 0.12)');
+  scan.addColorStop(0.5, 'rgba(3, 8, 24, 0.34)');
+  scan.addColorStop(1, 'rgba(3, 8, 24, 0.18)');
+  ctx.fillStyle = scan;
+  ctx.fillRect(-12, -12, W + 24, H + 24);
+
+  const vignette = ctx.createRadialGradient(W * 0.5, H * 0.46, 60, W * 0.5, H * 0.48, W * 0.72);
+  vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
+  vignette.addColorStop(0.7, 'rgba(0, 0, 0, 0.08)');
+  vignette.addColorStop(1, 'rgba(0, 0, 0, 0.52)');
+  ctx.fillStyle = vignette;
+  ctx.fillRect(-12, -12, W + 24, H + 24);
+}
+
+function drawFallbackMagneticLines(ctx, W, H) {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(68, 221, 255, 0.12)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 6; i++) {
+    const y = 90 + i * 78;
+    ctx.beginPath();
+    ctx.ellipse(W * 0.5, y, W * 0.58, 34 + i * 2, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawPhaseGlow(ctx, world, W, H) {
+  const fx = world.screenFx;
+  const glow = fx?.phaseGlow;
+  const phase = world.phase || 'IGNITION_PREP';
+  const fallbackKey = CONFIG.phases.rules[phase]?.glow || 'deep';
+  const from = THEME.glow[glow?.from] || THEME.glow[fallbackKey] || THEME.glow.deep;
+  const to = THEME.glow[glow?.to] || THEME.glow[fallbackKey] || THEME.glow.deep;
+  const t = clamp(glow?.t ?? 1, 0, 1);
+  const color = mixHex(from.color, to.color, easeOutCubic(t));
+  const baseAlpha = lerp(from.alpha, to.alpha, easeOutCubic(t));
+  const breathe = 0.78 + Math.sin(world.elapsed * Math.PI * 2 * 0.6) * 0.22;
+  const alpha = baseAlpha * breathe;
+
+  const core = ctx.createRadialGradient(W * 0.56, H * 0.48, 30, W * 0.52, H * 0.5, W * 0.66);
+  core.addColorStop(0, rgba(color, alpha));
+  core.addColorStop(0.58, rgba(color, alpha * 0.42));
+  core.addColorStop(1, rgba(color, 0));
+  ctx.fillStyle = core;
+  ctx.fillRect(-12, -12, W + 24, H + 24);
+
+  if (phase === 'IGNITION_BURST') {
+    drawGoldVignette(ctx, W, H, 0.16 + Math.sin(world.elapsed * 3) * 0.03);
+  }
+}
+
+function drawParallaxMagneticLines(ctx, world, W, H) {
+  const offset = (world.elapsed * 15) % 220;
+  ctx.save();
+  ctx.lineCap = 'round';
+  for (let i = 0; i < 5; i++) {
+    const y = 105 + i * 86;
+    const alpha = 0.14 + i * 0.025;
+    ctx.strokeStyle = `rgba(68, 221, 255, ${alpha})`;
+    ctx.lineWidth = i === 2 ? 2 : 1;
+    for (let x = -260 - offset; x < W + 260; x += 220) {
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.bezierCurveTo(x + 52, y - 34, x + 132, y + 34, x + 220, y);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
 }
 
 function drawStreamParticle(ctx, p, world) {
@@ -69,22 +168,6 @@ function drawStreamParticle(ctx, p, world) {
   ctx.arc(x, y, p.radius + 2, 0, Math.PI * 2);
   ctx.stroke();
   ctx.restore();
-}
-
-function drawMagneticGrid(ctx, world, W, H) {
-  // Subtle horizontal field lines that drift left, sells the "tokamak cross-section" feel.
-  const offset = (world.elapsed * 30) % 40;
-  ctx.strokeStyle = THEME.colors.bgGrid;
-  ctx.lineWidth = 1;
-  for (let y = 60; y < H; y += 40) {
-    ctx.beginPath();
-    for (let x = -offset; x < W; x += 6) {
-      const wave = Math.sin((x + world.elapsed * 60) * 0.02 + y * 0.05) * 4;
-      if (x === -offset) ctx.moveTo(x, y + wave);
-      else ctx.lineTo(x, y + wave);
-    }
-    ctx.stroke();
-  }
 }
 
 function drawWalls(ctx, W, H) {
@@ -154,6 +237,137 @@ function drawRedFlash(ctx, world, W, H) {
   ctx.globalAlpha = Math.min(0.28, world.redFlashT / CONFIG.hazards.tungsten.redFlashDuration * 0.28);
   ctx.fillRect(0, 0, W, H);
   ctx.globalAlpha = 1;
+}
+
+function drawScreenBurstParticles(ctx, world) {
+  const particles = world.screenFx?.burstParticles;
+  if (!particles?.length) return;
+
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for (const p of particles) {
+    const alpha = Math.max(0, p.life / p.maxLife);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.radius * (0.8 + (1 - alpha) * 0.8), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawScreenFxOverlay(ctx, world, W, H) {
+  const fx = world.screenFx;
+  if (!fx) return;
+
+  if (fx.cornerGlowT > 0) {
+    const alpha = easeOutCubic(fx.cornerGlowT / CONFIG.combo.screenFx.glowDuration) * 0.28;
+    drawCornerGlow(ctx, W, H, alpha);
+  }
+
+  if (fx.radialPulseT > 0) {
+    const progress = clamp(1 - fx.radialPulseT / Math.max(0.001, fx.radialPulseDuration), 0, 1);
+    const alpha = (1 - easeOutCubic(progress)) * 0.22;
+    const radius = lerp(80, W * 0.7, easeOutCubic(progress));
+    const grad = ctx.createRadialGradient(W * 0.5, H * 0.48, 0, W * 0.5, H * 0.48, radius);
+    grad.addColorStop(0, `rgba(255, 204, 68, ${alpha})`);
+    grad.addColorStop(0.55, `rgba(255, 136, 68, ${alpha * 0.45})`);
+    grad.addColorStop(1, 'rgba(255, 204, 68, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  if (fx.ignitionEntryT > 0) {
+    drawIgnitionEntryOverlay(ctx, fx, W, H);
+  }
+
+  if (fx.selfSustainBurstT > 0 || fx.selfSustainVignetteT > 0) {
+    drawSelfSustainOverlay(ctx, fx, W, H);
+  }
+
+  if (fx.whiteFlashT > 0) {
+    const alpha = (fx.whiteFlashT / CONFIG.combo.screenFx.whiteFlashDuration) * CONFIG.combo.screenFx.whiteFlashAlpha;
+    ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
+function drawCornerGlow(ctx, W, H, alpha) {
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  const corners = [
+    [0, 0],
+    [W, 0],
+    [0, H],
+    [W, H],
+  ];
+  for (const [x, y] of corners) {
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, 210);
+    grad.addColorStop(0, `rgba(255, 204, 68, ${alpha})`);
+    grad.addColorStop(1, 'rgba(255, 204, 68, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  }
+  ctx.restore();
+}
+
+function drawIgnitionEntryOverlay(ctx, fx, W, H) {
+  const age = CONFIG.ignitionPhase.enterFreezeDuration - fx.ignitionEntryT;
+  const flashDur = CONFIG.ignitionPhase.enterFlashDuration;
+  let whiteAlpha = 0;
+  let goldAlpha = 0;
+
+  if (age <= flashDur) {
+    whiteAlpha = (age / flashDur) * 0.35;
+  } else {
+    const out = clamp((age - flashDur) / (CONFIG.ignitionPhase.enterFreezeDuration - flashDur), 0, 1);
+    whiteAlpha = (1 - out) * 0.35;
+    goldAlpha = easeOutCubic(out) * 0.25;
+  }
+
+  if (goldAlpha > 0) {
+    const grad = ctx.createRadialGradient(W * 0.5, H * 0.5, 30, W * 0.5, H * 0.5, W * 0.72);
+    grad.addColorStop(0, `rgba(255, 204, 68, ${goldAlpha})`);
+    grad.addColorStop(0.7, `rgba(255, 136, 68, ${goldAlpha * 0.38})`);
+    grad.addColorStop(1, 'rgba(255, 204, 68, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  if (whiteAlpha > 0) {
+    ctx.fillStyle = `rgba(255, 255, 255, ${whiteAlpha})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
+function drawSelfSustainOverlay(ctx, fx, W, H) {
+  if (fx.selfSustainBurstT > 0) {
+    const progress = 1 - fx.selfSustainBurstT / CONFIG.ignitionPhase.selfSustainSlowDuration;
+    const alpha = progress < 0.45
+      ? lerp(0, 0.6, easeOutCubic(progress / 0.45))
+      : lerp(0.6, 0.2, easeOutCubic((progress - 0.45) / 0.55));
+    const radius = lerp(80, W * 0.76, easeOutCubic(progress));
+    const grad = ctx.createRadialGradient(W * 0.5, H * 0.5, 0, W * 0.5, H * 0.5, radius);
+    grad.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.78})`);
+    grad.addColorStop(0.28, `rgba(255, 204, 68, ${alpha})`);
+    grad.addColorStop(1, 'rgba(255, 204, 68, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  if (fx.selfSustainVignetteT > 0) {
+    const alpha = Math.min(0.36, fx.selfSustainVignetteT / CONFIG.ignitionPhase.selfSustainVignetteDuration * 0.36);
+    drawGoldVignette(ctx, W, H, alpha);
+  }
+}
+
+function drawGoldVignette(ctx, W, H, alpha) {
+  const grad = ctx.createRadialGradient(W * 0.5, H * 0.5, W * 0.22, W * 0.5, H * 0.5, W * 0.73);
+  grad.addColorStop(0, 'rgba(255, 204, 68, 0)');
+  grad.addColorStop(0.66, `rgba(255, 204, 68, ${alpha * 0.15})`);
+  grad.addColorStop(1, `rgba(255, 204, 68, ${alpha})`);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
 }
 
 function drawParticle(ctx, p) {
@@ -332,7 +546,9 @@ function prewarmIgnitionSprites() {
 
 function prewarmSelfSustainSprites() {
   const text = getSelfSustainText();
-  getTextSprite(getSelfSustainTitleKey(text.title), buildSelfSustainTitleCommands(text.title));
+  for (const char of Array.from(text.title)) {
+    getTextSprite(getSelfSustainTitleCharKey(char), buildSelfSustainTitleCommands(char));
+  }
   getTextSprite(getSelfSustainSubtitleKey(text.subtitle), buildSelfSustainSubtitleCommands(text.subtitle));
   getTextSprite(getSelfSustainFootnoteKey(text.footnote), buildSelfSustainFootnoteCommands(text.footnote));
 }
@@ -556,7 +772,7 @@ function drawSelfSustainText(ctx, p) {
   ctx.globalAlpha = alpha;
   ctx.translate(p.pos.x, y);
   ctx.scale(titleScale, titleScale);
-  drawTextSprite(ctx, getTextSprite(getSelfSustainTitleKey(p.title), buildSelfSustainTitleCommands(p.title)));
+  drawDelayedSelfSustainTitle(ctx, p.title, age);
   ctx.restore();
 
   ctx.save();
@@ -568,8 +784,34 @@ function drawSelfSustainText(ctx, p) {
   ctx.restore();
 }
 
-function getSelfSustainTitleKey(title) {
-  return `selfSustainTitle|${title}`;
+function drawDelayedSelfSustainTitle(ctx, title, age) {
+  const chars = Array.from(title);
+  const font = `900 96px ${DISPLAY_FONT}`;
+  const measure = getMeasureContext();
+  measure.font = font;
+  const widths = chars.map((char) => measure.measureText(char).width);
+  const totalWidth = widths.reduce((sum, width) => sum + width, 0);
+  let x = -totalWidth / 2;
+
+  for (let i = 0; i < chars.length; i++) {
+    const char = chars[i];
+    const delay = i * 0.03;
+    const localAlpha = clamp((age - delay) / 0.18, 0, 1);
+    if (localAlpha <= 0) {
+      x += widths[i];
+      continue;
+    }
+    ctx.save();
+    ctx.globalAlpha *= localAlpha;
+    ctx.translate(x + widths[i] / 2, 0);
+    drawTextSprite(ctx, getTextSprite(getSelfSustainTitleCharKey(char), buildSelfSustainTitleCommands(char)));
+    ctx.restore();
+    x += widths[i];
+  }
+}
+
+function getSelfSustainTitleCharKey(char) {
+  return `selfSustainTitleChar|${char}`;
 }
 
 function buildSelfSustainTitleCommands(title) {
@@ -627,6 +869,33 @@ function getComboScale(age, overshoot) {
     return 1 + Math.sin((age - 0.16) * Math.PI * 4) * 0.04;
   }
   return lerp(1, 0.95, easeOutCubic((age - 0.85) / 0.5));
+}
+
+function hexToRgb(hex) {
+  const value = hex.replace('#', '');
+  const full = value.length === 3
+    ? value.split('').map((c) => c + c).join('')
+    : value;
+  const n = Number.parseInt(full, 16);
+  return {
+    r: (n >> 16) & 255,
+    g: (n >> 8) & 255,
+    b: n & 255,
+  };
+}
+
+function mixHex(a, b, t) {
+  const ca = hexToRgb(a);
+  const cb = hexToRgb(b);
+  return {
+    r: Math.round(lerp(ca.r, cb.r, t)),
+    g: Math.round(lerp(ca.g, cb.g, t)),
+    b: Math.round(lerp(ca.b, cb.b, t)),
+  };
+}
+
+function rgba(color, alpha) {
+  return `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
 }
 
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }

@@ -5,6 +5,7 @@ const IMAGE_SPECS = {
   hazardTungsten: './assets/hazard_tungsten.png',
   boostNbi: './assets/boost_nbi.png',
   hudHe4: './assets/hud_he4.png',
+  backgroundTokamak: './assets/background_tokamak.png',
 };
 
 const assetLoaders = import.meta.glob([
@@ -14,6 +15,7 @@ const assetLoaders = import.meta.glob([
   './assets/hazard_tungsten.png',
   './assets/boost_nbi.png',
   './assets/hud_he4.png',
+  './assets/background_tokamak.png',
 ], {
   query: '?url',
   import: 'default',

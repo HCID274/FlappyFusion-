@@ -602,6 +602,18 @@ export const CONFIG = {
     scoreTable: [5, 10, 25, 50, 100],                  // index = comboCount - 1,>=5 取末位
     maxCount: 99,                                      // 仅用于 HUD 显示截断
     timerRingDiameter: 36,                             // §10.7 圆环像素
+    screenFx: {
+      glowDuration: 0.45,
+      pulseDuration: 0.42,
+      shakeDuration4: 0.10,
+      shakeDuration5: 0.20,
+      shakeAmplitude4: 3,
+      shakeAmplitude5: 5,
+      whiteFlashDuration: 0.05,
+      whiteFlashAlpha: 0.08,
+      whiteFlashLimitWindow: 5,
+      whiteFlashLimitCount: 4,
+    },
   },
 
   particleStream: {
@@ -653,6 +665,7 @@ export const CONFIG = {
     duration: 20,                                  // 秒
     enterFreezeDuration: 0.6,                      // 进入时的慢动作时长
     enterFlashDuration: 0.15,                      // 闪光峰值时间
+    enterSlowTimeScale: 0.7,                       // 点火进入慢动作倍率
     progressMilestones: [5, 10, 15],               // 触发额外脉冲反馈的秒数
     progressBar: {
       width: 480,
@@ -661,6 +674,9 @@ export const CONFIG = {
       slideInDuration: 0.3,
     },
     exitBurstParticleCount: 200,                   // 自维持成功时径向迸射粒子数
+    selfSustainSlowTimeScale: 0.4,                 // 自维持成功慢动作倍率
+    selfSustainSlowDuration: 0.5,
+    selfSustainVignetteDuration: 3.0,
   },
 };
 ```

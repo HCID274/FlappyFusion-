@@ -164,13 +164,14 @@ Boost = {
 | `difficultySystem.js` | `EV.TEMP_CHANGED` | `world.scrollSpeed`、SpawnSystem 间距 |
 | `fusionSystem.js` | `EV.COLLECTIBLE_HIT` (D/T/Li6;Li6 视作"自动 +1 T")、`EV.PHASE_CHANGED` | 维护 `collectedD/T` / `world.combo` / `world.fusionBurst`,发 `EV.COMBO_INCREMENT` / `EV.FUSION_TRIGGERED` |
 | `particleSystem.js` | `EV.FUSION_TRIGGERED`、`EV.COMBO_INCREMENT`、`EV.PARTICLE_COLLECTED`、`EV.PHASE_CHANGED`、`EV.IGNITION_TICK`、`EV.SELF_SUSTAIN_ACHIEVED` 等 | 维护粒子与飘字生命周期 |
+| `screenFxSystem.js` | `EV.FUSION_TRIGGERED`、`EV.PHASE_CHANGED`、`EV.SELF_SUSTAIN_ACHIEVED`、`EV.GAME_RESET` | 维护 `world.screenFx` / `world.timeScale`,提供屏幕辉光、震屏、闪白、慢动作、自维持迸射粒子 |
 | `cleanupSystem.js` | 所有滚动实体 | 移除离屏对象 |
 
 ### 4.4 Presentation
 
 | 模块 | 职责 |
 |---|---|
-| `renderer.js` | 按 z-order 把所有 `Renderable` 画到 Canvas:背景 → 障碍 → 粒子云 → 收集物 → 等离子体 → 飘字/粒子 → 调试层 |
+| `renderer.js` | 按 z-order 把所有 `Renderable` 画到 Canvas:背景板 → 阶段辉光 → 视差磁力线 → 障碍/粒子云/收集物/Boost/Hazard → 等离子体 → 前景粒子/飘字 → 屏幕级 FX overlay |
 | `hud.js` | DOM 元素显示温度/得分/磁场环/燃料舱/Combo 圆环/点火持续条。订阅事件更新离散状态,每帧只刷新时间与倒计时 |
 | `screens.js` | `MenuScreen` / `DeathCardScreen` / `TutorialScreen`,DOM overlay |
 
@@ -182,7 +183,7 @@ Boost = {
 | `content.js` | 中文/日语文案 catalog 与查询函数:`t(key)` / `getMilestoneText(temp)` / `getDeathBody(...)` |
 | `i18n.js` | 语言选择(默认日语)、catalog 结构校验、缺 key 抛错、语言切换事件 |
 | `theme.js` | 颜色、字号、尺寸 |
-| `assetLoader.js` | 启动时预加载当前 gameplay / HUD 必需 PNG(规格见 `docs/assets.md`)。背景板等屏幕级素材由对应任务注册或延迟加载。暴露 `getImage(key)` 给 entity / HUD 用。**缺图回退**:返回 `null`,Entity 在 render 时检测到则改用纯色色块绘制 — 这样部分图缺失也能跑通游戏 |
+| `assetLoader.js` | 启动时预加载当前 gameplay / HUD / 背景板 PNG(规格见 `docs/assets.md`)。暴露 `getImage(key)` 给 entity / HUD / renderer 用。**缺图回退**:返回 `null`,Entity 或 renderer 在 render 时检测到则改用纯色/代码绘制兜底 — 这样部分图缺失也能跑通游戏 |
 
 ---
 

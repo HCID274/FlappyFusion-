@@ -87,6 +87,18 @@ export const CONFIG = {
     scoreTable: [5, 10, 25, 50, 100],
     maxCount: 99,
     timerRingDiameter: 36,
+    screenFx: {
+      glowDuration: 0.45,
+      pulseDuration: 0.42,
+      shakeDuration4: 0.10,
+      shakeDuration5: 0.20,
+      shakeAmplitude4: 3,
+      shakeAmplitude5: 5,
+      whiteFlashDuration: 0.05,
+      whiteFlashAlpha: 0.08,
+      whiteFlashLimitWindow: 5,
+      whiteFlashLimitCount: 4,
+    },
   },
 
   collectible: {
@@ -135,6 +147,7 @@ export const CONFIG = {
     duration: 20,
     enterFreezeDuration: 0.6,
     enterFlashDuration: 0.15,
+    enterSlowTimeScale: 0.7,
     progressMilestones: [5, 10, 15],
     progressBar: {
       width: 480,
@@ -143,6 +156,9 @@ export const CONFIG = {
       slideInDuration: 0.3,
     },
     exitBurstParticleCount: 200,
+    selfSustainSlowTimeScale: 0.4,
+    selfSustainSlowDuration: 0.5,
+    selfSustainVignetteDuration: 3.0,
   },
 
   particle: {

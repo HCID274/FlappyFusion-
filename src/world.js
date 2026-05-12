@@ -30,6 +30,30 @@ export function resetWorld(world) {
   world.fusionBurst = { active: false, remaining: 0 };
   world.ignitionPhase = { active: false, elapsed: 0, entered: false, elapsedAtDeath: 0 };
   world.selfSustained = false;
+  world.timeScale = 1;
+  world.screenFx = {
+    phaseGlow: {
+      from: 'deep',
+      to: 'deep',
+      t: 1,
+      duration: 0.5,
+    },
+    cornerGlowT: 0,
+    radialPulseT: 0,
+    radialPulseDuration: CONFIG.combo.screenFx.pulseDuration,
+    whiteFlashT: 0,
+    whiteFlashDuration: CONFIG.combo.screenFx.whiteFlashDuration,
+    shakeT: 0,
+    shakeDuration: 0,
+    shakeAmplitude: 0,
+    shakeX: 0,
+    shakeY: 0,
+    ignitionEntryT: 0,
+    ignitionEntryDuration: CONFIG.ignitionPhase.enterFreezeDuration,
+    selfSustainBurstT: 0,
+    selfSustainVignetteT: 0,
+    burstParticles: [],
+  };
   world.deathCause = null;
   world.spawnDistance = 0;
   world.lastGapY = CONFIG.canvas.height / 2;

@@ -50,6 +50,14 @@ export const THEME = {
     RECORD: '#ffffff',
   },
 
+  glow: {
+    deep: { color: '#5566aa', alpha: 0.05 },
+    magenta: { color: '#ff44aa', alpha: 0.12 },
+    redOrange: { color: '#ff5544', alpha: 0.18 },
+    gold: { color: '#ffcc44', alpha: 0.25 },
+    whiteHot: { color: '#ffffff', alpha: 0.2 },
+  },
+
   size: {
     plasmaGlow: 1.7,
     instabilityR: 36,

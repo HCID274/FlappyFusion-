@@ -22,6 +22,7 @@ import { createIgnitionPhaseSystem } from './systems/ignitionPhaseSystem.js';
 import { createDifficultySystem } from './systems/difficultySystem.js';
 import { createParticleSystem } from './systems/particleSystem.js';
 import { createCleanupSystem } from './systems/cleanupSystem.js';
+import { createScreenFxSystem } from './systems/screenFxSystem.js';
 
 import { createRenderer } from './presentation/renderer.js';
 import { createHUD } from './presentation/hud.js';
@@ -36,6 +37,7 @@ const ctx = canvas.getContext('2d');
 
 const eventBus = createEventBus();
 const world = createWorld();
+const screenFxSystem = createScreenFxSystem(eventBus, world);
 
 // Order matters: input → spawn → particle stream → physics → collision → fusion → score/temp → phase/ignition → difficulty → particles → cleanup
 const systems = [
@@ -61,9 +63,11 @@ createScreens(eventBus, world);
 
 const loop = createGameLoop({
   update: (dt) => {
-    if (world.status === 'playing') world.elapsed += dt;
-    for (const s of systems) s.update(dt);
-    stateMachine.update(dt);
+    screenFxSystem.update(dt);
+    const gameDt = dt * (world.timeScale || 1);
+    if (world.status === 'playing') world.elapsed += gameDt;
+    for (const s of systems) s.update(gameDt);
+    stateMachine.update(gameDt);
   },
   render: () => {
     renderer.render();
