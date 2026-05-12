@@ -46,6 +46,7 @@ export function createPhysicsSystem(eventBus, world) {
       for (const ob of world.obstacles) ob.move(dx);
       for (const h of world.hazards) h.move(dx);
       for (const c of world.collectibles) c.move(dx);
+      for (const e of world.particleStream) e.move(dx);
       for (const b of world.boosts) b.move(dx);
     },
   };

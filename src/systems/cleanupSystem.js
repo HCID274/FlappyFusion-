@@ -19,6 +19,12 @@ export function createCleanupSystem(_eventBus, world) {
           world.collectibles.splice(i, 1);
         }
       }
+      for (let i = world.particleStream.length - 1; i >= 0; i--) {
+        const p = world.particleStream[i];
+        if (p.collected || p.pos.x + p.radius < CULL_X) {
+          world.particleStream.splice(i, 1);
+        }
+      }
       for (let i = world.hazards.length - 1; i >= 0; i--) {
         const h = world.hazards[i];
         if (h.pos.x + h.radius < CULL_X) world.hazards.splice(i, 1);

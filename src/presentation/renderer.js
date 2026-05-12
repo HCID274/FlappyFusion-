@@ -1,5 +1,5 @@
 // Renders the canvas. Reads world state, never mutates.
-// Z-order: bg → walls → magnetic field → obstacles → collectibles → plasma → particles → wall warning.
+// Z-order: bg → walls → magnetic field → obstacles → particle stream → collectibles → plasma → particles → wall warning.
 
 import { CONFIG } from '../config.js';
 import { THEME } from '../theme.js';
@@ -19,6 +19,7 @@ export function createRenderer(ctx, world) {
       for (const ob of world.obstacles) ob.render(ctx);
       for (const b of world.boosts) b.render(ctx);
       for (const h of world.hazards) h.render(ctx);
+      for (const e of world.particleStream) if (!e.collected) drawStreamParticle(ctx, e, world);
       for (const c of world.collectibles) if (!c.collected) c.render(ctx);
 
       if (world.status === 'playing' && world.plasma.alive) {
@@ -33,6 +34,27 @@ export function createRenderer(ctx, world) {
       drawRedFlash(ctx, world, W, H);
     },
   };
+}
+
+function drawStreamParticle(ctx, p, world) {
+  const wobbleY = Math.sin(world.elapsed * 8 + p.wobble) * 2;
+  const x = p.pos.x;
+  const y = p.pos.y + wobbleY;
+  ctx.save();
+  ctx.shadowColor = THEME.colors.electron;
+  ctx.shadowBlur = 8;
+  ctx.fillStyle = THEME.colors.electron;
+  ctx.beginPath();
+  ctx.arc(x, y, p.radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 0.5;
+  ctx.strokeStyle = 'rgba(170, 255, 255, 0.58)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(x, y, p.radius + 2, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawMagneticGrid(ctx, world, W, H) {
@@ -148,7 +170,66 @@ function drawParticle(ctx, p) {
     for (let i = 0; i < lines.length; i++) {
       ctx.fillText(lines[i], p.pos.x, startY + i * lineHeight);
     }
+  } else if (p.kind === 'comboText') {
+    drawComboText(ctx, p);
   }
 
   ctx.globalAlpha = 1;
+}
+
+function drawComboText(ctx, p) {
+  const age = p.maxLife - p.life;
+  const spec = THEME.combo[Math.min(Math.max(p.combo, 1), 5) - 1];
+  const progressOut = clamp((age - 0.85) / 0.5, 0, 1);
+  const y = p.pos.y - easeOutCubic(progressOut) * 80;
+  const scale = getComboScale(age, spec.overshoot);
+  const alpha = age < 0.85 ? 1 : 1 - easeInQuad(progressOut);
+  const fontFamily = '"Inter", "Space Grotesk", "Noto Sans SC", "Noto Sans JP", "PingFang SC", "Hiragino Sans", system-ui, sans-serif';
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(p.pos.x, y);
+  ctx.scale(scale, scale);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `${spec.weight} ${spec.fontSize}px ${fontFamily}`;
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = spec.stroke;
+  ctx.lineWidth = spec.strokeWidth;
+  ctx.shadowColor = spec.color;
+  ctx.shadowBlur = spec.shadowBlur;
+  ctx.strokeText(p.text, 0, 0);
+  ctx.fillStyle = spec.color;
+  ctx.fillText(p.text, 0, 0);
+
+  if (p.combo >= 5) {
+    ctx.shadowColor = THEME.colors.fusionGold;
+    ctx.shadowBlur = 18;
+    ctx.fillText(p.text, 0, 0);
+  }
+  ctx.restore();
+}
+
+function getComboScale(age, overshoot) {
+  if (age < 0.08) {
+    return lerp(0.4, overshoot, easeOutBack(age / 0.08));
+  }
+  if (age < 0.16) {
+    return lerp(overshoot, 1, easeOutQuad((age - 0.08) / 0.08));
+  }
+  if (age < 0.85) {
+    return 1 + Math.sin((age - 0.16) * Math.PI * 4) * 0.04;
+  }
+  return lerp(1, 0.95, easeOutCubic((age - 0.85) / 0.5));
+}
+
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function lerp(a, b, t) { return a + (b - a) * t; }
+function easeOutQuad(t) { return 1 - (1 - t) * (1 - t); }
+function easeInQuad(t) { return t * t; }
+function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+function easeOutBack(t) {
+  const c1 = 1.70158;
+  const c3 = c1 + 1;
+  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
 }

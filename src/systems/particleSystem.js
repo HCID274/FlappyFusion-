@@ -3,7 +3,7 @@
 import { EV } from '../engine/events.js';
 import { CONFIG } from '../config.js';
 import { THEME } from '../theme.js';
-import { getParticleLabel } from '../content.js';
+import { getComboLabel, getParticleLabel } from '../content.js';
 
 let nextId = 0;
 
@@ -18,6 +18,34 @@ function makeFloatingText(x, y, text, life, color, font) {
     text,
     color,
     font: font || THEME.font.floatLg,
+  };
+}
+
+function makeParticleScoreText(x, y) {
+  return {
+    id: `pt${nextId++}`,
+    kind: 'text',
+    pos: { x, y: y + (Math.random() - 0.5) * 16 },
+    vel: { x: 0, y: -75 },
+    life: 0.4,
+    maxLife: 0.4,
+    text: '+1',
+    color: THEME.colors.electron,
+    font: 'bold 20px ui-monospace, "SF Mono", Menlo, monospace',
+  };
+}
+
+function makeComboText(x, y, combo, score) {
+  return {
+    id: `pt${nextId++}`,
+    kind: 'comboText',
+    pos: { x, y },
+    vel: { x: 0, y: 0 },
+    life: 1.35,
+    maxLife: 1.35,
+    text: getComboLabel(combo, score),
+    combo,
+    score,
   };
 }
 
@@ -36,10 +64,17 @@ function makeFusionParticle(x, y, label, color, vx, vy) {
 }
 
 export function createParticleSystem(eventBus, world) {
+  eventBus.on(EV.COMBO_INCREMENT, ({ x, y, combo, score }) => {
+    world.particles.push(makeComboText(x, y - 30, combo, score));
+  });
+
   eventBus.on(EV.FUSION_TRIGGERED, ({ x, y }) => {
     world.particles.push(makeFusionParticle(x, y, getParticleLabel('he4'), THEME.colors.he4, -90, 60));
     world.particles.push(makeFusionParticle(x, y, getParticleLabel('neutron'), THEME.colors.neutron, 120, -80));
-    world.particles.push(makeFloatingText(x, y - 30, getParticleLabel('fusionScore'), 0.8, THEME.colors.fusionGold, THEME.font.floatSm));
+  });
+
+  eventBus.on(EV.PARTICLE_COLLECTED, ({ x, y }) => {
+    world.particles.push(makeParticleScoreText(x, y));
   });
 
   eventBus.on(EV.TEMP_MILESTONE, ({ text }) => {

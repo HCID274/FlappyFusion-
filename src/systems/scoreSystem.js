@@ -11,7 +11,8 @@ export function createScoreSystem(eventBus, world) {
   eventBus.on(EV.COLLECTIBLE_HIT, ({ collectible }) => {
     bump(collectible.type === 'Li6' ? CONFIG.score.perLithium : CONFIG.score.perCollectible);
   });
-  eventBus.on(EV.FUSION_TRIGGERED, () => bump(CONFIG.score.perFusionBase));
+  eventBus.on(EV.PARTICLE_COLLECTED, () => bump(CONFIG.score.perParticle));
+  eventBus.on(EV.FUSION_TRIGGERED, ({ score }) => bump(score ?? CONFIG.score.perFusionBase));
 
   return { update(_dt) {} };
 }

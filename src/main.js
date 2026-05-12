@@ -11,6 +11,7 @@ import { createStateMachine } from './engine/stateMachine.js';
 
 import { createInputSystem } from './systems/inputSystem.js';
 import { createSpawnSystem } from './systems/spawnSystem.js';
+import { createParticleStreamSystem } from './systems/particleStreamSystem.js';
 import { createPhysicsSystem } from './systems/physicsSystem.js';
 import { createCollisionSystem } from './systems/collisionSystem.js';
 import { createFusionSystem } from './systems/fusionSystem.js';
@@ -34,10 +35,11 @@ const ctx = canvas.getContext('2d');
 const eventBus = createEventBus();
 const world = createWorld();
 
-// Order matters: input → spawn → physics → collision → fusion → score/temp → difficulty → particles → cleanup
+// Order matters: input → spawn → particle stream → physics → collision → fusion → score/temp → difficulty → particles → cleanup
 const systems = [
   createInputSystem(eventBus, world),
   createSpawnSystem(eventBus, world),
+  createParticleStreamSystem(eventBus, world),
   createPhysicsSystem(eventBus, world),
   createCollisionSystem(eventBus, world),
   createFusionSystem(eventBus, world),

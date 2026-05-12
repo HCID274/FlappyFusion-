@@ -90,7 +90,10 @@ function spawnOne(world, eventBus) {
     world.lastWasInstability = false;
 
     // collectible in gap
-    const fuelSpawnChance = phaseRules.dtSpawnChance ?? CONFIG.collectible.spawnChance;
+    const baseFuelSpawnChance = phaseRules.dtSpawnChance ?? CONFIG.collectible.spawnChance;
+    const fuelSpawnChance = world.fusionBurst.active
+      ? CONFIG.fusion.burstDtSpawnChance
+      : baseFuelSpawnChance;
     if (Math.random() < fuelSpawnChance) {
       const cy = gapY + (Math.random() - 0.5) * CONFIG.collectible.yJitter;
       const cx = W + 60 + 28 + Math.random() * 20;

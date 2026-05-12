@@ -3,21 +3,49 @@
 import { hud, onLocaleChange } from '../content.js';
 import { EV } from '../engine/events.js';
 import { CONFIG } from '../config.js';
+import { THEME } from '../theme.js';
 import { getImage } from '../assetLoader.js';
 
 export function createHUD(eventBus, world) {
   const el = {
     temp: document.getElementById('hud-temp'),
     fuelBay: document.getElementById('hud-fuel-bay'),
+    comboRing: document.getElementById('hud-combo-ring'),
     score: document.getElementById('hud-score'),
     time: document.getElementById('hud-time'),
     pulseRing: document.getElementById('hud-pulse-ring'),
   };
   let suppressNextCollectibleRefresh = false;
+  const ringCircumference = 2 * Math.PI * 14;
 
   function refreshTemp() { el.temp.textContent = hud.temperature(world.temperature); }
   function refreshScore() { el.score.textContent = hud.score(world.score); }
   function refreshTime() { el.time.textContent = hud.time(world.elapsed); }
+  function refreshComboRing() {
+    if (!el.comboRing) return;
+    const progressEl = el.comboRing.querySelector('.ring-progress');
+    const countEl = el.comboRing.querySelector('.ring-count');
+    if (!progressEl || !countEl) return;
+
+    progressEl.style.strokeDasharray = `${ringCircumference}`;
+    const comboCount = world.combo?.count || 0;
+    if (comboCount < 2) {
+      el.comboRing.classList.remove('active', 'urgent');
+      progressEl.style.strokeDashoffset = `${ringCircumference}`;
+      countEl.textContent = '';
+      return;
+    }
+
+    const elapsed = world.elapsed - world.combo.lastTime;
+    const remaining = Math.max(0, CONFIG.combo.window - elapsed);
+    const progress = Math.max(0, Math.min(1, remaining / CONFIG.combo.window));
+    const spec = THEME.combo[Math.min(comboCount, THEME.combo.length) - 1];
+    el.comboRing.style.setProperty('--combo-color', spec.color);
+    progressEl.style.strokeDashoffset = `${ringCircumference * (1 - progress)}`;
+    countEl.textContent = String(Math.min(comboCount, CONFIG.combo.maxCount));
+    el.comboRing.classList.add('active');
+    el.comboRing.classList.toggle('urgent', remaining <= 0.4);
+  }
   function refreshFuelBay(snapshot = world) {
     if (!el.fuelBay) return;
     el.fuelBay.innerHTML = '';
@@ -128,11 +156,18 @@ export function createHUD(eventBus, world) {
       }
     }, 300);
   });
+  eventBus.on(EV.COMBO_INCREMENT, ({ combo }) => {
+    if (!el.comboRing || combo < 2) return;
+    el.comboRing.classList.remove('bump');
+    void el.comboRing.offsetWidth;
+    el.comboRing.classList.add('bump');
+    refreshComboRing();
+  });
   eventBus.on(EV.GAME_RESET, () => {
-    refreshTemp(); refreshFuelBay(); refreshScore(); refreshTime();
+    refreshTemp(); refreshFuelBay(); refreshScore(); refreshTime(); refreshComboRing();
   });
   onLocaleChange(() => {
-    refreshTemp(); refreshFuelBay(); refreshScore(); refreshTime();
+    refreshTemp(); refreshFuelBay(); refreshScore(); refreshTime(); refreshComboRing();
   });
   eventBus.on(EV.INPUT_PULSE, () => {
     if (!el.pulseRing) return;
@@ -142,9 +177,9 @@ export function createHUD(eventBus, world) {
   });
 
   // initial paint
-  refreshTemp(); refreshFuelBay(); refreshScore(); refreshTime();
+  refreshTemp(); refreshFuelBay(); refreshScore(); refreshTime(); refreshComboRing();
 
   return {
-    refresh() { refreshTime(); },
+    refresh() { refreshTime(); refreshComboRing(); },
   };
 }

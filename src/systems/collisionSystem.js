@@ -54,6 +54,14 @@ export function createCollisionSystem(eventBus, world) {
         }
       }
 
+      for (const e of world.particleStream) {
+        if (e.collected) continue;
+        if (circleHitsAABB(p.pos.x, p.pos.y, p.radius, e.hitBox)) {
+          e.collected = true;
+          eventBus.emit(EV.PARTICLE_COLLECTED, { particle: e, x: e.pos.x, y: e.pos.y });
+        }
+      }
+
       for (const h of world.hazards) {
         if (h.triggered) continue;
         if (circleHitsAABB(p.pos.x, p.pos.y, p.radius, h.hitBox)) {

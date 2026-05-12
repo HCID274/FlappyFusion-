@@ -15,8 +15,8 @@
 ### 1.1 代码侧已实现
 - 引擎层完整(`gameLoop` / `stateMachine` / `eventBus` / `events`)
 - 实体:`plasma`、`obstacles/divertor`、`obstacles/instability`、`collectibles/deuterium`、`collectibles/tritium`、`collectibles/atomBase`
-- 系统:`input` / `spawn` / `physics` / `collision` / `fusion` / `score` / `temperature` / `difficulty` / `particle` / `cleanup`
-- 表现:`renderer`(纯几何 + 网格背景) / `hud`(文本式 DOM) / `screens`
+- 系统:`input` / `spawn` / `particleStream` / `physics` / `collision` / `fusion` / `score` / `temperature` / `difficulty` / `particle` / `cleanup`
+- 表现:`renderer`(纯几何 + 网格背景 + 粒子云 + combo 飘字) / `hud`(视觉化燃料舱 + Combo 圆环) / `screens`
 - 基础设施:`config` / `theme` / `content` / `i18n` + 双语 catalog 已有
 - 单局玩法跑得通:撞墙 / 撞偏滤器 / 撞不稳定区死亡,D+T 触发聚变 +5 分,温度爬升 + 里程碑飘字
 
@@ -36,17 +36,13 @@
 - 没接素材,所有原子靠几何绘制
 
 **第二波(本次会话固化)**
-- 缺粒子云流(GDD §5.6)
-- 缺聚变 Combo(GDD §6.5,content.md §7.2)
-- 缺聚变高潮窗(GDD §6.6)
 - 缺温度阶段相(GDD §7.4)
 - 缺点火高潮相(GDD §7.5)
 - 缺点火持续条 HUD(GDD §10.6)
-- 缺 Combo 计时圆环(GDD §10.7)
 - 缺背景板加载与阶段辉光叠层(GDD §13.1, assets.md §7)
 - 缺死亡卡片 `{ignitionLine}` 渲染(content.md §8.2)
 - 死亡卡片占位符不全:缺 `{maxCombo}` / `{ignitionSeconds}` / `{selfSustained}`(content.md §1.3)
-- `events.js` 缺 `EV.PARTICLE_COLLECTED` / `EV.PHASE_CHANGED` / `EV.IGNITION_TICK` / `EV.SELF_SUSTAIN_ACHIEVED`
+- `events.js` 缺 `EV.PHASE_CHANGED` / `EV.IGNITION_TICK` / `EV.SELF_SUSTAIN_ACHIEVED`
 
 ### 1.3 素材交付状态
 
@@ -500,6 +496,6 @@ Task 4 (视觉合成层 + 屏幕级 FX)
 > 每次完成一个 Task,**直接在本文件标记完成日期**,作为简易的进度日志。
 
 - [x] Task 1 — 基础校准 + 素材接入 + 第一波元素 — _2026-05-12 完成_
-- [ ] Task 2 — 粒子云 + Combo + 高潮窗 — _未开始_
+- [x] Task 2 — 粒子云 + Combo + 高潮窗 — _2026-05-12 完成_
 - [ ] Task 3 — 阶段相 + 点火高潮 + 自维持 — _未开始_
 - [ ] Task 4 — 视觉合成层 + 屏幕级 FX — _未开始_

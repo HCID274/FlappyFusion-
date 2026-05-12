@@ -22,11 +22,15 @@ export function resetWorld(world) {
   world.scrollSpeed = CONFIG.scroll.baseSpeed;
   world.obstaclesPassed = 0;
   world.fusionCount = 0;
+  world.maxCombo = 0;
   world.collectedD = 0;
   world.collectedT = 0;
+  world.combo = { count: 0, lastTime: -Infinity };
+  world.fusionBurst = { active: false, remaining: 0 };
   world.deathCause = null;
   world.spawnDistance = 0;
   world.lastGapY = CONFIG.canvas.height / 2;
+  world.lastParticleStreamY = NaN;
   world.lastWasInstability = false;
   world.wallTouchTimer = 0;
   world.redFlashT = 0;
@@ -37,6 +41,7 @@ export function resetWorld(world) {
   world.obstacles = [];
   world.hazards = [];
   world.collectibles = [];
+  world.particleStream = [];
   world.boosts = [];
   world.particles = [];
 }

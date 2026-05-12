@@ -60,6 +60,13 @@ export const CONTENT = {
       tungstenCooling: '钨杂质溅射\n等离子体冷却 −1 档',
       nbiHeating: '中性束加热!\n+1 档',
     },
+    combo: {
+      label1: 'He⁴  +{score}',
+      label2: '⚡ COMBO ×2   +{score}',
+      label3: '⚡⚡ COMBO ×3   +{score}',
+      label4: '⚡⚡⚡ COMBO ×4   +{score}',
+      label5: '⚡⚡⚡⚡ MAX COMBO   +{score}',
+    },
     milestones: {
       50: '已超过太阳核心温度',
       80: '接近劳森判据下限',
@@ -144,6 +151,13 @@ export const CONTENT = {
       lithiumBreeding: '⁶Li → T 増殖\n+2',
       tungstenCooling: 'タングステン混入\nプラズマ冷却 −1 段',
       nbiHeating: '中性粒子ビーム加熱!\n+1 段',
+    },
+    combo: {
+      label1: 'He⁴  +{score}',
+      label2: '⚡ COMBO ×2   +{score}',
+      label3: '⚡⚡ COMBO ×3   +{score}',
+      label4: '⚡⚡⚡ COMBO ×4   +{score}',
+      label5: '⚡⚡⚡⚡ MAX COMBO   +{score}',
     },
     milestones: {
       50: '太陽中心温度を超えた',
@@ -253,6 +267,11 @@ export function getLearnMorePages() {
 
 export function getParticleLabel(name) {
   return t(`particleLabels.${name}`);
+}
+
+export function getComboLabel(combo, score) {
+  const key = Math.min(Math.max(combo, 1), 5);
+  return t(`combo.label${key}`, { score });
 }
 
 function getDeathTier(maxTemp) {
