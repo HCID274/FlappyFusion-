@@ -19,31 +19,106 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
+function easeOutCubic(t) {
+  return 1 - Math.pow(1 - t, 3);
+}
+
+function easeInCubic(t) {
+  return t * t * t;
+}
+
+function easeInOutSine(t) {
+  return -(Math.cos(Math.PI * t) - 1) / 2;
+}
+
+function makeTextMotion(x, y, dx, dy) {
+  return {
+    type: 'breathingFloat',
+    originX: x,
+    originY: y,
+    dx,
+    dy,
+  };
+}
+
+function segmentedMotionProgress(age, maxLife, motion) {
+  const fastDuration = Math.min(motion.fastDuration, maxLife * motion.fastMaxRatio);
+  const slowDuration = Math.min(motion.slowDuration, Math.max(0, maxLife - fastDuration) * motion.slowMaxRatio);
+  const fastShare = motion.fastShare;
+  const slowShare = motion.slowShare;
+
+  if (age <= fastDuration) {
+    return fastShare * easeOutCubic(clamp(age / Math.max(0.001, fastDuration), 0, 1));
+  }
+
+  if (age <= fastDuration + slowDuration) {
+    const t = clamp((age - fastDuration) / Math.max(0.001, slowDuration), 0, 1);
+    return fastShare + slowShare * easeInOutSine(t);
+  }
+
+  const t = clamp((age - fastDuration - slowDuration) / Math.max(0.001, maxLife - fastDuration - slowDuration), 0, 1);
+  return fastShare + slowShare + (1 - fastShare - slowShare) * easeInCubic(t);
+}
+
+function breathingTextProgress(age, maxLife) {
+  const cfg = CONFIG.particle;
+  return segmentedMotionProgress(age, maxLife, {
+    fastDuration: cfg.textMotionFastDuration,
+    slowDuration: cfg.textMotionSlowDuration,
+    fastShare: cfg.textMotionFastShare,
+    slowShare: cfg.textMotionSlowShare,
+    fastMaxRatio: 0.45,
+    slowMaxRatio: 0.7,
+  });
+}
+
+function fusionLabelProgress(age, maxLife) {
+  const cfg = CONFIG.particle;
+  return segmentedMotionProgress(age, maxLife, {
+    fastDuration: cfg.fusionLabelFastDuration,
+    slowDuration: cfg.fusionLabelHoldDuration,
+    fastShare: cfg.fusionLabelFastShare,
+    slowShare: cfg.fusionLabelHoldShare,
+    fastMaxRatio: 0.35,
+    slowMaxRatio: 0.75,
+  });
+}
+
 function makeFloatingText(x, y, text, life, color, font) {
+  const distance = Math.max(34, life * 30);
   return {
     id: `pt${nextId++}`,
     kind: 'text',
     pos: { x, y },
-    vel: { x: 0, y: -30 },
     life,
     maxLife: life,
     text,
     color,
     font: font || THEME.font.floatLg,
+    strokeStyle: 'rgba(0, 0, 0, 0.68)',
+    strokeWidth: 3,
+    shadowColor: color,
+    shadowBlur: 7,
+    motion: makeTextMotion(x, y, 0, -distance),
   };
 }
 
 function makeParticleScoreText(x, y, score) {
+  const startY = y + (Math.random() - 0.5) * 16;
   return {
     id: `pt${nextId++}`,
     kind: 'text',
-    pos: { x, y: y + (Math.random() - 0.5) * 16 },
-    vel: { x: 0, y: -75 },
-    life: 0.4,
-    maxLife: 0.4,
+    pos: { x, y: startY },
+    life: CONFIG.particle.scoreTextLifetime,
+    maxLife: CONFIG.particle.scoreTextLifetime,
     text: `+${score}`,
     color: THEME.colors.electron,
-    font: 'bold 20px ui-monospace, "SF Mono", Menlo, monospace',
+    font: 'bold 24px ui-monospace, "SF Mono", Menlo, monospace',
+    strokeStyle: 'rgba(0, 8, 18, 0.82)',
+    strokeWidth: 3,
+    shadowColor: THEME.colors.electron,
+    shadowBlur: 10,
+    motion: makeTextMotion(x, startY, 0, -CONFIG.particle.scoreTextDistance),
   };
 }
 
@@ -139,7 +214,7 @@ function makeSelfSustainText() {
   return {
     id: `pt${nextId++}`,
     kind: 'selfSustainText',
-    pos: { x: CONFIG.canvas.width / 2, y: CONFIG.canvas.height * 0.34 },
+    pos: { x: CONFIG.canvas.width / 2, y: CONFIG.canvas.height * 0.24 },
     vel: { x: 0, y: 0 },
     life: 2.5,
     maxLife: 2.5,
@@ -150,17 +225,30 @@ function makeSelfSustainText() {
 }
 
 function makeFusionParticle(x, y, label, color, vx, vy, radius = 4, life = CONFIG.particle.fusionLifetime) {
-  return {
+  const particle = {
     id: `pt${nextId++}`,
     kind: 'fusion',
     pos: { x, y },
-    vel: { x: vx, y: vy },
     life,
     maxLife: life,
     text: label,
     color,
     radius,
   };
+
+  if (label) {
+    particle.motion = {
+      type: 'fusionLabel',
+      originX: x,
+      originY: y,
+      dx: vx * life * 0.82,
+      dy: vy * life * 0.82,
+    };
+  } else {
+    particle.vel = { x: vx, y: vy };
+  }
+
+  return particle;
 }
 
 function makeFusionSpark(x, y) {
@@ -282,8 +370,20 @@ export function createParticleSystem(eventBus, world) {
     update(dt) {
       for (let i = world.particles.length - 1; i >= 0; i--) {
         const p = world.particles[i];
-        p.pos.x += p.vel.x * dt;
-        p.pos.y += p.vel.y * dt;
+        if (p.motion?.type === 'breathingFloat') {
+          const age = p.maxLife - p.life + dt;
+          const progress = breathingTextProgress(age, p.maxLife);
+          p.pos.x = p.motion.originX + p.motion.dx * progress;
+          p.pos.y = p.motion.originY + p.motion.dy * progress;
+        } else if (p.motion?.type === 'fusionLabel') {
+          const age = p.maxLife - p.life + dt;
+          const progress = fusionLabelProgress(age, p.maxLife);
+          p.pos.x = p.motion.originX + p.motion.dx * progress;
+          p.pos.y = p.motion.originY + p.motion.dy * progress;
+        } else {
+          p.pos.x += (p.vel?.x || 0) * dt;
+          p.pos.y += (p.vel?.y || 0) * dt;
+        }
         p.life -= dt;
         if (p.life <= 0) world.particles.splice(i, 1);
       }

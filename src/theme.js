@@ -28,10 +28,10 @@ export const THEME = {
 
   font: {
     hud: '13px ui-monospace, "SF Mono", Menlo, monospace',
-    floatLg: 'bold 22px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif',
-    floatSm: '14px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif',
+    floatLg: 'bold 24px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif',
+    floatSm: '16px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif',
     combo: '800 28px "Inter", "Space Grotesk", "Noto Sans SC", "Noto Sans JP", "PingFang SC", "Hiragino Sans", system-ui, sans-serif',
-    particleLabel: 'bold 12px ui-monospace, monospace',
+    particleLabel: 'bold 24px ui-monospace, monospace',
   },
 
   combo: [

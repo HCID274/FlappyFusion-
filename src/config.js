@@ -172,9 +172,19 @@ export const CONFIG = {
 
   particle: {
     fusionLifetime: 1.5,
+    fusionLabelFastDuration: 0.18,
+    fusionLabelHoldDuration: 0.50,
+    fusionLabelFastShare: 0.37,
+    fusionLabelHoldShare: 0.04,
     milestoneLifetime: 1.5,
     instabilityLabelLifetime: 0.8,
     sceneTextLifetime: 0.75,
+    scoreTextLifetime: 0.52,
+    scoreTextDistance: 42,
+    textMotionFastDuration: 0.15,
+    textMotionSlowDuration: 0.15,
+    textMotionFastShare: 0.42,
+    textMotionSlowShare: 0.10,
   },
 
   deathCardDelaySec: 0.6,

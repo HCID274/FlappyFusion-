@@ -8,6 +8,7 @@ import {
   getComboLabel,
   getIgnitionIntroText,
   getIgnitionMilestoneText,
+  getParticleLabel,
   getPhaseText,
   getSelfSustainText,
   onLocaleChange,
@@ -483,12 +484,7 @@ function drawParticle(ctx, p) {
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    if (p.text) {
-      ctx.fillStyle = THEME.colors.text;
-      ctx.font = THEME.font.particleLabel;
-      ctx.textAlign = 'left';
-      ctx.fillText(p.text, p.pos.x + 8, p.pos.y - 4);
-    }
+    if (p.text) drawFusionParticleLabel(ctx, p);
   } else if (p.kind === 'text') {
     drawTextParticle(ctx, p);
   } else if (p.kind === 'comboText') {
@@ -611,6 +607,7 @@ function scheduleTextSpritePrewarm() {
 
 function prewarmTextSprites() {
   prewarmComboSprites();
+  prewarmFusionParticleLabelSprites();
   prewarmPhaseSprites();
   prewarmIgnitionSprites();
   prewarmSelfSustainSprites();
@@ -625,6 +622,19 @@ function prewarmComboSprites() {
       const text = getComboLabel(combo, Math.round(baseScore * multiplier));
       getTextSprite(getComboSpriteKey(combo, text), buildComboTextCommands(combo, text));
     }
+  }
+}
+
+function prewarmFusionParticleLabelSprites() {
+  const labels = [
+    { text: getParticleLabel('he4'), color: THEME.colors.he4 },
+    { text: getParticleLabel('neutron'), color: THEME.colors.neutron },
+  ];
+  for (const label of labels) {
+    getTextSprite(
+      getFusionParticleLabelKey(label.text, label.color),
+      buildFusionParticleLabelCommands(label.text, label.color),
+    );
   }
 }
 
@@ -669,12 +679,50 @@ function drawTextParticle(ctx, p) {
     y: startY + i * lineHeight,
     font: p.font,
     fillStyle: p.color,
+    strokeStyle: p.strokeStyle,
+    strokeWidth: p.strokeWidth || 0,
+    shadowColor: p.shadowColor,
+    shadowBlur: p.shadowBlur || 0,
   }));
-  const sprite = getTextSprite(`text|${p.font}|${p.color}|${p.text}`, commands);
+  const sprite = getTextSprite(
+    `text|${p.font}|${p.color}|${p.strokeStyle || ''}|${p.strokeWidth || 0}|${p.shadowColor || ''}|${p.shadowBlur || 0}|${p.text}`,
+    commands,
+  );
   ctx.save();
   ctx.translate(p.pos.x, p.pos.y);
   drawTextSprite(ctx, sprite);
   ctx.restore();
+}
+
+function drawFusionParticleLabel(ctx, p) {
+  ctx.save();
+  ctx.translate(p.pos.x + 24, p.pos.y - 10);
+  drawTextSprite(
+    ctx,
+    getTextSprite(
+      getFusionParticleLabelKey(p.text, p.color),
+      buildFusionParticleLabelCommands(p.text, p.color),
+    ),
+  );
+  ctx.restore();
+}
+
+function getFusionParticleLabelKey(text, color) {
+  return `fusionLabel|${THEME.font.particleLabel}|${color}|${text}`;
+}
+
+function buildFusionParticleLabelCommands(text, color) {
+  return [{
+    text,
+    x: 0,
+    y: 0,
+    font: THEME.font.particleLabel,
+    fillStyle: THEME.colors.text,
+    strokeStyle: 'rgba(0, 0, 0, 0.78)',
+    strokeWidth: 3,
+    shadowColor: color,
+    shadowBlur: 7,
+  }];
 }
 
 function drawComboText(ctx, p) {

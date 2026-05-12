@@ -157,7 +157,7 @@ when x < -150 → cleanup
 - **进入点火高潮相后(§7.5),刷新率 ×3**
 
 **碰撞**:
-- 擦过 = +1 分 + 短促 "嗒" 视觉反馈(粒子被光球"吸入"的 0.15 秒动画)
+- 擦过 = +1 分 + 短促 "嗒" 视觉反馈;`+1` 小飞字为 24 px 青白文字,0.52 秒内上飘 42 px 并淡出,位移节奏为 0.15 秒快冲 / 0.15 秒慢咬 / 末段加速移出
 - 不进 fuel bay,**不触发 EV.COLLECTIBLE_HIT**(避免和 D/T 系统耦合),发独立事件 `EV.PARTICLE_COLLECTED { x, y }`
 - 每个粒子单独判定,**一串里可以漏吃几个**,鼓励玩家"贪心走位"
 
@@ -193,9 +193,9 @@ when x < -150 → cleanup
 当 `collectedD ≥ 1 && collectedT ≥ 1` 时:
 1. 立即触发聚变特效:
    - 光球瞬间放大 1.3×,白色闪光 0.1 秒
-   - 飞出 1 个红色 He4 粒子(向左下飘) + 1 个白色中性子粒子(向右上飘),自带文字标签 "He⁴" / "n"
+   - 飞出 1 个红色 He4 粒子(向左下飘) + 1 个白色中性子粒子(向右上飘),自带大号文字标签 "He⁴" / "n";标签运动为先快出、再极慢悬停 0.5 秒供玩家看清、最后加速逃逸
    - 额外生成少量金白粒子簇与局部 radial burst,并在聚变点绘制 0.3 秒内消退的金白冲击环
-   - 游戏内时间短暂降到 0.80×,持续 0.30 秒;若同时处于点火进入或自维持慢动作,以后者优先
+   - 游戏内时间短暂降到 0.80×,持续 0.15 秒;若同时处于点火进入或自维持慢动作,以后者优先
    - +5 分,屏幕得分数字短暂金色高亮
 2. 扣除 1D + 1T(`collectedD -= 1; collectedT -= 1`)
 3. `world.fusionCount += 1`
@@ -591,6 +591,23 @@ export const CONFIG = {
     perParticle: 1,            // 自由电子粒子(§5.6)
     perFusionBase: 5,          // combo×1 的基础值;combo×2+ 走 combo.scoreTable
     selfSustainBonus: 200,     // 自维持成功一次性奖励(§7.5.4)
+  },
+
+  particle: {
+    fusionLifetime: 1.5,
+    fusionLabelFastDuration: 0.18,
+    fusionLabelHoldDuration: 0.50,
+    fusionLabelFastShare: 0.37,
+    fusionLabelHoldShare: 0.04,
+    milestoneLifetime: 1.5,
+    instabilityLabelLifetime: 0.8,
+    sceneTextLifetime: 0.75,
+    scoreTextLifetime: 0.52,       // 自由电子 +1 小飞字持续秒数
+    scoreTextDistance: 42,         // 自由电子 +1 小飞字上飘距离
+    textMotionFastDuration: 0.15,  // 飘字首段快冲
+    textMotionSlowDuration: 0.15,  // 飘字中段慢咬
+    textMotionFastShare: 0.42,     // 首段完成总位移比例
+    textMotionSlowShare: 0.10,     // 中段完成总位移比例
   },
 
   fusion: {
