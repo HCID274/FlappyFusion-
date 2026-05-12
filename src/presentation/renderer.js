@@ -3,8 +3,22 @@
 
 import { CONFIG } from '../config.js';
 import { THEME } from '../theme.js';
+import {
+  getComboLabel,
+  getIgnitionIntroText,
+  getIgnitionMilestoneText,
+  getPhaseText,
+  getSelfSustainText,
+  onLocaleChange,
+} from '../content.js';
 
 export function createRenderer(ctx, world) {
+  scheduleTextSpritePrewarm();
+  onLocaleChange(() => {
+    textSpriteCache.clear();
+    scheduleTextSpritePrewarm();
+  });
+
   return {
     render() {
       const W = CONFIG.canvas.width;
@@ -160,16 +174,7 @@ function drawParticle(ctx, p) {
     ctx.textAlign = 'left';
     ctx.fillText(p.text, p.pos.x + 8, p.pos.y - 4);
   } else if (p.kind === 'text') {
-    ctx.fillStyle = p.color;
-    ctx.font = p.font;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    const lines = String(p.text).split('\n');
-    const lineHeight = 20;
-    const startY = p.pos.y - ((lines.length - 1) * lineHeight) / 2;
-    for (let i = 0; i < lines.length; i++) {
-      ctx.fillText(lines[i], p.pos.x, startY + i * lineHeight);
-    }
+    drawTextParticle(ctx, p);
   } else if (p.kind === 'comboText') {
     drawComboText(ctx, p);
   } else if (p.kind === 'phaseText') {
@@ -186,10 +191,174 @@ function drawParticle(ctx, p) {
 }
 
 const DISPLAY_FONT = '"Inter", "Space Grotesk", "Noto Sans SC", "Noto Sans JP", "PingFang SC", "Hiragino Sans", system-ui, sans-serif';
+const textSpriteCache = new Map();
+let measureContext = null;
+let textSpritePrewarmQueued = false;
+
+function getMeasureContext() {
+  if (!measureContext) measureContext = createScratchCanvas(1, 1).getContext('2d');
+  return measureContext;
+}
+
+function createScratchCanvas(width, height) {
+  if (typeof OffscreenCanvas !== 'undefined') return new OffscreenCanvas(width, height);
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  return canvas;
+}
+
+function getFontSize(font) {
+  const match = /(\d+(?:\.\d+)?)px/.exec(font);
+  return match ? Number(match[1]) : 20;
+}
+
+function getTextSprite(key, commands) {
+  const cached = textSpriteCache.get(key);
+  if (cached) return cached;
+
+  const measure = getMeasureContext();
+  let left = Infinity;
+  let top = Infinity;
+  let right = -Infinity;
+  let bottom = -Infinity;
+
+  for (const cmd of commands) {
+    measure.font = cmd.font;
+    const width = measure.measureText(cmd.text).width;
+    const fontSize = getFontSize(cmd.font);
+    const extra = (cmd.strokeWidth || 0) + (cmd.shadowBlur || 0) + 6;
+    left = Math.min(left, cmd.x - width / 2 - extra);
+    right = Math.max(right, cmd.x + width / 2 + extra);
+    top = Math.min(top, cmd.y - fontSize * 0.65 - extra);
+    bottom = Math.max(bottom, cmd.y + fontSize * 0.65 + extra);
+  }
+
+  if (!Number.isFinite(left)) {
+    return { canvas: createScratchCanvas(1, 1), x: 0, y: 0 };
+  }
+
+  const width = Math.max(1, Math.ceil(right - left));
+  const height = Math.max(1, Math.ceil(bottom - top));
+  const canvas = createScratchCanvas(width, height);
+  const c = canvas.getContext('2d');
+  c.translate(-left, -top);
+
+  for (const cmd of commands) {
+    c.save();
+    c.globalAlpha = cmd.alpha ?? 1;
+    c.font = cmd.font;
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.lineJoin = 'round';
+    c.shadowColor = cmd.shadowColor || 'transparent';
+    c.shadowBlur = cmd.shadowBlur || 0;
+    if (cmd.strokeStyle && cmd.strokeWidth > 0) {
+      c.strokeStyle = cmd.strokeStyle;
+      c.lineWidth = cmd.strokeWidth;
+      c.strokeText(cmd.text, cmd.x, cmd.y);
+    }
+    if (cmd.fillStyle) {
+      c.fillStyle = cmd.fillStyle;
+      c.fillText(cmd.text, cmd.x, cmd.y);
+    }
+    c.restore();
+  }
+
+  const sprite = { canvas, x: left, y: top };
+  textSpriteCache.set(key, sprite);
+  return sprite;
+}
+
+function drawTextSprite(ctx, sprite) {
+  ctx.drawImage(sprite.canvas, sprite.x, sprite.y);
+}
+
+function scheduleTextSpritePrewarm() {
+  if (textSpritePrewarmQueued) return;
+  textSpritePrewarmQueued = true;
+  const run = () => {
+    textSpritePrewarmQueued = false;
+    prewarmTextSprites();
+  };
+
+  if (typeof globalThis.requestIdleCallback === 'function') {
+    globalThis.requestIdleCallback(run, { timeout: 800 });
+  } else {
+    globalThis.setTimeout(run, 0);
+  }
+}
+
+function prewarmTextSprites() {
+  prewarmComboSprites();
+  prewarmPhaseSprites();
+  prewarmIgnitionSprites();
+  prewarmSelfSustainSprites();
+}
+
+function prewarmComboSprites() {
+  const multipliers = new Set(Object.values(CONFIG.phases.rules).map((rules) => rules.scoreMul ?? 1));
+  for (let combo = 1; combo <= THEME.combo.length; combo++) {
+    const tableIndex = Math.min(combo, CONFIG.combo.scoreTable.length) - 1;
+    const baseScore = CONFIG.combo.scoreTable[tableIndex];
+    for (const multiplier of multipliers) {
+      const text = getComboLabel(combo, Math.round(baseScore * multiplier));
+      getTextSprite(getComboSpriteKey(combo, text), buildComboTextCommands(combo, text));
+    }
+  }
+}
+
+function prewarmPhaseSprites() {
+  for (const phase of Object.keys(CONFIG.phases.rules)) {
+    if (phase === 'IGNITION_PREP') continue;
+    const text = getPhaseText(phase);
+    const color = THEME.phase[phase] || THEME.colors.fusionGold;
+    getTextSprite(getPhaseSpriteKey(text.title, text.subtitle, color), buildPhaseTextCommands(text.title, text.subtitle, color));
+  }
+}
+
+function prewarmIgnitionSprites() {
+  const intro = getIgnitionIntroText();
+  getTextSprite(getIgnitionIntroTitleKey(intro.title), buildIgnitionIntroTitleCommands(intro.title));
+  getTextSprite(getIgnitionIntroSubtitleKey(intro.subtitle), buildIgnitionIntroSubtitleCommands(intro.subtitle));
+
+  for (const milestone of CONFIG.ignitionPhase.progressMilestones) {
+    const text = getIgnitionMilestoneText(milestone);
+    if (!text) continue;
+    const color = milestone >= 15 ? THEME.colors.text : THEME.colors.fusionGold;
+    getTextSprite(getIgnitionMilestoneKey(text, milestone, color), buildIgnitionMilestoneCommands(text, milestone, color));
+  }
+}
+
+function prewarmSelfSustainSprites() {
+  const text = getSelfSustainText();
+  getTextSprite(getSelfSustainTitleKey(text.title), buildSelfSustainTitleCommands(text.title));
+  getTextSprite(getSelfSustainSubtitleKey(text.subtitle), buildSelfSustainSubtitleCommands(text.subtitle));
+  getTextSprite(getSelfSustainFootnoteKey(text.footnote), buildSelfSustainFootnoteCommands(text.footnote));
+}
+
+function drawTextParticle(ctx, p) {
+  const lines = String(p.text).split('\n');
+  const lineHeight = Math.max(18, getFontSize(p.font) * 1.15);
+  const startY = -((lines.length - 1) * lineHeight) / 2;
+  const commands = lines.map((line, i) => ({
+    text: line,
+    x: 0,
+    y: startY + i * lineHeight,
+    font: p.font,
+    fillStyle: p.color,
+  }));
+  const sprite = getTextSprite(`text|${p.font}|${p.color}|${p.text}`, commands);
+  ctx.save();
+  ctx.translate(p.pos.x, p.pos.y);
+  drawTextSprite(ctx, sprite);
+  ctx.restore();
+}
 
 function drawComboText(ctx, p) {
   const age = p.maxLife - p.life;
-  const spec = THEME.combo[Math.min(Math.max(p.combo, 1), 5) - 1];
+  const comboTier = getComboTier(p.combo);
+  const spec = THEME.combo[comboTier - 1];
   const progressOut = clamp((age - 0.85) / 0.5, 0, 1);
   const y = p.pos.y - easeOutCubic(progressOut) * 80;
   const scale = getComboScale(age, spec.overshoot);
@@ -199,24 +368,46 @@ function drawComboText(ctx, p) {
   ctx.globalAlpha = alpha;
   ctx.translate(p.pos.x, y);
   ctx.scale(scale, scale);
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.font = `${spec.weight} ${spec.fontSize}px ${DISPLAY_FONT}`;
-  ctx.lineJoin = 'round';
-  ctx.strokeStyle = spec.stroke;
-  ctx.lineWidth = spec.strokeWidth;
-  ctx.shadowColor = spec.color;
-  ctx.shadowBlur = spec.shadowBlur;
-  ctx.strokeText(p.text, 0, 0);
-  ctx.fillStyle = spec.color;
-  ctx.fillText(p.text, 0, 0);
-
-  if (p.combo >= 5) {
-    ctx.shadowColor = THEME.colors.fusionGold;
-    ctx.shadowBlur = 18;
-    ctx.fillText(p.text, 0, 0);
-  }
+  drawTextSprite(ctx, getTextSprite(getComboSpriteKey(comboTier, p.text), buildComboTextCommands(comboTier, p.text)));
   ctx.restore();
+}
+
+function getComboTier(combo) {
+  return Math.min(Math.max(combo, 1), THEME.combo.length);
+}
+
+function getComboSpriteKey(comboTier, text) {
+  return `combo|${comboTier}|${text}`;
+}
+
+function buildComboTextCommands(comboTier, text) {
+  const spec = THEME.combo[comboTier - 1];
+  const font = `${spec.weight} ${spec.fontSize}px ${DISPLAY_FONT}`;
+  const commands = [
+    {
+      text,
+      x: 0,
+      y: 0,
+      font,
+      strokeStyle: spec.stroke,
+      strokeWidth: spec.strokeWidth,
+      fillStyle: spec.color,
+      shadowColor: spec.color,
+      shadowBlur: spec.shadowBlur,
+    },
+  ];
+  if (comboTier >= 5) {
+    commands.push({
+      text,
+      x: 0,
+      y: 0,
+      font,
+      fillStyle: spec.color,
+      shadowColor: THEME.colors.fusionGold,
+      shadowBlur: 18,
+    });
+  }
+  return commands;
 }
 
 function drawPhaseText(ctx, p) {
@@ -232,25 +423,36 @@ function drawPhaseText(ctx, p) {
   ctx.globalAlpha = alpha;
   ctx.translate(p.pos.x, p.pos.y);
   ctx.scale(scale, scale);
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.lineJoin = 'round';
-  ctx.font = `900 60px ${DISPLAY_FONT}`;
-  ctx.strokeStyle = 'rgba(0, 0, 0, 0.72)';
-  ctx.lineWidth = 4;
-  ctx.shadowColor = p.color;
-  ctx.shadowBlur = 18;
-  ctx.strokeText(p.title, 0, 0);
-  ctx.fillStyle = p.color;
-  ctx.fillText(p.title, 0, 0);
-
-  if (p.subtitle) {
-    ctx.shadowBlur = 0;
-    ctx.font = `600 22px ${DISPLAY_FONT}`;
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-    ctx.fillText(p.subtitle, 0, 54);
-  }
+  drawTextSprite(ctx, getTextSprite(getPhaseSpriteKey(p.title, p.subtitle, p.color), buildPhaseTextCommands(p.title, p.subtitle, p.color)));
   ctx.restore();
+}
+
+function getPhaseSpriteKey(title, subtitle, color) {
+  return `phase|${title}|${subtitle}|${color}`;
+}
+
+function buildPhaseTextCommands(title, subtitle, color) {
+  const commands = [{
+    text: title,
+    x: 0,
+    y: 0,
+    font: `900 60px ${DISPLAY_FONT}`,
+    strokeStyle: 'rgba(0, 0, 0, 0.72)',
+    strokeWidth: 4,
+    fillStyle: color,
+    shadowColor: color,
+    shadowBlur: 18,
+  }];
+  if (subtitle) {
+    commands.push({
+      text: subtitle,
+      x: 0,
+      y: 54,
+      font: `600 22px ${DISPLAY_FONT}`,
+      fillStyle: 'rgba(255, 255, 255, 0.85)',
+    });
+  }
+  return commands;
 }
 
 function drawIgnitionIntroText(ctx, p) {
@@ -266,51 +468,79 @@ function drawIgnitionIntroText(ctx, p) {
   ctx.globalAlpha = alpha;
   ctx.translate(p.pos.x, y);
   ctx.scale(scale, scale);
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.font = `900 72px ${DISPLAY_FONT}`;
-  ctx.lineJoin = 'round';
-  ctx.strokeStyle = 'rgba(0, 0, 0, 0.75)';
-  ctx.lineWidth = 5;
-  ctx.shadowColor = THEME.colors.fusionGold;
-  ctx.shadowBlur = 26;
-  ctx.strokeText(p.title, 0, 0);
-  ctx.fillStyle = THEME.colors.fusionGold;
-  ctx.fillText(p.title, 0, 0);
-
   const subtitleAlpha = clamp((age - 0.3) / 0.3, 0, 1) * (1 - out);
-  ctx.globalAlpha = subtitleAlpha;
-  ctx.shadowBlur = 8;
-  ctx.font = `800 36px ${DISPLAY_FONT}`;
-  ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
-  ctx.lineWidth = 3;
-  ctx.strokeText(p.subtitle, 0, 62);
-  ctx.fillStyle = THEME.colors.text;
-  ctx.fillText(p.subtitle, 0, 62);
+  drawTextSprite(ctx, getTextSprite(getIgnitionIntroTitleKey(p.title), buildIgnitionIntroTitleCommands(p.title)));
+  ctx.globalAlpha = alpha * subtitleAlpha;
+  drawTextSprite(ctx, getTextSprite(getIgnitionIntroSubtitleKey(p.subtitle), buildIgnitionIntroSubtitleCommands(p.subtitle)));
   ctx.restore();
+}
+
+function getIgnitionIntroTitleKey(title) {
+  return `ignitionIntroTitle|${title}`;
+}
+
+function buildIgnitionIntroTitleCommands(title) {
+  return [{
+    text: title,
+    x: 0,
+    y: 0,
+    font: `900 72px ${DISPLAY_FONT}`,
+    strokeStyle: 'rgba(0, 0, 0, 0.75)',
+    strokeWidth: 5,
+    fillStyle: THEME.colors.fusionGold,
+    shadowColor: THEME.colors.fusionGold,
+    shadowBlur: 26,
+  }];
+}
+
+function getIgnitionIntroSubtitleKey(subtitle) {
+  return `ignitionIntroSubtitle|${subtitle}`;
+}
+
+function buildIgnitionIntroSubtitleCommands(subtitle) {
+  return [{
+    text: subtitle,
+    x: 0,
+    y: 62,
+    font: `800 36px ${DISPLAY_FONT}`,
+    strokeStyle: 'rgba(0, 0, 0, 0.7)',
+    strokeWidth: 3,
+    fillStyle: THEME.colors.text,
+    shadowColor: THEME.colors.fusionGold,
+    shadowBlur: 8,
+  }];
 }
 
 function drawIgnitionMilestoneText(ctx, p) {
   const age = p.maxLife - p.life;
   const out = clamp((age - 1) / 0.3, 0, 1);
   const scale = age < 0.3 ? lerp(1.4, 1, easeOutBack(age / 0.3)) : 1;
-  const fontSize = p.milestone >= 15 ? 24 : p.milestone >= 10 ? 22 : 20;
 
   ctx.save();
   ctx.globalAlpha = 1 - out;
   ctx.translate(p.pos.x, p.pos.y);
   ctx.scale(scale, scale);
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.font = `800 ${fontSize}px ${DISPLAY_FONT}`;
-  ctx.strokeStyle = p.milestone >= 15 ? THEME.colors.fusionGold : 'rgba(0, 0, 0, 0.7)';
-  ctx.lineWidth = p.milestone >= 15 ? 3 : 2;
-  ctx.shadowColor = THEME.colors.fusionGold;
-  ctx.shadowBlur = 14;
-  ctx.strokeText(p.text, 0, 0);
-  ctx.fillStyle = p.color;
-  ctx.fillText(p.text, 0, 0);
+  drawTextSprite(ctx, getTextSprite(getIgnitionMilestoneKey(p.text, p.milestone, p.color), buildIgnitionMilestoneCommands(p.text, p.milestone, p.color)));
   ctx.restore();
+}
+
+function getIgnitionMilestoneKey(text, milestone, color) {
+  return `ignitionMilestone|${text}|${milestone}|${color}`;
+}
+
+function buildIgnitionMilestoneCommands(text, milestone, color) {
+  const fontSize = milestone >= 15 ? 24 : milestone >= 10 ? 22 : 20;
+  return [{
+    text,
+    x: 0,
+    y: 0,
+    font: `800 ${fontSize}px ${DISPLAY_FONT}`,
+    strokeStyle: milestone >= 15 ? THEME.colors.fusionGold : 'rgba(0, 0, 0, 0.7)',
+    strokeWidth: milestone >= 15 ? 3 : 2,
+    fillStyle: color,
+    shadowColor: THEME.colors.fusionGold,
+    shadowBlur: 14,
+  }];
 }
 
 function drawSelfSustainText(ctx, p) {
@@ -324,35 +554,66 @@ function drawSelfSustainText(ctx, p) {
 
   ctx.save();
   ctx.globalAlpha = alpha;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.lineJoin = 'round';
   ctx.translate(p.pos.x, y);
   ctx.scale(titleScale, titleScale);
-  ctx.font = `900 96px ${DISPLAY_FONT}`;
-  ctx.strokeStyle = THEME.colors.fusionGold;
-  ctx.lineWidth = 4;
-  ctx.shadowColor = THEME.colors.text;
-  ctx.shadowBlur = 28;
-  ctx.strokeText(p.title, 0, 0);
-  ctx.fillStyle = THEME.colors.text;
-  ctx.fillText(p.title, 0, 0);
+  drawTextSprite(ctx, getTextSprite(getSelfSustainTitleKey(p.title), buildSelfSustainTitleCommands(p.title)));
   ctx.restore();
 
   ctx.save();
+  ctx.translate(p.pos.x, y);
   ctx.globalAlpha = alpha * clamp((age - 0.4) / 0.3, 0, 1);
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.font = `900 64px ${DISPLAY_FONT}`;
-  ctx.shadowColor = THEME.colors.fusionGold;
-  ctx.shadowBlur = 18;
-  ctx.fillStyle = THEME.colors.fusionGold;
-  ctx.fillText(p.subtitle, p.pos.x, y + 78);
+  drawTextSprite(ctx, getTextSprite(getSelfSustainSubtitleKey(p.subtitle), buildSelfSustainSubtitleCommands(p.subtitle)));
   ctx.globalAlpha = alpha * 0.7 * clamp((age - 0.8) / 0.3, 0, 1);
-  ctx.font = `700 18px ${DISPLAY_FONT}`;
-  ctx.fillStyle = THEME.colors.text;
-  ctx.fillText(p.footnote, p.pos.x, y + 122);
+  drawTextSprite(ctx, getTextSprite(getSelfSustainFootnoteKey(p.footnote), buildSelfSustainFootnoteCommands(p.footnote)));
   ctx.restore();
+}
+
+function getSelfSustainTitleKey(title) {
+  return `selfSustainTitle|${title}`;
+}
+
+function buildSelfSustainTitleCommands(title) {
+  return [{
+    text: title,
+    x: 0,
+    y: 0,
+    font: `900 96px ${DISPLAY_FONT}`,
+    strokeStyle: THEME.colors.fusionGold,
+    strokeWidth: 4,
+    fillStyle: THEME.colors.text,
+    shadowColor: THEME.colors.text,
+    shadowBlur: 28,
+  }];
+}
+
+function getSelfSustainSubtitleKey(subtitle) {
+  return `selfSustainSubtitle|${subtitle}`;
+}
+
+function buildSelfSustainSubtitleCommands(subtitle) {
+  return [{
+    text: subtitle,
+    x: 0,
+    y: 78,
+    font: `900 64px ${DISPLAY_FONT}`,
+    fillStyle: THEME.colors.fusionGold,
+    shadowColor: THEME.colors.fusionGold,
+    shadowBlur: 18,
+  }];
+}
+
+function getSelfSustainFootnoteKey(footnote) {
+  return `selfSustainFootnote|${footnote}`;
+}
+
+function buildSelfSustainFootnoteCommands(footnote) {
+  return [{
+    text: footnote,
+    x: 0,
+    y: 122,
+    font: `700 18px ${DISPLAY_FONT}`,
+    fillStyle: THEME.colors.text,
+  }];
 }
 
 function getComboScale(age, overshoot) {

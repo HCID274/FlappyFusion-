@@ -141,9 +141,14 @@ export function createHUD(eventBus, world) {
     if (!el.fuelBay) return;
     const filled = el.fuelBay.querySelectorAll('.fuel-slot.filled');
     filled.forEach((slot) => {
-      slot.classList.remove(className);
-      void slot.offsetWidth;
-      slot.classList.add(className);
+      restartAnimation(slot, className);
+    });
+  }
+
+  function restartAnimation(node, className) {
+    node.classList.remove(className);
+    requestAnimationFrame(() => {
+      if (node.isConnected) node.classList.add(className);
     });
   }
 
@@ -170,17 +175,13 @@ export function createHUD(eventBus, world) {
       refreshFuelBay();
       const he4 = el.fuelBay?.querySelector('.fuel-he4');
       if (he4) {
-        he4.classList.remove('bump');
-        void he4.offsetWidth;
-        he4.classList.add('bump');
+        restartAnimation(he4, 'bump');
       }
     }, 300);
   });
   eventBus.on(EV.COMBO_INCREMENT, ({ combo }) => {
     if (!el.comboRing || combo < 2) return;
-    el.comboRing.classList.remove('bump');
-    void el.comboRing.offsetWidth;
-    el.comboRing.classList.add('bump');
+    restartAnimation(el.comboRing, 'bump');
     refreshComboRing();
   });
   eventBus.on(EV.PHASE_CHANGED, ({ to }) => {
@@ -196,9 +197,7 @@ export function createHUD(eventBus, world) {
   eventBus.on(EV.IGNITION_TICK, ({ milestone }) => {
     refreshIgnitionBar();
     if (milestone && el.ignitionBar) {
-      el.ignitionBar.classList.remove('bump');
-      void el.ignitionBar.offsetWidth;
-      el.ignitionBar.classList.add('bump');
+      restartAnimation(el.ignitionBar, 'bump');
     }
   });
   eventBus.on(EV.SELF_SUSTAIN_ACHIEVED, () => {
@@ -218,9 +217,7 @@ export function createHUD(eventBus, world) {
   });
   eventBus.on(EV.INPUT_PULSE, () => {
     if (!el.pulseRing) return;
-    el.pulseRing.classList.remove('active');
-    void el.pulseRing.offsetWidth;
-    el.pulseRing.classList.add('active');
+    restartAnimation(el.pulseRing, 'active');
   });
 
   // initial paint
