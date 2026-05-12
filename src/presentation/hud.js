@@ -19,7 +19,8 @@ export function createHUD(eventBus, world) {
     ignitionFill: document.getElementById('hud-ignition-fill'),
   };
   let suppressNextCollectibleRefresh = false;
-  const ringCircumference = 2 * Math.PI * 14;
+  const ringRadius = CONFIG.combo.timerRingRadius || 18;
+  const ringCircumference = 2 * Math.PI * ringRadius;
 
   function refreshTemp() { el.temp.textContent = hud.temperature(world.temperature); }
   function refreshScore() { el.score.textContent = hud.score(world.score); }

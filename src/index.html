@@ -36,11 +36,6 @@
     }
     .hud-col { display: flex; flex-direction: column; gap: 6px; }
     .hud-col.right { align-items: flex-end; }
-    .fuel-combo-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-    }
     .hud-item {
       background: rgba(0, 0, 0, 0.45);
       padding: 5px 10px;
@@ -159,9 +154,17 @@
     @keyframes ready-pulse {
       50% { transform: scale(1.08); text-shadow: 0 0 12px #ffcc44; }
     }
+    .combo-hud {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 4;
+      pointer-events: none;
+    }
     .combo-ring {
-      width: 36px;
-      height: 36px;
+      width: 48px;
+      height: 48px;
       padding: 0;
       border-radius: 50%;
       position: relative;
@@ -173,6 +176,7 @@
       transition: opacity 0.18s ease, transform 0.18s ease, filter 0.15s ease;
       background: rgba(4, 8, 24, 0.78);
       border-color: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 0 18px rgba(255, 204, 68, 0.1);
     }
     .combo-ring.active {
       opacity: 1;
@@ -193,12 +197,12 @@
     .combo-ring .ring-track {
       fill: transparent;
       stroke: rgba(255, 255, 255, 0.14);
-      stroke-width: 4;
+      stroke-width: 5;
     }
     .combo-ring .ring-progress {
       fill: transparent;
       stroke: var(--combo-color, #ff8844);
-      stroke-width: 4;
+      stroke-width: 5;
       stroke-linecap: round;
       transition: stroke 0.08s linear;
     }
@@ -206,7 +210,7 @@
       position: relative;
       z-index: 1;
       color: #fff;
-      font: 800 16px/1 ui-monospace, "SF Mono", Menlo, monospace;
+      font: 800 18px/1 ui-monospace, "SF Mono", Menlo, monospace;
       text-shadow: 0 0 3px #000, 0 0 8px var(--combo-color, #ff8844);
     }
     .combo-ring.urgent .ring-progress {
@@ -297,6 +301,7 @@
       border: 2px solid #44ddff;
       opacity: 0.4;
       pointer-events: none;
+      z-index: 3;
     }
     .pulse-ring.active {
       animation: pulse 0.4s ease-out;
@@ -474,6 +479,15 @@
     <canvas id="game" tabindex="0"></canvas>
 
     <div class="pulse-ring" id="hud-pulse-ring"></div>
+    <div class="combo-hud">
+      <div class="hud-item combo-ring" id="hud-combo-ring">
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <circle class="ring-track" cx="24" cy="24" r="18"></circle>
+          <circle class="ring-progress" cx="24" cy="24" r="18"></circle>
+        </svg>
+        <span class="ring-count"></span>
+      </div>
+    </div>
     <div class="ignition-bar" id="hud-ignition-bar">
       <div class="ignition-label" id="hud-ignition-label"></div>
       <div class="ignition-track">
@@ -487,16 +501,7 @@
     <div class="hud">
       <div class="hud-col">
         <div class="hud-item" id="hud-temp"></div>
-        <div class="fuel-combo-row">
-          <div class="hud-item fuel-bay" id="hud-fuel-bay"></div>
-          <div class="hud-item combo-ring" id="hud-combo-ring">
-            <svg viewBox="0 0 36 36" aria-hidden="true">
-              <circle class="ring-track" cx="18" cy="18" r="14"></circle>
-              <circle class="ring-progress" cx="18" cy="18" r="14"></circle>
-            </svg>
-            <span class="ring-count"></span>
-          </div>
-        </div>
+        <div class="hud-item fuel-bay" id="hud-fuel-bay"></div>
       </div>
       <div class="hud-col right">
         <div class="hud-item" id="hud-score"></div>

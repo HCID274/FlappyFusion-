@@ -163,7 +163,7 @@ Boost = {
 | `ignitionPhaseSystem.js` | `EV.PHASE_CHANGED`、`EV.PLASMA_DEAD` | 维护 20 秒点火持续期,发 `EV.IGNITION_TICK` / `EV.SELF_SUSTAIN_ACHIEVED` |
 | `difficultySystem.js` | `EV.TEMP_CHANGED` | `world.scrollSpeed`、SpawnSystem 间距 |
 | `fusionSystem.js` | `EV.COLLECTIBLE_HIT` (D/T/Li6;Li6 视作"自动 +1 T")、`EV.PHASE_CHANGED` | 维护 `collectedD/T` / `world.combo` / `world.fusionBurst`,发 `EV.COMBO_INCREMENT` / `EV.FUSION_TRIGGERED` |
-| `particleSystem.js` | `EV.FUSION_TRIGGERED`、`EV.COMBO_INCREMENT`、`EV.PARTICLE_COLLECTED`、`EV.PHASE_CHANGED`、`EV.IGNITION_TICK`、`EV.SELF_SUSTAIN_ACHIEVED` 等 | 维护粒子与飘字生命周期 |
+| `particleSystem.js` | `EV.FUSION_TRIGGERED`、`EV.COMBO_INCREMENT`、`EV.PARTICLE_COLLECTED`、`EV.PHASE_CHANGED`、`EV.IGNITION_TICK`、`EV.SELF_SUSTAIN_ACHIEVED` 等 | 维护粒子与飘字生命周期;Combo 大字读取 `world.plasma.pos.y` 做上下半屏避让,并 clamp 到 HUD / 点火条之外 |
 | `screenFxSystem.js` | `EV.FUSION_TRIGGERED`、`EV.PHASE_CHANGED`、`EV.SELF_SUSTAIN_ACHIEVED`、`EV.GAME_RESET` | 维护 `world.screenFx` / `world.timeScale`,提供屏幕辉光、震屏、闪白、慢动作、自维持迸射粒子 |
 | `cleanupSystem.js` | 所有滚动实体 | 移除离屏对象 |
 
@@ -172,7 +172,7 @@ Boost = {
 | 模块 | 职责 |
 |---|---|
 | `renderer.js` | 按 z-order 把所有 `Renderable` 画到 Canvas:背景板 → 阶段辉光 → 视差磁力线 → 障碍/粒子云/收集物/Boost/Hazard → 等离子体 → 前景粒子/飘字 → 屏幕级 FX overlay。主画布与离屏文字 sprite 均按 `canvas.renderScale` 生成物理像素,绘制坐标仍是 800×600 逻辑坐标 |
-| `hud.js` | DOM 元素显示温度/得分/磁场环/燃料舱/Combo 圆环/点火持续条。订阅事件更新离散状态,每帧只刷新时间与倒计时 |
+| `hud.js` | DOM 元素显示温度/得分/磁场环/燃料舱/顶部中央 Combo 圆环/点火持续条。订阅事件更新离散状态,每帧只刷新时间与倒计时 |
 | `screens.js` | `MenuScreen` / `DeathCardScreen` / `TutorialScreen`,DOM overlay |
 
 ### 4.5 Infrastructure

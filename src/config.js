@@ -86,7 +86,8 @@ export const CONFIG = {
     window: 2.0,
     scoreTable: [5, 10, 25, 50, 100],
     maxCount: 99,
-    timerRingDiameter: 36,
+    timerRingDiameter: 48,
+    timerRingRadius: 18,
     screenFx: {
       glowDuration: 0.45,
       pulseDuration: 0.42,

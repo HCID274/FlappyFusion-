@@ -15,6 +15,10 @@ import {
 
 let nextId = 0;
 
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
 function makeFloatingText(x, y, text, life, color, font) {
   return {
     id: `pt${nextId++}`,
@@ -54,6 +58,34 @@ function makeComboText(x, y, combo, score) {
     text: getComboLabel(combo, score),
     combo,
     score,
+  };
+}
+
+function estimateComboSpriteHalfHeight(spec) {
+  return spec.fontSize * 0.65 + spec.strokeWidth + spec.shadowBlur + 6;
+}
+
+function getComboTextPosition(world, combo) {
+  const plasma = world.plasma?.pos || { x: CONFIG.canvas.width / 2, y: CONFIG.canvas.height / 2 };
+  const inLowerHalf = plasma.y >= CONFIG.canvas.height / 2;
+  const comboTier = Math.min(Math.max(combo, 1), THEME.combo.length);
+  const spec = THEME.combo[comboTier - 1];
+  const floatUpDistance = 80;
+  const halfTextWidth = comboTier >= 5 ? 260 : 190;
+  const halfTextHeight = estimateComboSpriteHalfHeight(spec);
+  const maxVisualHalfHeight = halfTextHeight * spec.overshoot;
+  const topHudBottom = 82;
+  const ignitionTop = world.ignitionPhase?.active ? CONFIG.canvas.height - 112 : CONFIG.canvas.height - 48;
+  const targetY = inLowerHalf ? 150 : 450;
+  const followX = CONFIG.canvas.width / 2 + clamp((plasma.x - CONFIG.canvas.width / 2) * 0.18, -72, 72);
+
+  return {
+    x: clamp(followX, halfTextWidth, CONFIG.canvas.width - halfTextWidth),
+    y: clamp(
+      targetY,
+      topHudBottom + floatUpDistance + halfTextHeight,
+      ignitionTop - maxVisualHalfHeight,
+    ),
   };
 }
 
@@ -132,8 +164,9 @@ function makeFusionParticle(x, y, label, color, vx, vy) {
 }
 
 export function createParticleSystem(eventBus, world) {
-  eventBus.on(EV.COMBO_INCREMENT, ({ x, y, combo, score }) => {
-    world.particles.push(makeComboText(x, y - 30, combo, score));
+  eventBus.on(EV.COMBO_INCREMENT, ({ combo, score }) => {
+    const pos = getComboTextPosition(world, combo);
+    world.particles.push(makeComboText(pos.x, pos.y, combo, score));
   });
 
   eventBus.on(EV.FUSION_TRIGGERED, ({ x, y }) => {

@@ -228,12 +228,13 @@ when x < -150 → cleanup
 **combo 计时器到期 / 玩家死亡 / 阶段切换都会清零**。
 
 **视觉动感**(详细规范在 `content.md` §7.1):
-- 飘字从光球位置爆出,**字号随 combo 数递增**(28 → 36 → 44 → 56 → 72 px)
+- 飘字生成点按主角半屏避让:光球在下半屏时放到上半屏,光球在上半屏时放到下半屏;再按顶部 HUD / 底部点火条做边界 clamp,避免大字挡住操作区
+- **字号随 combo 数递增**(28 → 36 → 44 → 56 → 72 px)
 - 颜色梯度:黄 → 橙 → 红 → 洋红 → 白热(`#ffcc44` → `#ff8844` → `#ff4477` → `#ff44dd` → `#ffffff`)
 - 动画:0.08 秒过冲到 1.3×、回弹到 1.0×、停留 0.7 秒、向上飘 80 px 同时淡出 0.5 秒
 - ×4 起,**屏幕边缘出现金色辉光脉冲一次**(代码绘制,见 `content.md` §7.2)
 - ×5 起,**附带一帧白色全屏闪烁**(0.05 秒,不超过 5% 透明度,避免刺眼)
-- HUD 燃料舱旁边出现 combo 计时圆环(顺时针缩,combo 窗口可视化)
+- HUD 顶部中央出现 combo 计时圆环(顺时针缩,combo 窗口可视化),与左上燃料舱信息分离
 
 **为什么这样设计**:
 - 数字越大字越大、颜色越烈,**视觉本身就是反馈**,不需要看具体数字也能感到"我在叠"
@@ -439,7 +440,7 @@ when x < -150 → cleanup
 |---|---|---|
 | 左上 | 温度计 + 燃料舱(见 §10.2) | TEMP_CHANGED / COLLECTIBLE_HIT / FUSION_TRIGGERED |
 | 右上 | 得分 + 时间 | SCORE_CHANGED / 每帧 |
-| 顶部中央 | 磁场强度环(空格时亮) | INPUT_PULSE |
+| 顶部中央 | 磁场强度环(空格时亮) + Combo 计时圆环(见 §10.7) | INPUT_PULSE / COMBO_INCREMENT |
 
 ### 10.2 燃料舱(Fuel Bay)— 聚变机制的核心可视化
 
@@ -501,14 +502,14 @@ when x < -150 → cleanup
 **事件订阅**:`EV.PHASE_CHANGED`(进入/退出)、`EV.IGNITION_TICK`(可选,逐帧也行)、`EV.SELF_SUSTAIN_ACHIEVED`(炸开)。
 **文字**:进度条上方居中小字 `点火持续 {elapsed} / 20 s`(等宽字体,18 px,见 `content.md` §8.5)。
 
-### 10.7 Combo 计时圆环 — 紧邻燃料舱
+### 10.7 Combo 计时圆环 — 顶部中央
 
-**位置**:燃料舱模块右侧,直径 36 px。
+**位置**:Canvas 顶部中央,独立于左上燃料舱,直径 48 px。
 **显示条件**:`comboCount ≥ 2` 时出现,combo 重置时消失(0.2 秒淡出)。
 **视觉**:
 - 圆环外圈:当前 combo 数对应颜色(同 §6.5 颜色梯度)
 - 圆环填充比例 = `remainingTime / comboWindow`,**顺时针缩短**(像倒计时表盘)
-- 圆心数字:当前 combo 数(等宽,16 px,白色描边)
+- 圆心数字:当前 combo 数(等宽,18 px,白色描边)
 - 每次成功接到一次新 combo:整环 scale 1.4 → 1.0 弹性回弹,并切到下一档颜色
 - 还剩 0.4 秒时:**圆环开始红色闪烁**(0.1 秒周期),提醒"快接下一发"
 
@@ -602,7 +603,8 @@ export const CONFIG = {
     window: 2.0,                                       // §6.5 combo 计时窗口(秒),阶段会覆盖
     scoreTable: [5, 10, 25, 50, 100],                  // index = comboCount - 1,>=5 取末位
     maxCount: 99,                                      // 仅用于 HUD 显示截断
-    timerRingDiameter: 36,                             // §10.7 圆环像素
+    timerRingDiameter: 48,                             // §10.7 圆环像素
+    timerRingRadius: 18,                               // SVG progress 圆半径
     screenFx: {
       glowDuration: 0.45,
       pulseDuration: 0.42,
