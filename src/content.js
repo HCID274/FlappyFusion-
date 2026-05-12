@@ -29,6 +29,8 @@ export const CONTENT = {
       btnNext: '下一页 →',
       btnPrev: '← 上一页',
       languageLabel: '语言',
+      languageIcon: '语',
+      languageToggleLabel: '切换语言: 当前 {current}, 点击切换到 {next}',
     },
     language: {
       zh: '中文',
@@ -104,6 +106,8 @@ export const CONTENT = {
       btnNext: '次へ →',
       btnPrev: '← 前へ',
       languageLabel: '言語',
+      languageIcon: '语',
+      languageToggleLabel: '言語を切り替え: 現在 {current}, クリックで {next} へ',
     },
     language: {
       zh: '中国語',

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="ja-JP">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -62,24 +62,30 @@
       position: absolute;
       right: 12px;
       bottom: 12px;
-      display: flex;
-      gap: 6px;
       z-index: 5;
     }
     .lang-btn {
-      min-width: 58px;
-      padding: 5px 8px;
-      border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      background: rgba(0, 0, 0, 0.42);
-      color: rgba(255, 255, 255, 0.68);
-      font: 12px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      cursor: pointer;
-    }
-    .lang-btn.active {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 136, 204, 0.72);
+      background: rgba(0, 0, 0, 0.46);
       color: #fff;
-      border-color: #ff88cc;
+      font: 600 18px/1 "PingFang SC", "Yu Gothic", "Microsoft YaHei", sans-serif;
+      cursor: pointer;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 0 18px rgba(255, 136, 204, 0.18);
+      transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+    }
+    .lang-btn:hover {
+      transform: translateY(-1px);
       background: rgba(255, 136, 204, 0.18);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14), 0 0 22px rgba(255, 136, 204, 0.28);
+    }
+    .lang-btn:focus-visible {
+      outline: 2px solid #44ddff;
+      outline-offset: 3px;
     }
 
     /* Overlays */
@@ -152,7 +158,7 @@
       line-height: 1.75;
       color: rgba(255, 255, 255, 0.85);
       white-space: pre-line;
-      margin-bottom: 0.7rem;
+      margin: 0 auto 0.7rem;
     }
     .footer {
       max-width: 460px;
@@ -161,7 +167,7 @@
       line-height: 1.6;
       border-top: 1px solid rgba(255, 255, 255, 0.15);
       padding-top: 0.7rem;
-      margin-top: 0.5rem;
+      margin: 0.5rem auto 0;
     }
     .actions {
       display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
@@ -189,12 +195,31 @@
 
     /* Modal */
     .modal-content {
+      width: min(540px, 100%);
       max-width: 540px;
     }
     .modal-nav {
-      display: flex; align-items: center; gap: 1rem; margin-top: 1rem;
+      width: min(380px, 100%);
+      display: grid;
+      grid-template-columns: 112px 56px 112px;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      margin: 1rem auto 0;
     }
-    .page-indicator { color: rgba(255,255,255,0.5); font-size: 12px; }
+    .modal-nav .btn {
+      width: 112px;
+      padding-inline: 0;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .page-indicator {
+      width: 56px;
+      color: rgba(255,255,255,0.5);
+      font-size: 12px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
   </style>
 </head>
 <body>
@@ -203,8 +228,7 @@
 
     <div class="pulse-ring" id="hud-pulse-ring"></div>
     <div class="lang-switch" id="language-switch">
-      <button class="lang-btn" id="lang-zh" type="button" data-locale="zh" aria-pressed="false"></button>
-      <button class="lang-btn" id="lang-ja" type="button" data-locale="ja" aria-pressed="false"></button>
+      <button class="lang-btn" id="lang-toggle" type="button"></button>
     </div>
 
     <div class="hud">

@@ -1,5 +1,5 @@
 export const SUPPORTED_LOCALES = ['zh', 'ja'];
-export const DEFAULT_LOCALE = 'zh';
+export const DEFAULT_LOCALE = 'ja';
 
 const HTML_LANG = {
   zh: 'zh-CN',
@@ -88,7 +88,6 @@ function detectInitialLocale() {
   return (
     normalizeLocale(params.get('lang')) ||
     normalizeLocale(window.localStorage?.getItem('fusion-flappy-locale')) ||
-    normalizeLocale(window.navigator.language) ||
     DEFAULT_LOCALE
   );
 }

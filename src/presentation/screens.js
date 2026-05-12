@@ -9,7 +9,6 @@ import {
   getLocale,
   onLocaleChange,
   setLocale,
-  SUPPORTED_LOCALES,
   t,
 } from '../content.js';
 import { EV } from '../engine/events.js';
@@ -20,6 +19,7 @@ export function createScreens(eventBus, world) {
   const death = document.getElementById('screen-death');
   const modal = document.getElementById('screen-learn');
   const languageSwitch = document.getElementById('language-switch');
+  const languageButton = document.getElementById('lang-toggle');
 
   show(menu); hide(death); hide(modal);
 
@@ -39,19 +39,20 @@ export function createScreens(eventBus, world) {
     document.getElementById('learn-next').textContent = t('ui.btnNext');
     document.getElementById('learn-close').textContent = t('ui.btnClose');
     languageSwitch.setAttribute('aria-label', t('ui.languageLabel'));
-    updateLanguageButtons();
+    updateLanguageButton();
 
     if (world.status === 'dead') showDeathCard();
     if (modal.style.display !== 'none') renderLearnPage();
   }
 
-  function updateLanguageButtons() {
-    for (const locale of SUPPORTED_LOCALES) {
-      const button = document.getElementById(`lang-${locale}`);
-      button.textContent = t(`language.${locale}`);
-      button.classList.toggle('active', locale === getLocale());
-      button.setAttribute('aria-pressed', String(locale === getLocale()));
-    }
+  function updateLanguageButton() {
+    const nextLocale = getNextLocale();
+    languageButton.textContent = t('ui.languageIcon');
+    languageButton.title = t('ui.languageToggleLabel', {
+      current: t(`language.${getLocale()}`),
+      next: t(`language.${nextLocale}`),
+    });
+    languageButton.setAttribute('aria-label', languageButton.title);
   }
 
   function showDeathCard() {
@@ -98,9 +99,7 @@ export function createScreens(eventBus, world) {
     }
   });
 
-  for (const locale of SUPPORTED_LOCALES) {
-    document.getElementById(`lang-${locale}`).addEventListener('click', () => setLocale(locale));
-  }
+  languageButton.addEventListener('click', () => setLocale(getNextLocale()));
 
   document.getElementById('death-learnmore-btn').addEventListener('click', () => {
     learnIdx = 0;
@@ -128,3 +127,4 @@ export function createScreens(eventBus, world) {
 
 function show(el) { el.style.display = 'flex'; }
 function hide(el) { el.style.display = 'none'; }
+function getNextLocale() { return getLocale() === 'ja' ? 'zh' : 'ja'; }

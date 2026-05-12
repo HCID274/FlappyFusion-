@@ -176,7 +176,7 @@ Boost = {
 |---|---|
 | `config.js` | 所有可调数值常量,见 §8 |
 | `content.js` | 中文/日语文案 catalog 与查询函数:`t(key)` / `getMilestoneText(temp)` / `getDeathBody(...)` |
-| `i18n.js` | 语言选择、catalog 结构校验、缺 key 抛错、语言切换事件 |
+| `i18n.js` | 语言选择(默认日语)、catalog 结构校验、缺 key 抛错、语言切换事件 |
 | `theme.js` | 颜色、字号、尺寸 |
 | `assetLoader.js` | 启动时预加载 `src/assets/*.png`(规格见 `docs/assets.md`)。暴露 `getImage(key)` 给 entity / HUD 用。**缺图回退**:返回一个特殊占位标志,Entity 在 render 时检测到则改用纯色色块绘制 — 这样部分图缺失也能跑通游戏 |
 
@@ -435,7 +435,7 @@ openCampus/
 - 飘字台词、死亡卡片文字、二维码 → `content.md`
 - 美术资源清单 → 暂不需要(纯几何 Canvas)
 - 单元测试 → 不做(展位小游戏 ROI 太低)
-- 多语言 → 支持中文 / 日语,禁止新增未校验语言
+- 多语言 → 支持中文 / 日语,默认日语,右下角单按钮切换,禁止新增未校验语言
 - 移动端适配 → 不做
 
 ---

@@ -2,6 +2,7 @@
 
 > 本文档是**所有玩家可见文字的唯一权威来源**(架构文档 §3.4 DRY 的"叶子"之一)。
 > 当前支持语言:中文 `zh`、日语 `ja`。
+> 初始默认语言为日语 `ja`;右下角圆形"语"按钮在 `zh` / `ja` 间切换。
 > `src/content.js` 的 catalog 必须与本文档同步;新增任何玩家可见文字都必须同时提供 `zh` 和 `ja`。
 > 配套文档:`architecture.md`(代码组织) / `game-design.md`(玩法与数值)。
 
@@ -57,6 +58,8 @@
 | `ui.btnPrev` | ← 上一页 | ← 前へ | Modal |
 | `ui.btnNext` | 下一页 → | 次へ → | Modal |
 | `ui.languageLabel` | 语言 | 言語 | 语言切换 |
+| `ui.languageIcon` | 语 | 语 | 右下角圆形语言按钮 |
+| `ui.languageToggleLabel` | 切换语言: 当前 `{current}`, 点击切换到 `{next}` | 言語を切り替え: 現在 `{current}`, クリックで `{next}` へ | 语言按钮无障碍标签 |
 
 ---
 
