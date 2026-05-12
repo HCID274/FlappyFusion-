@@ -8,7 +8,11 @@ export const CONFIG = {
     startX: 200,
     startY: 300,
     drift: 140,
+    driftHighSpeed: 170,
+    driftHighSpeedAt: 230,
     pulseImpulse: -150,
+    pulseImpulseHighSpeed: -105,
+    pulseImpulseHighSpeedAt: 230,
     pulseCooldownTime: 0,
     radius: 14,
     trailLength: 10,
@@ -61,8 +65,8 @@ export const CONFIG = {
     tungsten: {
       tempStepPenalty: 1,
       redFlashDuration: 0.3,
-      hitBoxSize: 80,
-      hitBoxPadding: 10,
+      displaySize: 64,
+      hitBoxSize: 51.2,
     },
   },
 
@@ -88,6 +92,9 @@ export const CONFIG = {
   collectible: {
     spawnChance: 0.7,
     typeWeights: { D: 0.45, T: 0.45, Li6: 0.10 },
+    dtBalanceWindow: 10,
+    dtMaxStreak: 3,
+    fuelCatchUpThreshold: 1,
     radius: 8,
     hitRadius: 24,
     yJitter: 40,

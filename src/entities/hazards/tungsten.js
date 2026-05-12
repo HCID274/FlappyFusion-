@@ -6,16 +6,15 @@ let nextId = 0;
 
 export function createTungsten(x, y) {
   const size = CONFIG.hazards.tungsten.hitBoxSize;
-  const hitSize = size + CONFIG.hazards.tungsten.hitBoxPadding * 2;
   const h = {
     id: `w${nextId++}`,
     type: 'tungsten',
     pos: { x, y },
-    hitBox: { x: x - hitSize / 2, y: y - hitSize / 2, w: hitSize, h: hitSize },
+    hitBox: { x: x - size / 2, y: y - size / 2, w: size, h: size },
     triggered: false,
     alpha: 1,
     spin: Math.random() * Math.PI * 2,
-    radius: hitSize / 2,
+    radius: size / 2,
   };
 
   h.move = (dx) => {
@@ -34,7 +33,7 @@ function drawTungsten(ctx, h) {
   ctx.globalAlpha = h.alpha;
   const img = getImage('hazardTungsten');
   if (img) {
-    const size = CONFIG.hazards.tungsten.hitBoxSize;
+    const size = CONFIG.hazards.tungsten.displaySize;
     ctx.translate(h.pos.x, h.pos.y);
     ctx.rotate(Math.sin(h.spin) * 0.08);
     ctx.shadowColor = THEME.colors.tungsten;
@@ -50,9 +49,10 @@ function drawTungsten(ctx, h) {
   ctx.strokeStyle = '#ffffff';
   ctx.lineWidth = 1;
   ctx.beginPath();
+  const size = CONFIG.hazards.tungsten.displaySize;
   for (let i = 0; i < 9; i++) {
     const a = (i / 9) * Math.PI * 2;
-    const r = i % 2 === 0 ? 34 : 16;
+    const r = (i % 2 === 0 ? 0.425 : 0.2) * size;
     const x = Math.cos(a) * r;
     const y = Math.sin(a) * r;
     if (i === 0) ctx.moveTo(x, y);

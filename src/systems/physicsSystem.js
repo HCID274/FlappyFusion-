@@ -4,6 +4,26 @@
 import { EV } from '../engine/events.js';
 import { CONFIG } from '../config.js';
 
+function clamp(v, lo, hi) {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+function lerpBySpeed(world, baseValue, highSpeedValue, highSpeedAt) {
+  const speedRange = Math.max(1, highSpeedAt - CONFIG.scroll.baseSpeed);
+  const t = clamp((world.scrollSpeed - CONFIG.scroll.baseSpeed) / speedRange, 0, 1);
+  return baseValue + (highSpeedValue - baseValue) * t;
+}
+
+function getPulseImpulse(world) {
+  const { pulseImpulse, pulseImpulseHighSpeed, pulseImpulseHighSpeedAt } = CONFIG.plasma;
+  return lerpBySpeed(world, pulseImpulse, pulseImpulseHighSpeed, pulseImpulseHighSpeedAt);
+}
+
+function getDrift(world) {
+  const { drift, driftHighSpeed, driftHighSpeedAt } = CONFIG.plasma;
+  return lerpBySpeed(world, drift, driftHighSpeed, driftHighSpeedAt);
+}
+
 export function createPhysicsSystem(eventBus, world) {
   let pendingPulse = false;
 
@@ -22,7 +42,7 @@ export function createPhysicsSystem(eventBus, world) {
       const p = world.plasma;
 
       if (pendingPulse) {
-        p.vel.y = CONFIG.plasma.pulseImpulse;
+        p.vel.y = getPulseImpulse(world);
         p.pulseCooldown = CONFIG.plasma.pulseCooldownTime;
         p.pulseFlashT = 1;
         pendingPulse = false;
@@ -32,7 +52,7 @@ export function createPhysicsSystem(eventBus, world) {
       if (world.redFlashT > 0) world.redFlashT = Math.max(0, world.redFlashT - dt);
       if (world.nbiGlowT > 0) world.nbiGlowT = Math.max(0, world.nbiGlowT - dt);
 
-      p.vel.y += CONFIG.plasma.drift * dt;
+      p.vel.y += getDrift(world) * dt;
       if (p.vel.y > CONFIG.plasma.maxFallSpeed) p.vel.y = CONFIG.plasma.maxFallSpeed;
       if (p.vel.y < CONFIG.plasma.maxRiseSpeed) p.vel.y = CONFIG.plasma.maxRiseSpeed;
       p.pos.y += p.vel.y * dt;

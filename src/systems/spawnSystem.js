@@ -11,23 +11,34 @@ import { createLithium6 } from '../entities/collectibles/lithium6.js';
 import { createTungsten } from '../entities/hazards/tungsten.js';
 import { createNbi } from '../entities/boosts/nbi.js';
 import { pickInstabilityName } from '../content.js';
+import { createFuelTypePicker } from '../dtBalance.js';
 
 function rand(a, b) { return a + Math.random() * (b - a); }
 
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
-function pickCollectible(cx, cy) {
-  const weights = CONFIG.collectible.typeWeights;
-  const total = weights.D + weights.T + weights.Li6;
-  const roll = Math.random() * total;
-  if (roll < weights.D) return createDeuterium(cx, cy);
-  if (roll < weights.D + weights.T) return createTritium(cx, cy);
-  return createLithium6(cx, cy);
+function createCollectiblePicker() {
+  const fuelTypePicker = createFuelTypePicker();
+
+  return {
+    reset() {
+      fuelTypePicker.reset();
+    },
+    pick(cx, cy, world) {
+      const type = fuelTypePicker.pick({
+        collectedD: world.collectedD,
+        collectedT: world.collectedT,
+      });
+      if (type === 'Li6') return createLithium6(cx, cy);
+      return type === 'D' ? createDeuterium(cx, cy) : createTritium(cx, cy);
+    },
+  };
 }
 
 export function createSpawnSystem(eventBus, world) {
   let nextSpawnAt = 0; // distance counter
   let phaseRules = CONFIG.phases.rules.IGNITION_PREP;
+  const collectiblePicker = createCollectiblePicker();
 
   eventBus.on(EV.PHASE_CHANGED, ({ to }) => {
     phaseRules = CONFIG.phases.rules[to] || CONFIG.phases.rules.IGNITION_PREP;
@@ -36,6 +47,7 @@ export function createSpawnSystem(eventBus, world) {
   eventBus.on(EV.GAME_RESET, () => {
     nextSpawnAt = 0;
     phaseRules = CONFIG.phases.rules.IGNITION_PREP;
+    collectiblePicker.reset();
   });
 
   return {
@@ -45,7 +57,7 @@ export function createSpawnSystem(eventBus, world) {
       world.spawnDistance += world.scrollSpeed * dt;
 
       while (world.spawnDistance >= nextSpawnAt) {
-        spawnOne(world, eventBus, phaseRules);
+        spawnOne(world, eventBus, phaseRules, collectiblePicker);
         const spacing = rand(CONFIG.obstacle.spacingMin, CONFIG.obstacle.spacingMax);
         nextSpawnAt += spacing * (phaseRules.obstacleSpacingMul ?? 1);
       }
@@ -53,7 +65,7 @@ export function createSpawnSystem(eventBus, world) {
   };
 }
 
-function spawnOne(world, eventBus, phaseRules) {
+function spawnOne(world, eventBus, phaseRules, collectiblePicker) {
   const W = CONFIG.canvas.width;
   const H = CONFIG.canvas.height;
   const margin = CONFIG.obstacle.wallMargin;
@@ -90,7 +102,7 @@ function spawnOne(world, eventBus, phaseRules) {
     if (Math.random() < fuelSpawnChance) {
       const cy = gapY + (Math.random() - 0.5) * CONFIG.collectible.yJitter;
       const cx = W + 60 + 28 + Math.random() * 20;
-      world.collectibles.push(pickCollectible(cx, cy));
+      world.collectibles.push(collectiblePicker.pick(cx, cy, world));
     }
   }
 

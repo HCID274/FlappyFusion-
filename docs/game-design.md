@@ -111,7 +111,7 @@
 
 ### 5.3 钨碎片(TungstenDebris)— 软障碍(不致死,温度倒退)
 **视觉**:破碎金属碎片簇,工业冷灰色,锐利棱角(贴图见 `docs/assets.md` `hazard_tungsten.png`)。
-**碰撞**:1 个 AABB hitbox,比 80×80 sprite 四周各外扩 10 px。撞到后:
+**碰撞**:1 个 AABB hitbox。sprite 显示为 64×64 px,判定盒进一步收窄为 51.2×51.2 px,用于减少高速阶段误触。撞到后:
 - **不死**,等离子体继续飞行
 - 温度倒退 1 档(`world.temperature -= CONFIG.temperature.increment`,不低于 start)
 - 屏幕红闪 0.3 秒,等离子体短暂闪烁
@@ -174,7 +174,7 @@ when x < -150 → cleanup
 
 ### 6.1 氘原子(D)与氚原子(T)
 **视觉**:D 蓝色发光小球(直径 16 px),内部画 1 个白点;T 绿色发光小球,内部画 2 个白点。区分度要高,色弱也能分辨(蓝 vs 绿 + 形状差异)。
-**生成**:每对 Divertor 之间的间隙中,**70% 概率**飘 1 个原子,D/T 各 50% 概率。
+**生成**:每对 Divertor 之间的间隙中,**70% 概率**飘 1 个原子。Li-6 先按 10% 稀有权重掷骰,保持原频率;剩余 D/T 会根据当前燃料舱补缺,某一方已有库存时优先生成另一方。若 D/T 持平,使用 10 个一组的平衡袋:每组固定 5 个 D + 5 个 T,袋内顺序随机打乱;袋内与跨袋最多连续 3 个同类。
 **位置**:在间隙中心 ±40 px 随机偏移。
 **碰撞**:使用 24 px 宽容半径;吃到 +1 分,光球 +0.5 圈短暂高亮,记录到 `world.collectedD/T`。
 
@@ -523,8 +523,12 @@ export const CONFIG = {
   plasma: {
     startX: 200,
     startY: 300,
-    drift: 140,                // px/s²,下沉加速度。中心到底约 2s 安全窗口
+    drift: 140,                // px/s²,基础下沉加速度。中心到底约 2s 安全窗口
+    driftHighSpeed: 170,       // 高速阶段线性增加到此值,增幅慢于升力减弱
+    driftHighSpeedAt: 230,     // 与高速升力调整共用的速度端点
     pulseImpulse: -150,        // 单次脉冲速度变化。飞行节奏 ~1.4s
+    pulseImpulseHighSpeed: -105,   // 高速阶段上升幅度线性减小,降低错过概率
+    pulseImpulseHighSpeedAt: 230,  // scrollSpeed 到此值时使用高速脉冲
     pulseCooldownTime: 0,      // 秒;先 0,平衡测试时再考虑
     radius: 14,
     trailLength: 10,
@@ -548,8 +552,8 @@ export const CONFIG = {
     tungsten: {
       tempStepPenalty: 1,      // 撞到温度倒退 1 档(× CONFIG.temperature.increment)
       redFlashDuration: 0.3,   // 屏幕红闪秒数
-      hitBoxSize: 80,          // 与 sprite 一致
-      hitBoxPadding: 10,       // 判定盒四周外扩,避免看起来碰到却没触发
+      displaySize: 64,         // sprite 显示尺寸,比旧 80×80 缩小 20%
+      hitBoxSize: 51.2,        // 判定盒再缩小 20%,减少误触
     },
   },
 
@@ -616,7 +620,10 @@ export const CONFIG = {
 
   collectible: {
     spawnChance: 0.7,                              // 70% 间隙有收集物
-    typeWeights: { D: 0.45, T: 0.45, Li6: 0.10 },  // Li-6 罕见
+    typeWeights: { D: 0.45, T: 0.45, Li6: 0.10 },  // Li-6 频率不受补缺逻辑影响
+    dtBalanceWindow: 10,                           // 每 10 个 D/T 固定 5D+5T,袋内洗牌
+    dtMaxStreak: 3,                                // 袋内与跨袋最多连续 3 个同类
+    fuelCatchUpThreshold: 1,                       // 背包一边有库存时,D/T 优先补另一边
     radius: 8,
     hitRadius: 24,                                 // 收集判定半径,比视觉半径更宽容
     yJitter: 40,
