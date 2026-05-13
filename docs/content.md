@@ -233,13 +233,17 @@ HUD 不显示障碍数 / collectedD / collectedT 数字(那是内部指标,玩�
 | 4 | 56 px | `#ff44dd` 洋红 | 黑 2 px | 22 px / `#ff44dd` | 900 |
 | 5+ | 72 px | 白热 `#ffffff` | `#ff44dd` 4 px 主色描边 | 30 px / `#ffffff` + 二次 18 px / `#ffcc44` | 900 |
 
-**字体栈**(粗体 display 字体,而非等宽):
+**字体栈**(按当前语言切换;DOM 与 Canvas 文字保持一致):
 ```
-'Inter', 'Space Grotesk', 'Noto Sans SC', 'Noto Sans JP',
-'PingFang SC', 'Hiragino Sans', system-ui, sans-serif
+zh:
+'Microsoft YaHei', 'Noto Sans SC', 'PingFang SC', sans-serif
+
+ja:
+'Yu Mincho', YuMincho, 'Hiragino Mincho ProN', 'Hiragino Mincho Pro',
+'MS PMincho', 'MS Mincho', 'Noto Serif JP', 'Source Han Serif JP', serif
 ```
 
-`letter-spacing: 0.02em`,**不要斜体**。等宽字号大了缺张力,务必用 display sans。
+`letter-spacing: 0.02em`,**不要斜体**。中文使用微软雅黑优先的黑体栈保证清晰度;日语使用 Mincho / 明朝体栈强化日文质感。
 
 #### 7.2.3 入场 → 停留 → 出场 动画时间轴
 
@@ -342,7 +346,7 @@ combo 计时到期(玩家没接上)、玩家死亡、阶段切换出 IGNITION_BU
 #### 7.4.3 HUD 点火持续条文字(GDD §10.6)
 
 - 进度条上方居中小字 `点火持续 {elapsed} / 20 s`(zh) / `点火持続 {elapsed} / 20 s`(ja)
-- 18 px 等宽字体(`'JetBrains Mono', 'SF Mono', monospace`)
+- 18 px 当前语言字体(同 §7.2.2 字体栈)
 - 每秒更新一次,数字部分弹跳 scale 1.0 → 1.15 → 1.0(0.2 s)
 
 #### 7.4.4 进入闪光(画面级,非文字)

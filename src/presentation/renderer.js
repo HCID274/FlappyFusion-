@@ -2,12 +2,13 @@
 // Z-order: background → phase glow → parallax field → playfield → foreground particles → screen overlays.
 
 import { CONFIG } from '../config.js';
-import { THEME } from '../theme.js';
+import { getThemeFonts, THEME } from '../theme.js';
 import { getImage } from '../assetLoader.js';
 import {
   getComboLabel,
   getIgnitionIntroText,
   getIgnitionMilestoneText,
+  getLocale,
   getParticleLabel,
   getPhaseText,
   getSelfSustainText,
@@ -17,7 +18,8 @@ import {
 export function createRenderer(ctx, world) {
   getFusionImpactSprite();
   scheduleTextSpritePrewarm();
-  onLocaleChange(() => {
+  onLocaleChange((locale) => {
+    currentFonts = getThemeFonts(locale);
     textSpriteCache.clear();
     scheduleTextSpritePrewarm();
   });
@@ -28,6 +30,7 @@ export function createRenderer(ctx, world) {
       const H = CONFIG.canvas.height;
       const fx = world.screenFx;
 
+      ctx.gameFontFamily = getCurrentFonts().family;
       ctx.fillStyle = THEME.colors.bg;
       ctx.fillRect(0, 0, W, H);
 
@@ -502,10 +505,18 @@ function drawParticle(ctx, p) {
   ctx.globalAlpha = 1;
 }
 
-const DISPLAY_FONT = '"Inter", "Space Grotesk", "Noto Sans SC", "Noto Sans JP", "PingFang SC", "Hiragino Sans", system-ui, sans-serif';
 const textSpriteCache = new Map();
 let measureContext = null;
 let textSpritePrewarmQueued = false;
+let currentFonts = getThemeFonts(getLocale());
+
+function getCurrentFonts() {
+  return currentFonts;
+}
+
+function getDisplayFont() {
+  return getCurrentFonts().displayFamily;
+}
 
 function getMeasureContext() {
   if (!measureContext) measureContext = createScratchCanvas(1, 1).getContext('2d');
@@ -708,7 +719,7 @@ function drawFusionParticleLabel(ctx, p) {
 }
 
 function getFusionParticleLabelKey(text, color) {
-  return `fusionLabel|${THEME.font.particleLabel}|${color}|${text}`;
+  return `fusionLabel|${getCurrentFonts().particleLabel}|${color}|${text}`;
 }
 
 function buildFusionParticleLabelCommands(text, color) {
@@ -716,7 +727,7 @@ function buildFusionParticleLabelCommands(text, color) {
     text,
     x: 0,
     y: 0,
-    font: THEME.font.particleLabel,
+    font: getCurrentFonts().particleLabel,
     fillStyle: THEME.colors.text,
     strokeStyle: 'rgba(0, 0, 0, 0.78)',
     strokeWidth: 3,
@@ -752,7 +763,7 @@ function getComboSpriteKey(comboTier, text) {
 
 function buildComboTextCommands(comboTier, text) {
   const spec = THEME.combo[comboTier - 1];
-  const font = `${spec.weight} ${spec.fontSize}px ${DISPLAY_FONT}`;
+  const font = `${spec.weight} ${spec.fontSize}px ${getDisplayFont()}`;
   const commands = [
     {
       text,
@@ -806,7 +817,7 @@ function buildPhaseTextCommands(title, subtitle, color) {
     text: title,
     x: 0,
     y: 0,
-    font: `900 60px ${DISPLAY_FONT}`,
+    font: `900 60px ${getDisplayFont()}`,
     strokeStyle: 'rgba(0, 0, 0, 0.72)',
     strokeWidth: 4,
     fillStyle: color,
@@ -818,7 +829,7 @@ function buildPhaseTextCommands(title, subtitle, color) {
       text: subtitle,
       x: 0,
       y: 54,
-      font: `600 22px ${DISPLAY_FONT}`,
+      font: `600 22px ${getDisplayFont()}`,
       fillStyle: 'rgba(255, 255, 255, 0.85)',
     });
   }
@@ -854,7 +865,7 @@ function buildIgnitionIntroTitleCommands(title) {
     text: title,
     x: 0,
     y: 0,
-    font: `900 72px ${DISPLAY_FONT}`,
+    font: `900 72px ${getDisplayFont()}`,
     strokeStyle: 'rgba(0, 0, 0, 0.75)',
     strokeWidth: 5,
     fillStyle: THEME.colors.fusionGold,
@@ -872,7 +883,7 @@ function buildIgnitionIntroSubtitleCommands(subtitle) {
     text: subtitle,
     x: 0,
     y: 62,
-    font: `800 36px ${DISPLAY_FONT}`,
+    font: `800 36px ${getDisplayFont()}`,
     strokeStyle: 'rgba(0, 0, 0, 0.7)',
     strokeWidth: 3,
     fillStyle: THEME.colors.text,
@@ -904,7 +915,7 @@ function buildIgnitionMilestoneCommands(text, milestone, color) {
     text,
     x: 0,
     y: 0,
-    font: `800 ${fontSize}px ${DISPLAY_FONT}`,
+    font: `800 ${fontSize}px ${getDisplayFont()}`,
     strokeStyle: milestone >= 15 ? THEME.colors.fusionGold : 'rgba(0, 0, 0, 0.7)',
     strokeWidth: milestone >= 15 ? 3 : 2,
     fillStyle: color,
@@ -940,7 +951,7 @@ function drawSelfSustainText(ctx, p) {
 
 function drawDelayedSelfSustainTitle(ctx, title, age) {
   const chars = Array.from(title);
-  const font = `900 96px ${DISPLAY_FONT}`;
+  const font = `900 96px ${getDisplayFont()}`;
   const measure = getMeasureContext();
   measure.font = font;
   const widths = chars.map((char) => measure.measureText(char).width);
@@ -973,7 +984,7 @@ function buildSelfSustainTitleCommands(title) {
     text: title,
     x: 0,
     y: 0,
-    font: `900 96px ${DISPLAY_FONT}`,
+    font: `900 96px ${getDisplayFont()}`,
     strokeStyle: THEME.colors.fusionGold,
     strokeWidth: 4,
     fillStyle: THEME.colors.text,
@@ -991,7 +1002,7 @@ function buildSelfSustainSubtitleCommands(subtitle) {
     text: subtitle,
     x: 0,
     y: 78,
-    font: `900 64px ${DISPLAY_FONT}`,
+    font: `900 64px ${getDisplayFont()}`,
     fillStyle: THEME.colors.fusionGold,
     shadowColor: THEME.colors.fusionGold,
     shadowBlur: 18,
@@ -1007,7 +1018,7 @@ function buildSelfSustainFootnoteCommands(footnote) {
     text: footnote,
     x: 0,
     y: 122,
-    font: `700 18px ${DISPLAY_FONT}`,
+    font: `700 18px ${getDisplayFont()}`,
     fillStyle: THEME.colors.text,
   }];
 }

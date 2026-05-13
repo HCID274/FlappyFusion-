@@ -1,6 +1,40 @@
 // Visual constants. Single source of truth for colors, fonts, sizes.
 // See docs/game-design.md §13 for visual style guidance.
 
+export const MINCHO_FONT =
+  '"Yu Mincho", YuMincho, "Hiragino Mincho ProN", "Hiragino Mincho Pro", "MS PMincho", "MS Mincho", "Noto Serif JP", "Source Han Serif JP", serif';
+
+export const ZH_FONT =
+  '"Microsoft YaHei", "Noto Sans SC", "PingFang SC", sans-serif';
+
+const FONT_BY_LOCALE = {
+  ja: MINCHO_FONT,
+  zh: ZH_FONT,
+};
+
+export function getFontStack(locale = 'zh') {
+  return FONT_BY_LOCALE[locale] || ZH_FONT;
+}
+
+export function getThemeFonts(locale = 'zh') {
+  const family = getFontStack(locale);
+  return {
+    family,
+    displayFamily: family,
+    hud: `13px ${family}`,
+    floatLg: `bold 24px ${family}`,
+    floatSm: `16px ${family}`,
+    combo: `800 28px ${family}`,
+    particleLabel: `bold 24px ${family}`,
+  };
+}
+
+export function applyDocumentFonts(locale = 'zh', root) {
+  const target = root || (typeof document !== 'undefined' ? document.documentElement : null);
+  if (!target) return;
+  target.style.setProperty('--font-app', getFontStack(locale));
+}
+
 export const THEME = {
   colors: {
     bg: '#0a0e27',
@@ -24,14 +58,6 @@ export const THEME = {
     textDim: 'rgba(255,255,255,0.65)',
     he4: '#ff7755',
     neutron: '#ffffff',
-  },
-
-  font: {
-    hud: '13px ui-monospace, "SF Mono", Menlo, monospace',
-    floatLg: 'bold 24px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif',
-    floatSm: '16px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif',
-    combo: '800 28px "Inter", "Space Grotesk", "Noto Sans SC", "Noto Sans JP", "PingFang SC", "Hiragino Sans", system-ui, sans-serif',
-    particleLabel: 'bold 24px ui-monospace, monospace',
   },
 
   combo: [

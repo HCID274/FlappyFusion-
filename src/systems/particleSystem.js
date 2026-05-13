@@ -2,12 +2,13 @@
 
 import { EV } from '../engine/events.js';
 import { CONFIG } from '../config.js';
-import { THEME } from '../theme.js';
+import { getThemeFonts, THEME } from '../theme.js';
 import { scoreForPhase } from '../scoreMath.js';
 import {
   getComboLabel,
   getIgnitionIntroText,
   getIgnitionMilestoneText,
+  getLocale,
   getParticleLabel,
   getPhaseText,
   getSelfSustainText,
@@ -39,6 +40,10 @@ function makeTextMotion(x, y, dx, dy) {
     dx,
     dy,
   };
+}
+
+function getCurrentFonts() {
+  return getThemeFonts(getLocale());
 }
 
 function segmentedMotionProgress(age, maxLife, motion) {
@@ -94,7 +99,7 @@ function makeFloatingText(x, y, text, life, color, font) {
     maxLife: life,
     text,
     color,
-    font: font || THEME.font.floatLg,
+    font: font || getCurrentFonts().floatLg,
     strokeStyle: 'rgba(0, 0, 0, 0.68)',
     strokeWidth: 3,
     shadowColor: color,
@@ -113,7 +118,7 @@ function makeParticleScoreText(x, y, score) {
     maxLife: CONFIG.particle.scoreTextLifetime,
     text: `+${score}`,
     color: THEME.colors.electron,
-    font: 'bold 24px ui-monospace, "SF Mono", Menlo, monospace',
+    font: getCurrentFonts().floatLg,
     strokeStyle: 'rgba(0, 8, 18, 0.82)',
     strokeWidth: 3,
     shadowColor: THEME.colors.electron,
@@ -326,7 +331,7 @@ export function createParticleSystem(eventBus, world) {
       name,
       CONFIG.particle.instabilityLabelLifetime,
       THEME.colors.danger,
-      THEME.font.floatSm,
+      getCurrentFonts().floatSm,
     ));
   });
 
@@ -338,7 +343,7 @@ export function createParticleSystem(eventBus, world) {
       getParticleLabel('lithiumBreeding', { score: scoreForPhase(CONFIG.score.perLithium, world.phase) }),
       CONFIG.particle.sceneTextLifetime,
       THEME.colors.lithium6,
-      THEME.font.floatSm,
+      getCurrentFonts().floatSm,
     ));
   });
 
@@ -350,7 +355,7 @@ export function createParticleSystem(eventBus, world) {
       getParticleLabel('tungstenCooling'),
       CONFIG.particle.sceneTextLifetime,
       THEME.colors.tungsten,
-      THEME.font.floatSm,
+      getCurrentFonts().floatSm,
     ));
   });
 
@@ -362,7 +367,7 @@ export function createParticleSystem(eventBus, world) {
       getParticleLabel('nbiHeating'),
       CONFIG.particle.sceneTextLifetime,
       THEME.colors.fusionGold,
-      THEME.font.floatSm,
+      getCurrentFonts().floatSm,
     ));
   });
 

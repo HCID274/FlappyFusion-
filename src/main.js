@@ -4,7 +4,8 @@
 import { CONFIG } from './config.js';
 import { preloadAssets } from './assetLoader.js';
 import { createWorld } from './world.js';
-import { initLocale } from './content.js';
+import { initLocale, onLocaleChange } from './content.js';
+import { applyDocumentFonts } from './theme.js';
 import { createEventBus } from './engine/eventBus.js';
 import { createGameLoop } from './engine/gameLoop.js';
 import { createStateMachine } from './engine/stateMachine.js';
@@ -29,7 +30,8 @@ import { createHUD } from './presentation/hud.js';
 import { createScreens } from './presentation/screens.js';
 
 const canvas = document.getElementById('game');
-initLocale();
+applyDocumentFonts(initLocale());
+onLocaleChange(applyDocumentFonts);
 await preloadAssets();
 const renderScale = CONFIG.canvas.renderScale || 1;
 canvas.width = CONFIG.canvas.width * renderScale;

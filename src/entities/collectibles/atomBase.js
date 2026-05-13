@@ -59,7 +59,7 @@ function drawAtom(ctx, c, color, dots, imageKey, label) {
   }
 
   ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 10px ui-monospace, monospace';
+  ctx.font = `bold 10px ${ctx.gameFontFamily || 'sans-serif'}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(label, c.pos.x, c.pos.y + yo);

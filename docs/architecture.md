@@ -171,7 +171,7 @@ Boost = {
 
 | 模块 | 职责 |
 |---|---|
-| `renderer.js` | 按 z-order 把所有 `Renderable` 画到 Canvas:背景板 → 阶段辉光 → 视差磁力线 → 障碍/粒子云/收集物/Boost/Hazard → 等离子体 → 前景粒子/飘字 → 屏幕级 FX overlay。主画布、离屏文字 sprite、聚变冲击环 sprite 均按 `canvas.renderScale` 生成物理像素,绘制坐标仍是 800×600 逻辑坐标;Combo/阶段/点火/自维持/聚变标签等文字均走 `getTextSprite()` 缓存 |
+| `renderer.js` | 按 z-order 把所有 `Renderable` 画到 Canvas:背景板 → 阶段辉光 → 视差磁力线 → 障碍/粒子云/收集物/Boost/Hazard → 等离子体 → 前景粒子/飘字 → 屏幕级 FX overlay。主画布、离屏文字 sprite、聚变冲击环 sprite 均按 `canvas.renderScale` 生成物理像素,绘制坐标仍是 800×600 逻辑坐标;Combo/阶段/点火/自维持/聚变标签等文字均走 `getTextSprite()` 缓存,字体按当前语言从 `theme.js` 读取 |
 | `hud.js` | DOM 元素显示温度/得分/磁场环/燃料舱/顶部中央 Combo 圆环/点火持续条。订阅事件更新离散状态,每帧只刷新时间与倒计时 |
 | `screens.js` | `MenuScreen` / `DeathCardScreen` / `TutorialScreen`,DOM overlay |
 
@@ -182,7 +182,7 @@ Boost = {
 | `config.js` | 所有可调数值常量,见 §8 |
 | `content.js` | 中文/日语文案 catalog 与查询函数:`t(key)` / `getMilestoneText(temp)` / `getDeathBody(...)` |
 | `i18n.js` | 语言选择(默认日语)、catalog 结构校验、缺 key 抛错、语言切换事件 |
-| `theme.js` | 颜色、字号、尺寸 |
+| `theme.js` | 颜色、字号、尺寸、按语言切换的字体栈(zh 微软雅黑 / ja Mincho),并通过 `applyDocumentFonts()` 写入 DOM 的 `--font-app` CSS 变量 |
 | `assetLoader.js` | 启动时预加载 `src/assets/2x/` 高清 PNG(规格见 `docs/assets.md`)。暴露 `getImage(key)` 给 entity / HUD / renderer 用。**缺图回退**:返回 `null`,Entity 或 renderer 在 render 时检测到则改用纯色/代码绘制兜底 — 这样部分图缺失也能跑通游戏 |
 
 ---
