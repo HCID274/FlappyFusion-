@@ -2,6 +2,32 @@ import { CONFIG } from '../../config.js';
 import { THEME } from '../../theme.js';
 
 let nextId = 0;
+const GAP = 220;
+
+function clamp(v, lo, hi) {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+function layoutHitBoxes(ob) {
+  const margin = CONFIG.obstacle.wallMargin;
+  const H = CONFIG.canvas.height;
+  const minCenterY = margin + 140;
+  const maxCenterY = Math.max(minCenterY, H - margin - 140);
+  ob.centerY = clamp(ob.centerY, minCenterY, maxCenterY);
+
+  ob.hitBoxes[0] = {
+    x: ob.x,
+    y: margin,
+    w: ob.w,
+    h: Math.max(0, ob.centerY - GAP / 2 - margin),
+  };
+  ob.hitBoxes[1] = {
+    x: ob.x,
+    y: ob.centerY + GAP / 2,
+    w: ob.w,
+    h: Math.max(0, H - margin - (ob.centerY + GAP / 2)),
+  };
+}
 
 // MHD instability region: a roiling red cloud of blobs above and below a passable gap.
 // Approximated as 2 stacked AABB hitboxes with the gap in between.
@@ -9,9 +35,6 @@ let nextId = 0;
 
 export function createInstability(leftX, centerY) {
   const r = THEME.size.instabilityR;
-  const margin = CONFIG.obstacle.wallMargin;
-  const H = CONFIG.canvas.height;
-  const gap = 220;
   const w = r * 2;
 
   const ob = {
@@ -24,22 +47,21 @@ export function createInstability(leftX, centerY) {
     passed: false,
     rot: 0,
     blobs: [
-      { dx: 0,        dy: -gap / 2 - r * 0.5, r: r * 1.0 },
-      { dx: r * 0.4,  dy: -gap / 2 - r * 1.4, r: r * 0.7 },
-      { dx: 0,        dy:  gap / 2 + r * 0.5, r: r * 1.0 },
-      { dx: -r * 0.4, dy:  gap / 2 + r * 1.4, r: r * 0.7 },
+      { dx: 0,        dy: -GAP / 2 - r * 0.5, r: r * 1.0 },
+      { dx: r * 0.4,  dy: -GAP / 2 - r * 1.4, r: r * 0.7 },
+      { dx: 0,        dy:  GAP / 2 + r * 0.5, r: r * 1.0 },
+      { dx: -r * 0.4, dy:  GAP / 2 + r * 1.4, r: r * 0.7 },
     ],
-    hitBoxes: [
-      { x: leftX, y: margin, w, h: Math.max(0, centerY - gap / 2 - margin) },
-      { x: leftX, y: centerY + gap / 2, w, h: Math.max(0, H - margin - (centerY + gap / 2)) },
-    ],
+    hitBoxes: [],
   };
+  ob.layout = () => layoutHitBoxes(ob);
   ob.move = (dx) => {
     ob.x += dx;
     ob.hitBoxes[0].x += dx;
     ob.hitBoxes[1].x += dx;
   };
   ob.render = (ctx) => drawInstability(ctx, ob);
+  ob.layout();
   return ob;
 }
 

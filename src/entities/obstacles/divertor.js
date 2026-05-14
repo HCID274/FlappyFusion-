@@ -3,13 +3,27 @@ import { THEME } from '../../theme.js';
 
 let nextId = 0;
 
-export function createDivertor(x, gapY, gap) {
-  const w = CONFIG.obstacle.width;
+function clamp(v, lo, hi) {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+function layoutHitBoxes(ob) {
   const H = CONFIG.canvas.height;
   const margin = CONFIG.obstacle.wallMargin;
-  const topH = gapY - gap / 2 - margin;
-  const botY = gapY + gap / 2;
+  const minGapY = margin + ob.gap / 2 + 30;
+  const maxGapY = Math.max(minGapY, H - margin - ob.gap / 2 - 30);
+  ob.gapY = clamp(ob.gapY, minGapY, maxGapY);
+
+  const topH = ob.gapY - ob.gap / 2 - margin;
+  const botY = ob.gapY + ob.gap / 2;
   const botH = H - margin - botY;
+
+  ob.hitBoxes[0] = { x: ob.x, y: margin, w: ob.w, h: Math.max(0, topH) };
+  ob.hitBoxes[1] = { x: ob.x, y: botY, w: ob.w, h: Math.max(0, botH) };
+}
+
+export function createDivertor(x, gapY, gap) {
+  const w = CONFIG.obstacle.width;
 
   const ob = {
     id: `div${nextId++}`,
@@ -19,17 +33,16 @@ export function createDivertor(x, gapY, gap) {
     gap,
     w,
     passed: false,
-    hitBoxes: [
-      { x, y: margin, w, h: Math.max(0, topH) },
-      { x, y: botY, w, h: Math.max(0, botH) },
-    ],
+    hitBoxes: [],
   };
+  ob.layout = () => layoutHitBoxes(ob);
   ob.move = (dx) => {
     ob.x += dx;
     ob.hitBoxes[0].x += dx;
     ob.hitBoxes[1].x += dx;
   };
   ob.render = (ctx) => drawDivertor(ctx, ob);
+  ob.layout();
   return ob;
 }
 

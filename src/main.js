@@ -33,19 +33,68 @@ const canvas = document.getElementById('game');
 applyDocumentFonts(initLocale());
 onLocaleChange(applyDocumentFonts);
 await preloadAssets();
-const renderScale = CONFIG.canvas.renderScale || 1;
-canvas.width = CONFIG.canvas.width * renderScale;
-canvas.height = CONFIG.canvas.height * renderScale;
-canvas.style.width = `${CONFIG.canvas.width}px`;
-canvas.style.height = `${CONFIG.canvas.height}px`;
 const ctx = canvas.getContext('2d');
-ctx.setTransform(renderScale, 0, 0, renderScale, 0, 0);
 ctx.imageSmoothingEnabled = true;
 ctx.imageSmoothingQuality = 'high';
+
+const maxRenderScale = CONFIG.canvas.renderScale || 1;
+
+function getViewportSize() {
+  const viewport = window.visualViewport;
+  const width = viewport?.width || window.innerWidth || document.documentElement.clientWidth || CONFIG.canvas.width;
+  const height = viewport?.height || window.innerHeight || document.documentElement.clientHeight || CONFIG.canvas.height;
+  return {
+    width: Math.max(1, Math.round(width)),
+    height: Math.max(1, Math.round(height)),
+  };
+}
+
+function syncCanvasToViewport() {
+  const { width, height } = getViewportSize();
+  const renderScale = Math.min(Math.max(1, window.devicePixelRatio || 1), maxRenderScale);
+
+  CONFIG.canvas.width = width;
+  CONFIG.canvas.height = height;
+  CONFIG.canvas.renderScale = renderScale;
+
+  canvas.width = Math.round(width * renderScale);
+  canvas.height = Math.round(height * renderScale);
+  canvas.style.width = '100%';
+  canvas.style.height = '100%';
+
+  ctx.setTransform(renderScale, 0, 0, renderScale, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+}
+
+function clampWorldToViewport(world) {
+  const margin = CONFIG.obstacle.wallMargin;
+  const p = world.plasma;
+  const minY = margin + p.radius;
+  const maxX = Math.max(p.radius, CONFIG.canvas.width - p.radius);
+  const maxY = Math.max(minY, CONFIG.canvas.height - margin - p.radius);
+
+  p.pos.x = Math.min(Math.max(p.radius, p.pos.x), maxX);
+  p.pos.y = Math.min(Math.max(minY, p.pos.y), maxY);
+  world.lastGapY = Math.min(Math.max(margin + 140, world.lastGapY), Math.max(margin + 140, CONFIG.canvas.height - margin - 140));
+
+  for (const obstacle of world.obstacles) obstacle.layout?.();
+}
+
+syncCanvasToViewport();
 
 const eventBus = createEventBus();
 const world = createWorld();
 const screenFxSystem = createScreenFxSystem(eventBus, world);
+
+window.addEventListener('resize', () => {
+  syncCanvasToViewport();
+  clampWorldToViewport(world);
+});
+window.visualViewport?.addEventListener('resize', () => {
+  syncCanvasToViewport();
+  clampWorldToViewport(world);
+});
 
 // Order matters: input → spawn → particle stream → physics → collision → fusion → score/temp → phase/ignition → difficulty → particles → cleanup
 const systems = [
