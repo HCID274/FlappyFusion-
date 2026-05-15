@@ -30,6 +30,7 @@ import { createHUD } from './presentation/hud.js';
 import { createScreens } from './presentation/screens.js';
 
 const canvas = document.getElementById('game');
+const stage = canvas.closest('.game-wrap');
 applyDocumentFonts(initLocale());
 onLocaleChange(applyDocumentFonts);
 await preloadAssets();
@@ -39,18 +40,31 @@ ctx.imageSmoothingQuality = 'high';
 
 const maxRenderScale = CONFIG.canvas.renderScale || 1;
 
-function getViewportSize() {
+function getFallbackStageSize() {
   const viewport = window.visualViewport;
-  const width = viewport?.width || window.innerWidth || document.documentElement.clientWidth || CONFIG.canvas.width;
-  const height = viewport?.height || window.innerHeight || document.documentElement.clientHeight || CONFIG.canvas.height;
+  const viewportWidth = viewport?.width || window.innerWidth || document.documentElement.clientWidth || CONFIG.canvas.width;
+  const viewportHeight = viewport?.height || window.innerHeight || document.documentElement.clientHeight || CONFIG.canvas.height;
+  const width = Math.min(viewportWidth, viewportHeight * (4 / 3));
+  const height = Math.min(viewportHeight, viewportWidth * (3 / 4));
+
   return {
     width: Math.max(1, Math.round(width)),
     height: Math.max(1, Math.round(height)),
   };
 }
 
-function syncCanvasToViewport() {
-  const { width, height } = getViewportSize();
+function getStageSize() {
+  const rect = stage?.getBoundingClientRect();
+  if (!rect?.width || !rect?.height) return getFallbackStageSize();
+
+  return {
+    width: Math.max(1, Math.round(rect.width)),
+    height: Math.max(1, Math.round(rect.height)),
+  };
+}
+
+function syncCanvasToStage() {
+  const { width, height } = getStageSize();
   const renderScale = Math.min(Math.max(1, window.devicePixelRatio || 1), maxRenderScale);
 
   CONFIG.canvas.width = width;
@@ -67,7 +81,7 @@ function syncCanvasToViewport() {
   ctx.imageSmoothingQuality = 'high';
 }
 
-function clampWorldToViewport(world) {
+function clampWorldToStage(world) {
   const margin = CONFIG.obstacle.wallMargin;
   const p = world.plasma;
   const minY = margin + p.radius;
@@ -81,20 +95,22 @@ function clampWorldToViewport(world) {
   for (const obstacle of world.obstacles) obstacle.layout?.();
 }
 
-syncCanvasToViewport();
+syncCanvasToStage();
 
 const eventBus = createEventBus();
 const world = createWorld();
 const screenFxSystem = createScreenFxSystem(eventBus, world);
 
-window.addEventListener('resize', () => {
-  syncCanvasToViewport();
-  clampWorldToViewport(world);
-});
-window.visualViewport?.addEventListener('resize', () => {
-  syncCanvasToViewport();
-  clampWorldToViewport(world);
-});
+function resizeGame() {
+  syncCanvasToStage();
+  clampWorldToStage(world);
+}
+
+window.addEventListener('resize', resizeGame);
+window.visualViewport?.addEventListener('resize', resizeGame);
+if (typeof ResizeObserver !== 'undefined' && stage) {
+  new ResizeObserver(resizeGame).observe(stage);
+}
 
 // Order matters: input → spawn → particle stream → physics → collision → fusion → score/temp → phase/ignition → difficulty → particles → cleanup
 const systems = [
