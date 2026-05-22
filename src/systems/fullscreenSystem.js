@@ -58,8 +58,9 @@ export function createFullscreenSystem(eventBus, world, stage) {
   function updateFullscreenState({ hint = false } = {}) {
     const active = document.fullscreenElement === stage;
     const portrait = window.innerHeight > window.innerWidth;
+    const smallScreen = Math.min(window.innerWidth, window.innerHeight) < 700;
     world.isFullscreen = active;
-    world.fullscreenHintVisible = hint || (active && portrait);
+    world.fullscreenHintVisible = hint || (portrait && smallScreen);
     stage?.classList.toggle('is-fullscreen', active);
     document.body.classList.toggle('is-fullscreen', active);
     eventBus.emit(EV.FULLSCREEN_CHANGED, {

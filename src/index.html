@@ -7,6 +7,10 @@
   <style>
     :root {
       --font-app: sans-serif;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
     }
     * { box-sizing: border-box; }
     html, body {
@@ -19,44 +23,77 @@
       overflow: hidden;
       overscroll-behavior: none;
     }
-    body {
+    .game-wrap {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
       display: grid;
       place-items: center;
+      padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+      overflow: hidden;
+      background: #000;
+      touch-action: none;
     }
-    .game-wrap {
+    @supports (height: 100dvh) {
+      .game-wrap {
+        height: 100dvh;
+      }
+    }
+    .game-frame {
+      --game-scale: 1;
       position: relative;
-      width: min(100vw, 133.333333vh);
-      height: min(100vh, 75vw);
+      width: min(100%, 133.333333vh);
+      height: min(100%, 75vw);
       aspect-ratio: 4 / 3;
       overflow: hidden;
       background: #0a0e27;
       touch-action: none;
     }
     @supports (height: 100dvh) {
-      .game-wrap {
-        width: min(100vw, 133.333333dvh);
-        height: min(100dvh, 75vw);
+      .game-frame {
+        width: min(100%, 133.333333dvh);
+        height: min(100%, 75vw);
       }
+    }
+    .game-stage {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 800px;
+      height: 600px;
+      overflow: hidden;
+      transform: scale(var(--game-scale));
+      transform-origin: top left;
+      touch-action: none;
     }
     #game {
       display: block;
-      width: 100%;
-      height: 100%;
+      width: 800px;
+      height: 600px;
       background: #0a0e27;
       outline: none;
       touch-action: none;
       user-select: none;
     }
     .game-wrap:fullscreen {
-      width: 100dvw;
-      height: 100dvh;
-      max-width: none;
-      max-height: none;
-      aspect-ratio: auto;
+      width: 100vw;
+      height: 100vh;
     }
-    .game-wrap:fullscreen #game {
-      width: 100%;
-      height: 100%;
+    @supports (height: 100dvh) {
+      .game-wrap:fullscreen {
+        height: 100dvh;
+      }
+    }
+    .game-wrap:fullscreen .game-frame {
+      width: min(100%, 133.333333vh);
+      height: min(100%, 75vw);
+    }
+    @supports (height: 100dvh) {
+      .game-wrap:fullscreen .game-frame {
+        width: min(100%, 133.333333dvh);
+        height: min(100%, 75vw);
+      }
     }
 
     /* HUD */
@@ -374,8 +411,8 @@
     }
     .view-controls {
       position: absolute;
-      left: max(12px, env(safe-area-inset-left));
-      bottom: max(12px, env(safe-area-inset-bottom));
+      left: 12px;
+      bottom: 12px;
       z-index: 6;
       display: flex;
       align-items: flex-end;
@@ -406,7 +443,7 @@
       outline-offset: 3px;
     }
     .fullscreen-hint {
-      max-width: min(280px, 52vw);
+      max-width: 280px;
       padding: 8px 11px;
       border-radius: 8px;
       border: 1px solid rgba(255, 204, 68, 0.5);
@@ -694,7 +731,7 @@
     .tutorial-card-content {
       left: 50%;
       width: min(420px, calc(100% - 32px));
-      max-height: min(76vh, 430px);
+      max-height: 430px;
       padding: 14px 16px 16px;
       overflow: hidden;
       transform: translateX(-50%);
@@ -795,104 +832,13 @@
       text-align: center;
       font-variant-numeric: tabular-nums;
     }
-
-    @media (max-width: 600px) {
-      .hud {
-        top: 8px;
-        left: 8px;
-        right: 8px;
-        font-size: 11px;
-      }
-      .hud-item {
-        padding: 4px 8px;
-      }
-      .fuel-bay {
-        width: 156px;
-        padding: 7px 8px 8px;
-      }
-      .fuel-slots {
-        max-width: 112px;
-      }
-      .fuel-slot {
-        width: 24px;
-        height: 24px;
-      }
-      .fuel-slot img {
-        width: 21px;
-        height: 21px;
-      }
-      .overlay {
-        padding: 1.25rem;
-      }
-      .overlay h1 {
-        font-size: 24px;
-      }
-      .overlay h2 {
-        font-size: 20px;
-      }
-      .tutorial,
-      .body {
-        font-size: 13px;
-      }
-      .menu-toggles {
-        gap: 6px;
-      }
-      .menu-toggle-row {
-        gap: 6px;
-      }
-      .difficulty-btn,
-      .audience-btn,
-      .tutorial-toggle-btn,
-      .audio-toggle-btn {
-        min-width: 76px;
-        min-height: 32px;
-        padding-inline: 10px;
-        font-size: 11px;
-      }
-      .audience-btn {
-        min-width: 94px;
-      }
-      .tutorial-toggle-btn {
-        min-width: 126px;
-      }
-      .audio-toggle-btn {
-        min-width: 108px;
-      }
-      .learn-illust {
-        height: 150px;
-      }
-      .learn-qr {
-        width: 112px;
-        height: 112px;
-        margin-top: 0.65rem;
-        padding: 4px;
-      }
-      .tutorial-illust {
-        height: 118px;
-      }
-      .lang-switch {
-        right: 8px;
-        bottom: 8px;
-      }
-      .view-controls {
-        left: max(8px, env(safe-area-inset-left));
-        bottom: max(8px, env(safe-area-inset-bottom));
-      }
-      .fullscreen-btn {
-        min-width: 68px;
-        min-height: 36px;
-        padding-inline: 12px;
-      }
-      .fullscreen-hint {
-        max-width: min(240px, 58vw);
-        font-size: 11px;
-      }
-    }
   </style>
 </head>
 <body>
   <div class="game-wrap">
-    <canvas id="game" tabindex="0"></canvas>
+    <div class="game-frame">
+    <div class="game-stage">
+      <canvas id="game" tabindex="0"></canvas>
 
     <div class="pulse-ring" id="hud-pulse-ring"></div>
     <div class="combo-hud">
@@ -993,6 +939,8 @@
         <div class="tutorial-hint" id="tutorial-hint"></div>
         <button class="btn tutorial-close-btn" id="tutorial-close-btn" type="button"></button>
       </div>
+    </div>
+    </div>
     </div>
   </div>
 

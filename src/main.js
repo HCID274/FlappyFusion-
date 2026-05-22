@@ -9,7 +9,6 @@ import { applyDocumentFonts } from './theme.js';
 import { createEventBus } from './engine/eventBus.js';
 import { createGameLoop } from './engine/gameLoop.js';
 import { createStateMachine } from './engine/stateMachine.js';
-import { EV } from './engine/events.js';
 
 import { createInputSystem } from './systems/inputSystem.js';
 import { createSpawnSystem } from './systems/spawnSystem.js';
@@ -38,92 +37,107 @@ import { createTutorialScreen } from './presentation/tutorialScreen.js';
 
 const canvas = document.getElementById('game');
 const stage = canvas.closest('.game-wrap');
-applyDocumentFonts(initLocale());
-onLocaleChange(applyDocumentFonts);
-await preloadAssets();
+const frame = canvas.closest('.game-frame');
+const gameStage = canvas.closest('.game-stage');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = true;
 ctx.imageSmoothingQuality = 'high';
 
-const maxRenderScale = CONFIG.canvas.renderScale || 1;
+const designWidth = CONFIG.canvas.width;
+const designHeight = CONFIG.canvas.height;
+const maxBackingScale = CONFIG.canvas.renderScale || 1;
 
-function getFallbackStageSize() {
+function parseCssPx(raw) {
+  const value = Number.parseFloat(raw);
+  return Number.isFinite(value) ? value : 0;
+}
+
+function getSafeInsets() {
+  const style = getComputedStyle(stage || document.documentElement);
+  return {
+    left: parseCssPx(style.paddingLeft),
+    right: parseCssPx(style.paddingRight),
+    top: parseCssPx(style.paddingTop),
+    bottom: parseCssPx(style.paddingBottom),
+  };
+}
+
+function getViewportSize() {
   const viewport = window.visualViewport;
-  const viewportWidth = viewport?.width || window.innerWidth || document.documentElement.clientWidth || CONFIG.canvas.width;
-  const viewportHeight = viewport?.height || window.innerHeight || document.documentElement.clientHeight || CONFIG.canvas.height;
-  const width = Math.min(viewportWidth, viewportHeight * (4 / 3));
-  const height = Math.min(viewportHeight, viewportWidth * (3 / 4));
+  const safe = getSafeInsets();
+  const safeX = safe.left + safe.right;
+  const safeY = safe.top + safe.bottom;
+  const rawWidth = viewport?.width || window.innerWidth || document.documentElement.clientWidth || designWidth;
+  const rawHeight = viewport?.height || window.innerHeight || document.documentElement.clientHeight || designHeight;
 
   return {
-    width: Math.max(1, Math.round(width)),
-    height: Math.max(1, Math.round(height)),
+    width: Math.max(1, rawWidth - safeX),
+    height: Math.max(1, rawHeight - safeY),
   };
 }
 
-function getStageSize() {
-  const rect = stage?.getBoundingClientRect();
-  if (!rect?.width || !rect?.height) return getFallbackStageSize();
+function getFrameLayout() {
+  const viewport = getViewportSize();
+  const scale = Math.max(0.01, Math.min(viewport.width / designWidth, viewport.height / designHeight));
 
   return {
-    width: Math.max(1, Math.round(rect.width)),
-    height: Math.max(1, Math.round(rect.height)),
+    scale,
+    width: designWidth * scale,
+    height: designHeight * scale,
   };
 }
 
-function syncCanvasToStage() {
-  const { width, height } = getStageSize();
-  const renderScale = Math.min(Math.max(1, window.devicePixelRatio || 1), maxRenderScale);
+function syncCanvasToFrame() {
+  const { width, height, scale: layoutScale } = getFrameLayout();
+  const backingScale = Math.min(
+    Math.max(1, (window.devicePixelRatio || 1) * layoutScale),
+    maxBackingScale,
+  );
 
-  CONFIG.canvas.width = width;
-  CONFIG.canvas.height = height;
-  CONFIG.canvas.renderScale = renderScale;
+  // Keep gameplay and HUD on the original 800x600 coordinate system.
+  CONFIG.canvas.width = designWidth;
+  CONFIG.canvas.height = designHeight;
+  CONFIG.canvas.renderScale = backingScale;
 
-  canvas.width = Math.round(width * renderScale);
-  canvas.height = Math.round(height * renderScale);
-  canvas.style.width = '100%';
-  canvas.style.height = '100%';
+  frame?.style.setProperty('--game-scale', String(layoutScale));
+  if (frame) {
+    frame.style.width = `${width}px`;
+    frame.style.height = `${height}px`;
+  }
+  gameStage?.style.setProperty('--game-scale', String(layoutScale));
+  canvas.width = Math.round(designWidth * backingScale);
+  canvas.height = Math.round(designHeight * backingScale);
+  canvas.style.width = `${designWidth}px`;
+  canvas.style.height = `${designHeight}px`;
 
-  ctx.setTransform(renderScale, 0, 0, renderScale, 0, 0);
+  ctx.setTransform(backingScale, 0, 0, backingScale, 0, 0);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 }
 
-function clampWorldToStage(world) {
-  const margin = CONFIG.obstacle.wallMargin;
-  const p = world.plasma;
-  const minY = margin + p.radius;
-  const maxX = Math.max(p.radius, CONFIG.canvas.width - p.radius);
-  const maxY = Math.max(minY, CONFIG.canvas.height - margin - p.radius);
-
-  p.pos.x = Math.min(Math.max(p.radius, p.pos.x), maxX);
-  p.pos.y = Math.min(Math.max(minY, p.pos.y), maxY);
-  world.lastGapY = Math.min(Math.max(margin + 140, world.lastGapY), Math.max(margin + 140, CONFIG.canvas.height - margin - 140));
-
-  for (const obstacle of world.obstacles) obstacle.layout?.();
-}
-
-syncCanvasToStage();
+syncCanvasToFrame();
+applyDocumentFonts(initLocale());
+onLocaleChange(applyDocumentFonts);
+await preloadAssets();
+syncCanvasToFrame();
 
 const eventBus = createEventBus();
 const world = createWorld();
-clampWorldToStage(world);
 const screenFxSystem = createScreenFxSystem(eventBus, world);
 createFullscreenSystem(eventBus, world, stage);
-eventBus.on(EV.GAME_RESET, () => clampWorldToStage(world));
 
 // A page refresh is an operator reset at the booth. Keep language/difficulty
 // preferences in localStorage, but never carry viewed tutorial cards into it.
 clearSeenTutorials();
 
 function resizeGame() {
-  syncCanvasToStage();
-  clampWorldToStage(world);
+  syncCanvasToFrame();
 }
 
 window.addEventListener('resize', resizeGame);
 window.visualViewport?.addEventListener('resize', resizeGame);
-if (typeof ResizeObserver !== 'undefined' && stage) {
-  new ResizeObserver(resizeGame).observe(stage);
+if (typeof ResizeObserver !== 'undefined' && frame) {
+  new ResizeObserver(resizeGame).observe(frame);
 }
 
 // Order matters: input → spawn → particle stream → physics → collision → fusion → score/temp → phase/ignition → difficulty → particles → cleanup

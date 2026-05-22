@@ -114,7 +114,10 @@ export function createTutorialScreen(eventBus, world) {
   
   function updateSpotlight() {
     if (!activeId || overlay.style.display === 'none') return;
-    const rect = overlay.getBoundingClientRect();
+    const rect = {
+      width: overlay.offsetWidth || CONFIG.canvas.width,
+      height: overlay.offsetHeight || CONFIG.canvas.height,
+    };
     if (!rect.width || !rect.height) return;
 
     const focus = toCssFocusRect(activeTarget, rect);
@@ -153,9 +156,8 @@ export function createTutorialScreen(eventBus, world) {
   }
 
   function positionCard(rect, focus) {
-    const cardRect = card.getBoundingClientRect();
-    const cardWidth = cardRect.width || Math.min(420, rect.width - 32);
-    const cardHeight = cardRect.height || 280;
+    const cardWidth = card.offsetWidth || Math.min(420, rect.width - 32);
+    const cardHeight = card.offsetHeight || 280;
     const defaultTop = clamp(rect.height * CONFIG.tutorial.cardTopFraction, 14, rect.height - cardHeight - 14);
     const cardLeft = (rect.width - cardWidth) / 2;
     const proposed = { left: cardLeft, top: defaultTop, width: cardWidth, height: cardHeight };
