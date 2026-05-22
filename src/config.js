@@ -1,6 +1,8 @@
 // Single source of truth for all tunable numerical values.
 // See docs/game-design.md §11 for design rationale.
 
+const SCORE_SCALE = 100;
+
 export const CONFIG = {
   canvas: { width: 800, height: 600, renderScale: 2 },
 
@@ -45,12 +47,12 @@ export const CONFIG = {
   },
 
   score: {
-    perObstacle: 1,
-    perCollectible: 1,
-    perLithium: 2,
-    perParticle: 1,
-    perFusionBase: 5,
-    selfSustainBonus: 200,
+    perObstacle: 1 * SCORE_SCALE,
+    perCollectible: 1 * SCORE_SCALE,
+    perLithium: 2 * SCORE_SCALE,
+    perParticle: 1 * SCORE_SCALE,
+    perFusionBase: 5 * SCORE_SCALE,
+    selfSustainBonus: 200 * SCORE_SCALE,
   },
 
   fusion: {
@@ -92,7 +94,7 @@ export const CONFIG = {
 
   combo: {
     window: 2.0,
-    scoreTable: [5, 10, 25, 50, 100],
+    scoreTable: [5, 10, 25, 50, 100].map((score) => score * SCORE_SCALE),
     maxCount: 99,
     timerRingDiameter: 48,
     timerRingRadius: 18,
@@ -199,9 +201,9 @@ export const CONFIG = {
   difficulty: {
     default: 'easy',
     presets: {
-      easy: { gapMul: 1.0, speedMul: 1.0, hazardMul: 1.0, thresholdMul: 1.0 },
-      normal: { gapMul: 0.85, speedMul: 1.15, hazardMul: 1.3, thresholdMul: 1.2 },
-      hard: { gapMul: 0.7, speedMul: 1.3, hazardMul: 1.6, thresholdMul: 1.5 },
+      easy: { gapMul: 0.85, speedMul: 1.15, hazardMul: 1.3, thresholdMul: 1.2 },
+      normal: { gapMul: 0.7, speedMul: 1.3, hazardMul: 1.6, thresholdMul: 1.5 },
+      hard: { gapMul: 0.7, speedMul: 1.5, hazardMul: 1.6, thresholdMul: 1.5 },
     },
   },
 };

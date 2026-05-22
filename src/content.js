@@ -1,6 +1,7 @@
 // Single source of truth for all player-facing strings.
 // Every leaf string must exist in both zh and ja, or the build fails.
 
+import { CONFIG } from './config.js';
 import {
   getAudience,
   getLocale,
@@ -109,7 +110,7 @@ export const CONTENT = {
     particleLabels: {
       he4: 'He⁴',
       neutron: 'n',
-      fusionScore: '+5',
+      fusionScore: '+500',
       lithiumBreeding: '⁶Li → T 增殖\n+{score}',
       tungstenCooling: '钨杂质溅射\n等离子体冷却 −1 档',
       nbiHeating: '中性束加热!\n+1 档',
@@ -140,7 +141,7 @@ export const CONTENT = {
     },
     selfSustain: {
       title: '自维持成功!',
-      subtitle: '+200',
+      subtitle: '+{score}',
       footnote: '— self-sustained burn',
     },
     milestones: {
@@ -169,7 +170,7 @@ export const CONTENT = {
         t3: '{temperature} —— 你已经超过太阳核心了。\n但要让氘氚发生足够多的聚变反应,\n人类需要的是太阳核心 5–10 倍的温度。\n原因很简单:地球上没有太阳那样的引力压力,\n我们只能靠"更高温度"来弥补。',
         t4: '{temperature} —— 你触到了"劳森判据"的门口。\n这是工程上判断聚变能否净产能的指标:\n温度、密度、约束时间三者乘积要够大。\n你已经搞定了温度,真实的 ITER 还得搞定后两个。',
         t5: '🎉 {temperature} —— 你点火了!\n\n聚变点火温度是 1 亿度。这是地球上人为创造的\n最极端环境之一。\n你坚持了 {seconds} 秒、完成了 {fusionCount} 次聚变,\n最高 COMBO ×{maxCombo}。\n现实中 ITER 的目标是稳定维持 400 秒以上。\n\n{ignitionLine}',
-        t6: '{temperature} —— 已经超越 ITER 的设计参数了。\n你大概是研究室的人,或者天赋异禀。\n\n{ignitionLine}\n\n我们办公室在 3 楼,欢迎来聊。',
+        t6: '{temperature} —— 已经超越 ITER 的设计参数了。\n你大概是研究室的人,或者天赋异禀。\n\n{ignitionLine}\n\n糟谷研究室就在应力研 1 楼。对等离子体或模拟感兴趣的话,欢迎来参观交流。',
       },
     },
     instabilityNames: ['撕裂模', '气球模', '锯齿模'],
@@ -184,7 +185,7 @@ export const CONTENT = {
       },
       {
         heading: '我们在做什么',
-        body: '糟谷研究室通过计算机模拟研究等离子体物理。\n重点是聚变等离子体模拟,也覆盖宇宙等离子体等从理学到工学的问题。\n\n扫码访问研究室网站。\n\n谢谢来玩!',
+        body: '糟谷研究室通过计算机模拟研究等离子体物理。\n重点是聚变等离子体模拟,也覆盖宇宙等离子体等从理学到工学的问题。\n\n研究室在应力研 1 楼。扫码访问研究室网站。\n\n谢谢来玩!',
       },
     ],
   },
@@ -280,7 +281,7 @@ export const CONTENT = {
     particleLabels: {
       he4: 'He⁴',
       neutron: 'n',
-      fusionScore: '+5',
+      fusionScore: '+500',
       lithiumBreeding: '⁶Li → T 増殖\n+{score}',
       tungstenCooling: 'タングステン混入\nプラズマ冷却 −1 段',
       nbiHeating: '中性粒子ビーム加熱!\n+1 段',
@@ -311,7 +312,7 @@ export const CONTENT = {
     },
     selfSustain: {
       title: '自己点火成功!',
-      subtitle: '+200',
+      subtitle: '+{score}',
       footnote: '— self-sustained burn',
     },
     milestones: {
@@ -356,8 +357,8 @@ export const CONTENT = {
           teen: '🎉 {temperature} —— 点火しました!\n\n核融合点火温度は 1 億度。地球上で人類が作る\n最も極端な環境の一つです。\n{seconds} 秒間維持し,{fusionCount} 回の核融合に成功しました。\n最高 COMBO ×{maxCombo}。\n現実の ITER は 400 秒以上の安定維持を目指しています。\n\n{ignitionLine}',
         },
         t6: {
-          kid: '{temperature} です。すごい記録です!\nもう研究室の人レベルかもしれません。\n\n{ignitionLine}\n\n3 階の研究室にも遊びに来てください。',
-          teen: '{temperature} —— すでに ITER の設計値を超えています。\nあなたは研究室の人か,かなり才能があります。\n\n{ignitionLine}\n\n私たちのオフィスは 3 階です。ぜひ話しに来てください。',
+          kid: '{temperature} です。すごい記録です!\nもう研究室の人レベルかもしれません。\n\n{ignitionLine}\n\n糟谷研究室は応力研 1 階にあります。プラズマやシミュレーションに興味があったら,ぜひ見に来てね。',
+          teen: '{temperature} —— すでに ITER の設計値を超えています。\nあなたは研究室の人か,かなり才能があります。\n\n{ignitionLine}\n\n糟谷研究室は応力研 1 階にあります。プラズマやシミュレーションに興味があれば,ぜひ見学に来てください。',
         },
       },
     },
@@ -389,8 +390,8 @@ export const CONTENT = {
           teen: '私たちが取り組むこと',
         },
         body: {
-          kid: '糟谷研究室では,\nコンピュータでプラズマの動きを調べています。\n核融合だけでなく,宇宙のプラズマも研究します。\n\n下の QR コードから研究室サイトも見られます。\n\n遊んでくれてありがとう!',
-          teen: '糟谷研究室では,コンピュータシミュレーションを通じてプラズマ物理を研究しています。\n専門は核融合プラズマのシミュレーションで,宇宙プラズマまで幅広く扱います。\n\n下の QR コードから研究室サイトをご覧いただけます。\n\n遊んでくれてありがとうございます!',
+          kid: '糟谷研究室では,\nコンピュータでプラズマの動きを調べています。\n核融合だけでなく,宇宙のプラズマも研究します。\n\n研究室は応力研 1 階です。下の QR コードから研究室サイトも見られます。\n\n遊んでくれてありがとう!',
+          teen: '糟谷研究室では,コンピュータシミュレーションを通じてプラズマ物理を研究しています。\n専門は核融合プラズマのシミュレーションで,宇宙プラズマまで幅広く扱います。\n\n研究室は応力研 1 階です。下の QR コードから研究室サイトをご覧いただけます。\n\n遊んでくれてありがとうございます!',
         },
       },
     ],
@@ -512,7 +513,7 @@ export function getIgnitionMilestoneText(milestone) {
 export function getSelfSustainText() {
   return {
     title: t('selfSustain.title'),
-    subtitle: t('selfSustain.subtitle'),
+    subtitle: t('selfSustain.subtitle', { score: CONFIG.score.selfSustainBonus }),
     footnote: t('selfSustain.footnote'),
   };
 }
