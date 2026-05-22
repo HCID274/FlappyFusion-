@@ -36,6 +36,11 @@ export const CONTENT = {
       zh: '中文',
       ja: '日本語',
     },
+    difficulty: {
+      easy: 'easy',
+      normal: 'normal',
+      hard: 'hard',
+    },
     tutorial: '按 [空格] 触发磁场脉冲,把等离子体悬浮在腔室中央。\n撞上炉壁或偏滤器 = 实验失败。\n吃 D + T 触发聚变反应。',
     units: {
       tenThousandDegrees: '{value} 万度',
@@ -154,6 +159,11 @@ export const CONTENT = {
     language: {
       zh: '中国語',
       ja: '日本語',
+    },
+    difficulty: {
+      easy: 'easy',
+      normal: 'normal',
+      hard: 'hard',
     },
     tutorial: '[スペース] で磁場パルスを出し,プラズマを炉心中央に浮かせます。\n炉壁やダイバータに触れると実験失敗。\nD + T を集めると核融合反応が起きます。',
     units: {

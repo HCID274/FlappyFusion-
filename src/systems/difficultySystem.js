@@ -5,7 +5,7 @@ import { CONFIG } from '../config.js';
 
 export function createDifficultySystem(eventBus, world) {
   eventBus.on(EV.TEMP_CHANGED, ({ step }) => {
-    world.scrollSpeed = CONFIG.scroll.baseSpeed + step * CONFIG.scroll.speedPerTempStep;
+    world.scrollSpeed = (CONFIG.scroll.baseSpeed + step * CONFIG.scroll.speedPerTempStep) * world.speedMul;
   });
 
   return { update(_dt) {} };

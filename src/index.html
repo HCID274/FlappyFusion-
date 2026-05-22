@@ -391,6 +391,44 @@
       font-size: 14px;
       white-space: pre-line;
     }
+    .menu-toggles {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: min(100%, 520px);
+      margin: 0 0 0.7rem;
+    }
+    .difficulty-btn {
+      min-width: 92px;
+      min-height: 34px;
+      padding: 7px 14px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 136, 204, 0.55);
+      background: rgba(0, 0, 0, 0.22);
+      color: rgba(255, 255, 255, 0.78);
+      font: 700 12px/1 var(--font-app);
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, color 0.14s ease, transform 0.14s ease;
+    }
+    .difficulty-btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(68, 221, 255, 0.72);
+      color: #fff;
+      background: rgba(68, 221, 255, 0.10);
+    }
+    .difficulty-btn.active {
+      border-color: #44ddff;
+      background: rgba(68, 221, 255, 0.18);
+      color: #fff;
+      box-shadow: 0 0 0 1px rgba(68, 221, 255, 0.24), 0 0 18px rgba(68, 221, 255, 0.22);
+    }
+    .difficulty-btn:focus-visible {
+      outline: 2px solid #ff88cc;
+      outline-offset: 3px;
+    }
     .key {
       display: inline-block;
       padding: 1px 8px;
@@ -528,6 +566,15 @@
       .body {
         font-size: 13px;
       }
+      .menu-toggles {
+        gap: 6px;
+      }
+      .difficulty-btn {
+        min-width: 76px;
+        min-height: 32px;
+        padding-inline: 10px;
+        font-size: 11px;
+      }
       .lang-switch {
         right: 8px;
         bottom: 8px;
@@ -574,6 +621,11 @@
       <h1 id="menu-title"></h1>
       <div class="subtitle" id="menu-subtitle"></div>
       <div class="tutorial" id="menu-tutorial"></div>
+      <div class="menu-toggles" id="menu-toggles">
+        <button class="difficulty-btn" type="button" data-difficulty="easy" id="difficulty-easy"></button>
+        <button class="difficulty-btn" type="button" data-difficulty="normal" id="difficulty-normal"></button>
+        <button class="difficulty-btn" type="button" data-difficulty="hard" id="difficulty-hard"></button>
+      </div>
       <div class="start-hint" id="menu-start"></div>
       <div class="lab" id="menu-lab"></div>
     </div>

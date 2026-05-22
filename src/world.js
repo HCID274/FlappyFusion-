@@ -5,6 +5,8 @@
 import { CONFIG } from './config.js';
 import { createPlasma } from './entities/plasma.js';
 
+export const DIFFICULTY_STORAGE_KEY = 'mcsc.difficulty';
+
 function createFusionImpactParticlePool() {
   const size = CONFIG.fusion.impactBurstParticleCount * CONFIG.fusion.impactBurstMaxActiveBursts;
   return Array.from({ length: size }, () => ({
@@ -21,12 +23,20 @@ function createFusionImpactParticlePool() {
 
 export function createWorld() {
   const world = {};
+  world.difficulty = readStoredDifficulty();
+  applyDifficultyPreset(world);
   resetWorld(world);
   world.status = 'menu';
   return world;
 }
 
+export function setWorldDifficulty(world, difficulty) {
+  world.difficulty = normalizeDifficulty(difficulty);
+  applyDifficultyPreset(world);
+}
+
 export function resetWorld(world) {
+  applyDifficultyPreset(world);
   world.status = 'playing';
   world.elapsed = 0;
   world.score = 0;
@@ -34,7 +44,7 @@ export function resetWorld(world) {
   world.maxTemperature = CONFIG.temperature.start;
   world.tempStep = 0;
   world.phase = 'IGNITION_PREP';
-  world.scrollSpeed = CONFIG.scroll.baseSpeed;
+  world.scrollSpeed = CONFIG.scroll.baseSpeed * world.speedMul;
   world.obstaclesPassed = 0;
   world.fusionCount = 0;
   world.maxCombo = 0;
@@ -92,4 +102,26 @@ export function resetWorld(world) {
   world.particleStream = [];
   world.boosts = [];
   world.particles = [];
+}
+
+function applyDifficultyPreset(world) {
+  const difficulty = normalizeDifficulty(world.difficulty);
+  const preset = CONFIG.difficulty.presets[difficulty];
+
+  world.difficulty = difficulty;
+  world.gapMul = preset.gapMul;
+  world.speedMul = preset.speedMul;
+  world.hazardMul = preset.hazardMul;
+  world.thresholdMul = preset.thresholdMul;
+}
+
+function readStoredDifficulty() {
+  if (typeof window === 'undefined') return CONFIG.difficulty.default;
+  return normalizeDifficulty(window.localStorage?.getItem(DIFFICULTY_STORAGE_KEY));
+}
+
+function normalizeDifficulty(difficulty) {
+  return Object.prototype.hasOwnProperty.call(CONFIG.difficulty.presets, difficulty)
+    ? difficulty
+    : CONFIG.difficulty.default;
 }

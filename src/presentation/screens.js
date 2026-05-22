@@ -13,6 +13,7 @@ import {
 } from '../content.js';
 import { EV } from '../engine/events.js';
 import { CONFIG } from '../config.js';
+import { DIFFICULTY_STORAGE_KEY, setWorldDifficulty } from '../world.js';
 
 export function createScreens(eventBus, world) {
   const menu = document.getElementById('screen-menu');
@@ -20,6 +21,7 @@ export function createScreens(eventBus, world) {
   const modal = document.getElementById('screen-learn');
   const languageSwitch = document.getElementById('language-switch');
   const languageButton = document.getElementById('lang-toggle');
+  const difficultyButtons = Array.from(document.querySelectorAll('.difficulty-btn'));
 
   show(menu); hide(death); hide(modal);
 
@@ -33,6 +35,7 @@ export function createScreens(eventBus, world) {
     document.getElementById('menu-tutorial').innerText = t('tutorial');
     document.getElementById('menu-start').textContent = t('ui.startHint');
     document.getElementById('menu-lab').textContent = t('ui.lab');
+    renderDifficultyButtons();
     document.getElementById('death-restart').textContent = t('ui.restartHint');
     document.getElementById('death-learnmore').textContent = t('ui.btnLearnMore');
     document.getElementById('learn-prev').textContent = t('ui.btnPrev');
@@ -53,6 +56,15 @@ export function createScreens(eventBus, world) {
       next: t(`language.${nextLocale}`),
     });
     languageButton.setAttribute('aria-label', languageButton.title);
+  }
+
+  function renderDifficultyButtons() {
+    for (const button of difficultyButtons) {
+      const difficulty = button.dataset.difficulty;
+      button.textContent = t(`difficulty.${difficulty}`);
+      button.classList.toggle('active', difficulty === world.difficulty);
+      button.setAttribute('aria-pressed', String(difficulty === world.difficulty));
+    }
   }
 
   function showDeathCard() {
@@ -109,6 +121,19 @@ export function createScreens(eventBus, world) {
   });
 
   languageButton.addEventListener('click', () => setLocale(getNextLocale()));
+
+  for (const button of difficultyButtons) {
+    button.addEventListener('click', () => {
+      setWorldDifficulty(world, button.dataset.difficulty);
+      window.localStorage?.setItem(DIFFICULTY_STORAGE_KEY, world.difficulty);
+      renderDifficultyButtons();
+    });
+    button.addEventListener('keydown', (e) => {
+      if (e.code !== 'Space') return;
+      e.preventDefault();
+      button.blur();
+    });
+  }
 
   document.getElementById('death-learnmore-btn').addEventListener('click', () => {
     learnIdx = 0;

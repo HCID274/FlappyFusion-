@@ -17,6 +17,26 @@ function rand(a, b) { return a + Math.random() * (b - a); }
 
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
+function chance(value) { return clamp(value, 0, 1); }
+
+export function getHazardProgressTemperature(world) {
+  const stepEvery = Math.max(1, CONFIG.temperature.stepEveryNObstacles);
+  const progressInStep = (world.obstaclesPassed % stepEvery) / stepEvery;
+  return world.temperature + progressInStep * CONFIG.temperature.increment;
+}
+
+export function getTungstenSpawnChance(world, phaseRules) {
+  const currentChance = phaseRules.tungstenSpawn ?? 0;
+  if (currentChance > 0) return currentChance;
+
+  const earlyTungstenThreshold = CONFIG.phases.thresholds.HEATING / (world.thresholdMul || 1);
+  if (world.phase === 'IGNITION_PREP' && getHazardProgressTemperature(world) >= earlyTungstenThreshold) {
+    return CONFIG.phases.rules.HEATING.tungstenSpawn;
+  }
+
+  return currentChance;
+}
+
 function createCollectiblePicker() {
   const fuelTypePicker = createFuelTypePicker();
 
@@ -69,7 +89,8 @@ function spawnOne(world, eventBus, phaseRules, collectiblePicker) {
   const W = CONFIG.canvas.width;
   const H = CONFIG.canvas.height;
   const margin = CONFIG.obstacle.wallMargin;
-  const useInstability = !world.lastWasInstability && Math.random() < CONFIG.obstacle.instabilityChance;
+  const useInstability = !world.lastWasInstability
+    && Math.random() < chance(CONFIG.obstacle.instabilityChance * world.hazardMul);
 
   if (useInstability) {
     const centerY = clamp(
@@ -83,7 +104,7 @@ function spawnOne(world, eventBus, phaseRules, collectiblePicker) {
     world.lastWasInstability = true;
     eventBus.emit(EV.INSTABILITY_SPAWNED, { name: pickInstabilityName() });
   } else {
-    const gap = rand(CONFIG.obstacle.gapMin, CONFIG.obstacle.gapMax);
+    const gap = rand(CONFIG.obstacle.gapMin, CONFIG.obstacle.gapMax) * world.gapMul;
     const gapY = clamp(
       world.lastGapY + (Math.random() - 0.5) * CONFIG.obstacle.gapJitterMax,
       margin + gap / 2 + 30,
@@ -106,7 +127,7 @@ function spawnOne(world, eventBus, phaseRules, collectiblePicker) {
     }
   }
 
-  if (Math.random() < phaseRules.tungstenSpawn) {
+  if (Math.random() < chance(getTungstenSpawnChance(world, phaseRules) * world.hazardMul)) {
     const y = rand(80, H - 80);
     world.hazards.push(createTungsten(W + 120, y));
   }

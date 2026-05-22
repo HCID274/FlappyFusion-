@@ -188,4 +188,13 @@ export const CONFIG = {
   },
 
   deathCardDelaySec: 0.6,
+
+  difficulty: {
+    default: 'easy',
+    presets: {
+      easy: { gapMul: 1.0, speedMul: 1.0, hazardMul: 1.0, thresholdMul: 1.0 },
+      normal: { gapMul: 0.85, speedMul: 1.15, hazardMul: 1.3, thresholdMul: 1.2 },
+      hard: { gapMul: 0.7, speedMul: 1.3, hazardMul: 1.6, thresholdMul: 1.5 },
+    },
+  },
 };
