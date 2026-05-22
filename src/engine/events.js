@@ -21,6 +21,7 @@ export const EV = {
   GAME_RESET: 'game:reset',
   FULLSCREEN_TOGGLE_REQUESTED: 'fullscreen:toggle-requested',
   FULLSCREEN_CHANGED: 'fullscreen:changed',
+  AUDIO_CHANGED: 'audio:changed',
   INSTABILITY_SPAWNED: 'instability:spawned',
   ENTITY_SPAWNED: 'entity:spawned',
   TUTORIAL_REQUESTED: 'tutorial:requested',

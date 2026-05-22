@@ -7,6 +7,7 @@ import { createPlasma } from './entities/plasma.js';
 
 export const DIFFICULTY_STORAGE_KEY = 'mcsc.difficulty';
 export const TUTORIAL_ENABLED_STORAGE_KEY = 'mcsc.tutorialEnabled';
+export const AUDIO_ENABLED_STORAGE_KEY = 'mcsc.audioEnabled';
 
 function createFusionImpactParticlePool() {
   const size = CONFIG.fusion.impactBurstParticleCount * CONFIG.fusion.impactBurstMaxActiveBursts;
@@ -26,6 +27,7 @@ export function createWorld() {
   const world = {};
   world.difficulty = readStoredDifficulty();
   world.tutorialEnabled = readStoredTutorialEnabled();
+  world.audioEnabled = readStoredAudioEnabled();
   applyDifficultyPreset(world);
   resetWorld(world);
   world.status = 'menu';
@@ -143,6 +145,12 @@ function readStoredDifficulty() {
 function readStoredTutorialEnabled() {
   if (typeof window === 'undefined') return true;
   const stored = window.localStorage?.getItem(TUTORIAL_ENABLED_STORAGE_KEY);
+  return stored === null ? true : stored !== 'false';
+}
+
+function readStoredAudioEnabled() {
+  if (typeof window === 'undefined') return true;
+  const stored = window.localStorage?.getItem(AUDIO_ENABLED_STORAGE_KEY);
   return stored === null ? true : stored !== 'false';
 }
 

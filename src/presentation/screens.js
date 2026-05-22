@@ -17,7 +17,12 @@ import {
 import { EV } from '../engine/events.js';
 import { CONFIG } from '../config.js';
 import { getAssetUrl } from '../assetLoader.js';
-import { DIFFICULTY_STORAGE_KEY, TUTORIAL_ENABLED_STORAGE_KEY, setWorldDifficulty } from '../world.js';
+import {
+  AUDIO_ENABLED_STORAGE_KEY,
+  DIFFICULTY_STORAGE_KEY,
+  TUTORIAL_ENABLED_STORAGE_KEY,
+  setWorldDifficulty,
+} from '../world.js';
 
 const LEARN_ILLUSTRATIONS = [
   './assets/2x/01card.png',
@@ -39,6 +44,7 @@ export function createScreens(eventBus, world) {
   const audienceRow = document.getElementById('audience-toggle-row');
   const audienceButtons = Array.from(document.querySelectorAll('.audience-btn'));
   const tutorialToggle = document.getElementById('tutorial-toggle');
+  const audioToggle = document.getElementById('audio-toggle');
   const learnIllust = document.getElementById('learn-illust');
   const learnQr = document.getElementById('learn-qr');
   const learnBody = document.getElementById('learn-body');
@@ -60,6 +66,7 @@ export function createScreens(eventBus, world) {
     renderDifficultyButtons();
     renderAudienceButtons();
     renderTutorialToggle();
+    renderAudioToggle();
     renderFullscreenButton();
     document.getElementById('death-restart').textContent = t('ui.btnRestart');
     document.getElementById('death-learnmore').textContent = t('ui.btnLearnMore');
@@ -107,6 +114,13 @@ export function createScreens(eventBus, world) {
     tutorialToggle.classList.toggle('active', world.tutorialEnabled);
     tutorialToggle.classList.toggle('inactive', !world.tutorialEnabled);
     tutorialToggle.setAttribute('aria-pressed', String(world.tutorialEnabled));
+  }
+
+  function renderAudioToggle() {
+    audioToggle.textContent = world.audioEnabled ? t('audioToggle.on') : t('audioToggle.off');
+    audioToggle.classList.toggle('active', world.audioEnabled);
+    audioToggle.classList.toggle('inactive', !world.audioEnabled);
+    audioToggle.setAttribute('aria-pressed', String(world.audioEnabled));
   }
 
   function renderFullscreenButton() {
@@ -253,6 +267,14 @@ export function createScreens(eventBus, world) {
     renderTutorialToggle();
   });
   allowSpaceStartFromFocusedButton(tutorialToggle);
+
+  audioToggle.addEventListener('click', () => {
+    world.audioEnabled = !world.audioEnabled;
+    window.localStorage?.setItem(AUDIO_ENABLED_STORAGE_KEY, String(world.audioEnabled));
+    renderAudioToggle();
+    eventBus.emit(EV.AUDIO_CHANGED, { enabled: world.audioEnabled });
+  });
+  allowSpaceStartFromFocusedButton(audioToggle);
 
   document.getElementById('death-learnmore-btn').addEventListener('click', () => {
     learnIdx = 0;

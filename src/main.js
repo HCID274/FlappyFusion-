@@ -28,6 +28,7 @@ import { createScreenFxSystem } from './systems/screenFxSystem.js';
 import { clearSeenTutorials, createTutorialSystem } from './systems/tutorialSystem.js';
 import { createIdleResetSystem } from './systems/idleResetSystem.js';
 import { createFullscreenSystem } from './systems/fullscreenSystem.js';
+import { createAudioSystem } from './systems/audioSystem.js';
 
 import { createRenderer } from './presentation/renderer.js';
 import { createHUD } from './presentation/hud.js';
@@ -139,6 +140,7 @@ const systems = [
   createDifficultySystem(eventBus, world),
   createTutorialSystem(eventBus, world),
   createIdleResetSystem(eventBus, world),
+  createAudioSystem(eventBus, world),
   createParticleSystem(eventBus, world),
   createCleanupSystem(eventBus, world),
 ];

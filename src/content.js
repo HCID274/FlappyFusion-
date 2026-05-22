@@ -56,9 +56,9 @@ export const CONTENT = {
       ja: '日本語',
     },
     difficulty: {
-      easy: 'easy',
-      normal: 'normal',
-      hard: 'hard',
+      easy: '简单',
+      normal: '普通',
+      hard: '困难',
     },
     audience: {
       kid: '儿童版',
@@ -67,6 +67,10 @@ export const CONTENT = {
     tutorialToggle: {
       on: '教学: ON',
       off: '教学: OFF',
+    },
+    audioToggle: {
+      on: '声音: ON',
+      off: '声音: OFF',
     },
     tutorial: {
       menu: '按 [空格] 触发磁场脉冲,把等离子体悬浮在腔室中央。\n撞上炉壁或偏滤器 = 实验失败。\n吃 D + T 触发聚变反应。',
@@ -211,9 +215,9 @@ export const CONTENT = {
       ja: '日本語',
     },
     difficulty: {
-      easy: 'easy',
-      normal: 'normal',
-      hard: 'hard',
+      easy: 'やさしい',
+      normal: 'ふつう',
+      hard: 'むずかしい',
     },
     audience: {
       kid: '子供向け',
@@ -222,6 +226,10 @@ export const CONTENT = {
     tutorialToggle: {
       on: 'チュートリアル: ON',
       off: 'チュートリアル: OFF',
+    },
+    audioToggle: {
+      on: 'サウンド: ON',
+      off: 'サウンド: OFF',
     },
     tutorial: {
       menu: '[スペース] で磁場パルスを出し,プラズマを炉心中央に浮かせます。\n炉壁やダイバータに触れると実験失敗。\nD + T を集めると核融合反応が起きます。',

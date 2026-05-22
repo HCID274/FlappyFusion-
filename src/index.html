@@ -470,7 +470,8 @@
     }
     .difficulty-btn,
     .audience-btn,
-    .tutorial-toggle-btn {
+    .tutorial-toggle-btn,
+    .audio-toggle-btn {
       min-width: 92px;
       min-height: 34px;
       padding: 7px 14px;
@@ -492,9 +493,15 @@
       text-transform: none;
       border-color: rgba(255, 255, 255, 0.28);
     }
+    .audio-toggle-btn {
+      min-width: 122px;
+      text-transform: none;
+      border-color: rgba(68, 221, 255, 0.42);
+    }
     .difficulty-btn:hover,
     .audience-btn:hover,
-    .tutorial-toggle-btn:hover {
+    .tutorial-toggle-btn:hover,
+    .audio-toggle-btn:hover {
       transform: translateY(-1px);
       border-color: rgba(68, 221, 255, 0.72);
       color: #fff;
@@ -519,9 +526,22 @@
       color: rgba(255, 255, 255, 0.66);
       box-shadow: none;
     }
+    .audio-toggle-btn.active {
+      border-color: #44ddff;
+      background: rgba(68, 221, 255, 0.24);
+      color: #fff;
+      box-shadow: 0 0 0 1px rgba(68, 221, 255, 0.24), 0 0 18px rgba(68, 221, 255, 0.18);
+    }
+    .audio-toggle-btn.inactive {
+      border-color: rgba(255, 255, 255, 0.24);
+      background: rgba(150, 156, 170, 0.24);
+      color: rgba(255, 255, 255, 0.66);
+      box-shadow: none;
+    }
     .difficulty-btn:focus-visible,
     .audience-btn:focus-visible,
-    .tutorial-toggle-btn:focus-visible {
+    .tutorial-toggle-btn:focus-visible,
+    .audio-toggle-btn:focus-visible {
       outline: 2px solid #ff88cc;
       outline-offset: 3px;
     }
@@ -822,7 +842,8 @@
       }
       .difficulty-btn,
       .audience-btn,
-      .tutorial-toggle-btn {
+      .tutorial-toggle-btn,
+      .audio-toggle-btn {
         min-width: 76px;
         min-height: 32px;
         padding-inline: 10px;
@@ -833,6 +854,9 @@
       }
       .tutorial-toggle-btn {
         min-width: 126px;
+      }
+      .audio-toggle-btn {
+        min-width: 108px;
       }
       .learn-illust {
         height: 150px;
@@ -921,6 +945,9 @@
         </div>
         <div class="menu-toggle-row" id="tutorial-toggle-row">
           <button class="tutorial-toggle-btn" type="button" id="tutorial-toggle"></button>
+        </div>
+        <div class="menu-toggle-row" id="audio-toggle-row">
+          <button class="audio-toggle-btn" type="button" id="audio-toggle"></button>
         </div>
       </div>
       <button class="start-hint" id="menu-start" type="button"></button>
