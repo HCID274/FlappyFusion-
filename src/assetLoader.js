@@ -14,16 +14,15 @@ const assetLoaders = import.meta.glob('./assets/2x/*.png', {
 });
 
 const images = new Map();
+const assetUrls = new Map();
 
 export async function preloadAssets() {
   await Promise.all(Object.entries(IMAGE_SPECS).map(async ([key, path]) => {
-    const loadUrl = assetLoaders[path];
-    if (!loadUrl) {
+    const url = await getAssetUrl(path);
+    if (!url) {
       images.set(key, null);
       return;
     }
-
-    const url = await loadUrl();
     const img = new Image();
     const loaded = await new Promise((resolve) => {
       img.onload = () => resolve(true);
@@ -33,6 +32,15 @@ export async function preloadAssets() {
 
     images.set(key, loaded ? img : null);
   }));
+}
+
+export async function getAssetUrl(path) {
+  const loadUrl = assetLoaders[path];
+  if (!loadUrl) return null;
+  if (!assetUrls.has(path)) {
+    assetUrls.set(path, loadUrl().catch(() => null));
+  }
+  return assetUrls.get(path);
 }
 
 export function getImage(key) {

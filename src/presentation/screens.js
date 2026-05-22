@@ -2,18 +2,28 @@
 // Subscribes to STATE_CHANGED to show/hide. All player-facing text comes from content.js.
 
 import {
+  getAudience,
   getDeathBody,
   getDeathStats,
   getDeathTitle,
   getLearnMorePages,
   getLocale,
+  onAudienceChange,
   onLocaleChange,
+  setAudience,
   setLocale,
   t,
 } from '../content.js';
 import { EV } from '../engine/events.js';
 import { CONFIG } from '../config.js';
+import { getAssetUrl } from '../assetLoader.js';
 import { DIFFICULTY_STORAGE_KEY, setWorldDifficulty } from '../world.js';
+
+const LEARN_ILLUSTRATIONS = [
+  './assets/2x/01card.png',
+  './assets/2x/02card.png',
+  './assets/2x/03card.png',
+];
 
 export function createScreens(eventBus, world) {
   const menu = document.getElementById('screen-menu');
@@ -22,20 +32,25 @@ export function createScreens(eventBus, world) {
   const languageSwitch = document.getElementById('language-switch');
   const languageButton = document.getElementById('lang-toggle');
   const difficultyButtons = Array.from(document.querySelectorAll('.difficulty-btn'));
+  const audienceRow = document.getElementById('audience-toggle-row');
+  const audienceButtons = Array.from(document.querySelectorAll('.audience-btn'));
+  const learnIllust = document.getElementById('learn-illust');
 
   show(menu); hide(death); hide(modal);
 
   let deathTimer = null;
   let learnIdx = 0;
+  let learnIllustrationRequest = 0;
 
   function renderStaticText() {
     document.title = t('ui.pageTitle');
     document.getElementById('menu-title').textContent = t('ui.title');
     document.getElementById('menu-subtitle').textContent = t('ui.subtitle');
-    document.getElementById('menu-tutorial').innerText = t('tutorial');
+    document.getElementById('menu-tutorial').innerText = t('tutorial.menu');
     document.getElementById('menu-start').textContent = t('ui.startHint');
     document.getElementById('menu-lab').textContent = t('ui.lab');
     renderDifficultyButtons();
+    renderAudienceButtons();
     document.getElementById('death-restart').textContent = t('ui.restartHint');
     document.getElementById('death-learnmore').textContent = t('ui.btnLearnMore');
     document.getElementById('learn-prev').textContent = t('ui.btnPrev');
@@ -64,6 +79,16 @@ export function createScreens(eventBus, world) {
       button.textContent = t(`difficulty.${difficulty}`);
       button.classList.toggle('active', difficulty === world.difficulty);
       button.setAttribute('aria-pressed', String(difficulty === world.difficulty));
+    }
+  }
+
+  function renderAudienceButtons() {
+    audienceRow.style.display = getLocale() === 'ja' ? '' : 'none';
+    for (const button of audienceButtons) {
+      const audience = button.dataset.audience;
+      button.textContent = t(`audience.${audience}`);
+      button.classList.toggle('active', audience === getAudience());
+      button.setAttribute('aria-pressed', String(audience === getAudience()));
     }
   }
 
@@ -102,11 +127,33 @@ export function createScreens(eventBus, world) {
   function renderLearnPage() {
     const learnMore = getLearnMorePages();
     const page = learnMore[learnIdx];
+    renderLearnIllustration();
     document.getElementById('learn-heading').textContent = page.heading;
     document.getElementById('learn-body').innerText = page.body;
     document.getElementById('learn-prev').disabled = learnIdx === 0;
     document.getElementById('learn-next').disabled = learnIdx === learnMore.length - 1;
     document.getElementById('learn-page').textContent = `${learnIdx + 1} / ${learnMore.length}`;
+  }
+
+  async function renderLearnIllustration() {
+    const requestId = ++learnIllustrationRequest;
+    const path = LEARN_ILLUSTRATIONS[learnIdx];
+    learnIllust.style.display = '';
+    learnIllust.removeAttribute('src');
+    learnIllust.onload = () => {
+      learnIllust.style.display = '';
+    };
+    learnIllust.onerror = () => {
+      learnIllust.style.display = 'none';
+    };
+
+    const src = await getAssetUrl(path);
+    if (requestId !== learnIllustrationRequest) return;
+    if (!src) {
+      learnIllust.style.display = 'none';
+      return;
+    }
+    learnIllust.src = src;
   }
 
   eventBus.on(EV.STATE_CHANGED, ({ to }) => {
@@ -128,11 +175,14 @@ export function createScreens(eventBus, world) {
       window.localStorage?.setItem(DIFFICULTY_STORAGE_KEY, world.difficulty);
       renderDifficultyButtons();
     });
-    button.addEventListener('keydown', (e) => {
-      if (e.code !== 'Space') return;
-      e.preventDefault();
-      button.blur();
+    allowSpaceStartFromFocusedButton(button);
+  }
+
+  for (const button of audienceButtons) {
+    button.addEventListener('click', () => {
+      setAudience(button.dataset.audience);
     });
+    allowSpaceStartFromFocusedButton(button);
   }
 
   document.getElementById('death-learnmore-btn').addEventListener('click', () => {
@@ -155,6 +205,7 @@ export function createScreens(eventBus, world) {
 
   renderStaticText();
   onLocaleChange(renderStaticText);
+  onAudienceChange(renderStaticText);
 
   return {};
 }
@@ -162,3 +213,10 @@ export function createScreens(eventBus, world) {
 function show(el) { el.style.display = 'flex'; }
 function hide(el) { el.style.display = 'none'; }
 function getNextLocale() { return getLocale() === 'ja' ? 'zh' : 'ja'; }
+function allowSpaceStartFromFocusedButton(button) {
+  button.addEventListener('keydown', (e) => {
+    if (e.code !== 'Space') return;
+    e.preventDefault();
+    button.blur();
+  });
+}

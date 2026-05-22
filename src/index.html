@@ -393,14 +393,23 @@
     }
     .menu-toggles {
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 8px;
       width: min(100%, 520px);
       margin: 0 0 0.7rem;
     }
-    .difficulty-btn {
+    .menu-toggle-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+    }
+    .difficulty-btn,
+    .audience-btn {
       min-width: 92px;
       min-height: 34px;
       padding: 7px 14px;
@@ -413,19 +422,26 @@
       cursor: pointer;
       transition: background 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, color 0.14s ease, transform 0.14s ease;
     }
-    .difficulty-btn:hover {
+    .audience-btn {
+      min-width: 112px;
+      text-transform: none;
+    }
+    .difficulty-btn:hover,
+    .audience-btn:hover {
       transform: translateY(-1px);
       border-color: rgba(68, 221, 255, 0.72);
       color: #fff;
       background: rgba(68, 221, 255, 0.10);
     }
-    .difficulty-btn.active {
+    .difficulty-btn.active,
+    .audience-btn.active {
       border-color: #44ddff;
       background: rgba(68, 221, 255, 0.18);
       color: #fff;
       box-shadow: 0 0 0 1px rgba(68, 221, 255, 0.24), 0 0 18px rgba(68, 221, 255, 0.22);
     }
-    .difficulty-btn:focus-visible {
+    .difficulty-btn:focus-visible,
+    .audience-btn:focus-visible {
       outline: 2px solid #ff88cc;
       outline-offset: 3px;
     }
@@ -505,6 +521,13 @@
       width: min(540px, 100%);
       max-width: 540px;
     }
+    .learn-illust {
+      display: block;
+      width: 100%;
+      height: 200px;
+      object-fit: contain;
+      margin: 0 0 0.8rem;
+    }
     .modal-nav {
       width: min(380px, 100%);
       display: grid;
@@ -569,11 +592,21 @@
       .menu-toggles {
         gap: 6px;
       }
-      .difficulty-btn {
+      .menu-toggle-row {
+        gap: 6px;
+      }
+      .difficulty-btn,
+      .audience-btn {
         min-width: 76px;
         min-height: 32px;
         padding-inline: 10px;
         font-size: 11px;
+      }
+      .audience-btn {
+        min-width: 94px;
+      }
+      .learn-illust {
+        height: 150px;
       }
       .lang-switch {
         right: 8px;
@@ -622,9 +655,15 @@
       <div class="subtitle" id="menu-subtitle"></div>
       <div class="tutorial" id="menu-tutorial"></div>
       <div class="menu-toggles" id="menu-toggles">
-        <button class="difficulty-btn" type="button" data-difficulty="easy" id="difficulty-easy"></button>
-        <button class="difficulty-btn" type="button" data-difficulty="normal" id="difficulty-normal"></button>
-        <button class="difficulty-btn" type="button" data-difficulty="hard" id="difficulty-hard"></button>
+        <div class="menu-toggle-row" id="difficulty-toggle-row">
+          <button class="difficulty-btn" type="button" data-difficulty="easy" id="difficulty-easy"></button>
+          <button class="difficulty-btn" type="button" data-difficulty="normal" id="difficulty-normal"></button>
+          <button class="difficulty-btn" type="button" data-difficulty="hard" id="difficulty-hard"></button>
+        </div>
+        <div class="menu-toggle-row" id="audience-toggle-row">
+          <button class="audience-btn" type="button" data-audience="kid" id="audience-kid"></button>
+          <button class="audience-btn" type="button" data-audience="teen" id="audience-teen"></button>
+        </div>
       </div>
       <div class="start-hint" id="menu-start"></div>
       <div class="lab" id="menu-lab"></div>
@@ -643,6 +682,7 @@
 
     <div class="overlay" id="screen-learn" style="display:none">
       <div class="modal-content">
+        <img class="learn-illust" id="learn-illust" alt="">
         <h2 id="learn-heading"></h2>
         <div class="body" id="learn-body"></div>
         <div class="modal-nav">

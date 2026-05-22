@@ -1,5 +1,8 @@
 export const SUPPORTED_LOCALES = ['zh', 'ja'];
 export const DEFAULT_LOCALE = 'ja';
+export const SUPPORTED_AUDIENCES = ['kid', 'teen'];
+export const DEFAULT_AUDIENCE = 'teen';
+export const AUDIENCE_STORAGE_KEY = 'mcsc.audience';
 
 const HTML_LANG = {
   zh: 'zh-CN',
@@ -8,6 +11,8 @@ const HTML_LANG = {
 
 let currentLocale = detectInitialLocale();
 const listeners = new Set();
+let currentAudience = detectInitialAudience();
+const audienceListeners = new Set();
 
 export function initLocale() {
   applyDocumentLocale();
@@ -40,8 +45,33 @@ export function onLocaleChange(listener) {
   return () => listeners.delete(listener);
 }
 
+export function getAudience() {
+  return currentAudience;
+}
+
+export function setAudience(audience) {
+  const normalized = normalizeAudience(audience);
+  if (!normalized) {
+    throw new Error(`[i18n] Unsupported audience: ${audience}`);
+  }
+
+  if (currentAudience === normalized) return;
+  currentAudience = normalized;
+
+  if (typeof window !== 'undefined') {
+    window.localStorage?.setItem(AUDIENCE_STORAGE_KEY, currentAudience);
+  }
+
+  for (const listener of audienceListeners) listener(currentAudience);
+}
+
+export function onAudienceChange(listener) {
+  audienceListeners.add(listener);
+  return () => audienceListeners.delete(listener);
+}
+
 export function textFromCatalog(catalog, path, values = {}, locale = currentLocale) {
-  const value = getFromCatalog(catalog, locale, path);
+  const value = valueFromCatalog(catalog, path, locale);
   if (typeof value !== 'string') {
     throw new Error(`[i18n] Expected string at "${path}" for locale "${locale}"`);
   }
@@ -49,7 +79,7 @@ export function textFromCatalog(catalog, path, values = {}, locale = currentLoca
 }
 
 export function valueFromCatalog(catalog, path, locale = currentLocale) {
-  return getFromCatalog(catalog, locale, path);
+  return resolveAudienceValue(getFromCatalog(catalog, locale, path), locale);
 }
 
 export function validateCatalog(catalog, requiredLocales = SUPPORTED_LOCALES) {
@@ -68,6 +98,7 @@ export function validateCatalog(catalog, requiredLocales = SUPPORTED_LOCALES) {
     }
     compareShape(reference, catalog[locale], locale, [], errors);
   }
+  validateAudienceBranches(catalog.ja, ['ja'], errors);
 
   const extraLocales = Object.keys(catalog).filter((locale) => !requiredLocales.includes(locale));
   for (const locale of extraLocales) {
@@ -92,12 +123,23 @@ function detectInitialLocale() {
   );
 }
 
+function detectInitialAudience() {
+  if (typeof window === 'undefined') return DEFAULT_AUDIENCE;
+  return normalizeAudience(window.localStorage?.getItem(AUDIENCE_STORAGE_KEY)) || DEFAULT_AUDIENCE;
+}
+
 function normalizeLocale(locale) {
   if (!locale) return null;
   const value = String(locale).toLowerCase();
   if (value.startsWith('zh')) return 'zh';
   if (value.startsWith('ja')) return 'ja';
   return SUPPORTED_LOCALES.includes(value) ? value : null;
+}
+
+function normalizeAudience(audience) {
+  if (!audience) return null;
+  const value = String(audience).toLowerCase();
+  return SUPPORTED_AUDIENCES.includes(value) ? value : null;
 }
 
 function applyDocumentLocale() {
@@ -129,14 +171,34 @@ function interpolate(template, values) {
   });
 }
 
+function resolveAudienceValue(value, locale) {
+  if (locale !== 'ja') return value;
+  if (isAudienceBranch(value)) {
+    return resolveAudienceValue(value[currentAudience], locale);
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => resolveAudienceValue(item, locale));
+  }
+  if (isPlainObject(value)) {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, child]) => [key, resolveAudienceValue(child, locale)]),
+    );
+  }
+  return value;
+}
+
 function compareShape(reference, candidate, locale, path, errors) {
   const keyPath = path.length > 0 ? path.join('.') : '<root>';
 
   if (typeof reference === 'string') {
-    if (typeof candidate !== 'string') {
+    if (typeof candidate === 'string') {
+      if (candidate.trim() === '') {
+        errors.push(`${locale}.${keyPath} must not be empty`);
+      }
+    } else if (locale === 'ja' && isAudienceBranch(candidate)) {
+      validateAudienceLeaf(candidate, `${locale}.${keyPath}`, errors);
+    } else {
       errors.push(`${locale}.${keyPath} must be a string`);
-    } else if (candidate.trim() === '') {
-      errors.push(`${locale}.${keyPath} must not be empty`);
     }
     return;
   }
@@ -178,6 +240,52 @@ function compareShape(reference, candidate, locale, path, errors) {
   }
 
   errors.push(`${keyPath} uses unsupported catalog value type`);
+}
+
+function validateAudienceBranches(node, path, errors) {
+  if (Array.isArray(node)) {
+    node.forEach((child, index) => validateAudienceBranches(child, [...path, String(index)], errors));
+    return;
+  }
+  if (!isPlainObject(node)) return;
+
+  const keyPath = path.join('.');
+  const hasKid = Object.prototype.hasOwnProperty.call(node, 'kid');
+  const hasTeen = Object.prototype.hasOwnProperty.call(node, 'teen');
+
+  if (hasKid || hasTeen) {
+    if (!hasKid || !hasTeen) {
+      errors.push(`${keyPath} must define both kid and teen`);
+      return;
+    }
+    validateAudienceLeaf(node, keyPath, errors);
+    return;
+  }
+
+  for (const [key, child] of Object.entries(node)) {
+    validateAudienceBranches(child, [...path, key], errors);
+  }
+}
+
+function validateAudienceLeaf(node, keyPath, errors) {
+  for (const key of Object.keys(node)) {
+    if (!SUPPORTED_AUDIENCES.includes(key)) {
+      errors.push(`${keyPath}.${key} is unexpected`);
+    }
+  }
+  for (const audience of SUPPORTED_AUDIENCES) {
+    if (typeof node[audience] !== 'string') {
+      errors.push(`${keyPath}.${audience} must be a string`);
+    } else if (node[audience].trim() === '') {
+      errors.push(`${keyPath}.${audience} must not be empty`);
+    }
+  }
+}
+
+function isAudienceBranch(value) {
+  return isPlainObject(value)
+    && Object.prototype.hasOwnProperty.call(value, 'kid')
+    && Object.prototype.hasOwnProperty.call(value, 'teen');
 }
 
 function isPlainObject(value) {
