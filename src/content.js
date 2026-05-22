@@ -45,6 +45,7 @@ export const CONTENT = {
       languageLabel: '语言',
       languageIcon: '语',
       languageToggleLabel: '切换语言: 当前 {current}, 点击切换到 {next}',
+      tutorialContinueHint: '按 [空格] 继续',
     },
     language: {
       zh: '中文',
@@ -59,12 +60,28 @@ export const CONTENT = {
       kid: '儿童版',
       teen: '学生版',
     },
+    tutorialToggle: {
+      on: '教学: ON',
+      off: '教学: OFF',
+    },
     tutorial: {
       menu: '按 [空格] 触发磁场脉冲,把等离子体悬浮在腔室中央。\n撞上炉壁或偏滤器 = 实验失败。\n吃 D + T 触发聚变反应。',
-      fusion: '集齐 D 和 T 会发生聚变反应,生成 He⁴ 和中子。',
-      li: '锂-6 会吸收中子并增殖氚,是聚变燃料循环的一部分。',
-      tungsten: '钨杂质会让等离子体冷却,需要避开。',
-      nbi: '中性束把高速粒子打入等离子体,用来继续加热。',
+      fusion: {
+        title: 'D + T: 聚变燃料',
+        body: '集齐 D 和 T 会发生聚变反应,生成 He⁴ 和中子。',
+      },
+      li: {
+        title: 'Li-6: 氚增殖材料',
+        body: '锂-6 会吸收中子并增殖氚,是聚变燃料循环的一部分。',
+      },
+      tungsten: {
+        title: '钨碎片: 等离子体杂质',
+        body: '钨杂质会让等离子体冷却,需要避开。',
+      },
+      nbi: {
+        title: 'NBI: 中性束加热',
+        body: '中性束把高速粒子打入等离子体,用来继续加热。',
+      },
     },
     units: {
       tenThousandDegrees: '{value} 万度',
@@ -179,6 +196,7 @@ export const CONTENT = {
       languageLabel: '言語',
       languageIcon: '语',
       languageToggleLabel: '言語を切り替え: 現在 {current}, クリックで {next} へ',
+      tutorialContinueHint: '[スペース] で続ける',
     },
     language: {
       zh: '中国語',
@@ -193,23 +211,39 @@ export const CONTENT = {
       kid: '子供向け',
       teen: '学生向け',
     },
+    tutorialToggle: {
+      on: 'チュートリアル: ON',
+      off: 'チュートリアル: OFF',
+    },
     tutorial: {
       menu: '[スペース] で磁場パルスを出し,プラズマを炉心中央に浮かせます。\n炉壁やダイバータに触れると実験失敗。\nD + T を集めると核融合反応が起きます。',
       fusion: {
-        kid: 'D と T を集めると,核融合が起きるよ。星の中みたいな反応です。',
-        teen: 'D と T がそろうと核融合反応が起き,He⁴ と中性子が生まれます。',
+        title: 'D + T: 核融合燃料',
+        body: {
+          kid: 'D と T を集めると,核融合が起きるよ。星の中みたいな反応です。',
+          teen: 'D と T がそろうと核融合反応が起き,He⁴ と中性子が生まれます。',
+        },
       },
       li: {
-        kid: 'Li-6 は燃料を増やしてくれる材料だよ。見つけたら取ろう。',
-        teen: 'リチウム 6 は中性子を受けて三重水素を増やします。燃料を作るしくみです。',
+        title: 'Li-6: 燃料を増やす材料',
+        body: {
+          kid: 'Li-6 は燃料を増やしてくれる材料だよ。見つけたら取ろう。',
+          teen: 'リチウム 6 は中性子を受けて三重水素を増やします。燃料を作るしくみです。',
+        },
       },
       tungsten: {
-        kid: 'タングステンのかけらはプラズマを冷やすよ。よけよう。',
-        teen: 'タングステンが混ざるとプラズマが冷えます。ぶつからないように避けましょう。',
+        title: 'タングステン: プラズマの不純物',
+        body: {
+          kid: 'タングステンのかけらはプラズマを冷やすよ。よけよう。',
+          teen: 'タングステンが混ざるとプラズマが冷えます。ぶつからないように避けましょう。',
+        },
       },
       nbi: {
-        kid: 'ビームでプラズマをあたためるよ。取ると温度アップ。',
-        teen: '中性粒子ビームは外からプラズマを温める加熱装置です。',
+        title: 'NBI: 中性粒子ビーム加熱',
+        body: {
+          kid: 'ビームでプラズマをあたためるよ。取ると温度アップ。',
+          teen: '中性粒子ビームは外からプラズマを温める加熱装置です。',
+        },
       },
     },
     units: {

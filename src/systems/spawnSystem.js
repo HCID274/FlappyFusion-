@@ -48,11 +48,21 @@ function createCollectiblePicker() {
       const type = fuelTypePicker.pick({
         collectedD: world.collectedD,
         collectedT: world.collectedT,
+        allowLi6: canSpawnLi6(world),
       });
-      if (type === 'Li6') return createLithium6(cx, cy);
-      return type === 'D' ? createDeuterium(cx, cy) : createTritium(cx, cy);
+      const collectible = type === 'Li6'
+        ? createLithium6(cx, cy)
+        : type === 'D'
+          ? createDeuterium(cx, cy)
+          : createTritium(cx, cy);
+      if (collectible.type === 'D' || collectible.type === 'T') world.seenDT = true;
+      return collectible;
     },
   };
+}
+
+function canSpawnLi6(world) {
+  return world.seenDT && (!world.tutorialEnabled || world.tutorialSeen?.fusion);
 }
 
 export function createSpawnSystem(eventBus, world) {
@@ -123,17 +133,23 @@ function spawnOne(world, eventBus, phaseRules, collectiblePicker) {
     if (Math.random() < fuelSpawnChance) {
       const cy = gapY + (Math.random() - 0.5) * CONFIG.collectible.yJitter;
       const cx = W + 60 + 28 + Math.random() * 20;
-      world.collectibles.push(collectiblePicker.pick(cx, cy, world));
+      const collectible = collectiblePicker.pick(cx, cy, world);
+      world.collectibles.push(collectible);
+      eventBus.emit(EV.ENTITY_SPAWNED, { entity: collectible, group: 'collectible' });
     }
   }
 
   if (Math.random() < chance(getTungstenSpawnChance(world, phaseRules) * world.hazardMul)) {
     const y = rand(80, H - 80);
-    world.hazards.push(createTungsten(W + 120, y));
+    const hazard = createTungsten(W + 120, y);
+    world.hazards.push(hazard);
+    eventBus.emit(EV.ENTITY_SPAWNED, { entity: hazard, group: 'hazard' });
   }
 
   if (Math.random() < phaseRules.nbiSpawn) {
     const y = rand(CONFIG.boosts.nbi.yMargin, H - CONFIG.boosts.nbi.yMargin);
-    world.boosts.push(createNbi(W + 160, y));
+    const boost = createNbi(W + 160, y);
+    world.boosts.push(boost);
+    eventBus.emit(EV.ENTITY_SPAWNED, { entity: boost, group: 'boost' });
   }
 }

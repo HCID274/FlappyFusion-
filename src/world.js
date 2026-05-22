@@ -6,6 +6,7 @@ import { CONFIG } from './config.js';
 import { createPlasma } from './entities/plasma.js';
 
 export const DIFFICULTY_STORAGE_KEY = 'mcsc.difficulty';
+export const TUTORIAL_ENABLED_STORAGE_KEY = 'mcsc.tutorialEnabled';
 
 function createFusionImpactParticlePool() {
   const size = CONFIG.fusion.impactBurstParticleCount * CONFIG.fusion.impactBurstMaxActiveBursts;
@@ -24,6 +25,7 @@ function createFusionImpactParticlePool() {
 export function createWorld() {
   const world = {};
   world.difficulty = readStoredDifficulty();
+  world.tutorialEnabled = readStoredTutorialEnabled();
   applyDifficultyPreset(world);
   resetWorld(world);
   world.status = 'menu';
@@ -55,6 +57,7 @@ export function resetWorld(world) {
   world.ignitionPhase = { active: false, elapsed: 0, entered: false, elapsedAtDeath: 0 };
   world.selfSustained = false;
   world.timeScale = 1;
+  world.tutorialPaused = false;
   world.screenFx = {
     phaseGlow: {
       from: 'deep',
@@ -93,6 +96,7 @@ export function resetWorld(world) {
   world.wallTouchTimer = 0;
   world.redFlashT = 0;
   world.nbiGlowT = 0;
+  world.seenDT = false;
   if (world.inputBlocked === undefined) world.inputBlocked = false;
 
   world.plasma = createPlasma();
@@ -118,6 +122,12 @@ function applyDifficultyPreset(world) {
 function readStoredDifficulty() {
   if (typeof window === 'undefined') return CONFIG.difficulty.default;
   return normalizeDifficulty(window.localStorage?.getItem(DIFFICULTY_STORAGE_KEY));
+}
+
+function readStoredTutorialEnabled() {
+  if (typeof window === 'undefined') return true;
+  const stored = window.localStorage?.getItem(TUTORIAL_ENABLED_STORAGE_KEY);
+  return stored === null ? true : stored !== 'false';
 }
 
 function normalizeDifficulty(difficulty) {

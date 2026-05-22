@@ -20,4 +20,7 @@ export const EV = {
   STATE_CHANGED: 'state:changed',
   GAME_RESET: 'game:reset',
   INSTABILITY_SPAWNED: 'instability:spawned',
+  ENTITY_SPAWNED: 'entity:spawned',
+  TUTORIAL_REQUESTED: 'tutorial:requested',
+  TUTORIAL_DISMISSED: 'tutorial:dismissed',
 };

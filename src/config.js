@@ -187,6 +187,13 @@ export const CONFIG = {
     textMotionSlowShare: 0.10,
   },
 
+  tutorial: {
+    triggerScreenFraction: 2 / 3,
+    focusPadding: 18,
+    focusMinSize: 64,
+    cardTopFraction: 0.08,
+  },
+
   deathCardDelaySec: 0.6,
 
   difficulty: {

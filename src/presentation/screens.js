@@ -17,7 +17,7 @@ import {
 import { EV } from '../engine/events.js';
 import { CONFIG } from '../config.js';
 import { getAssetUrl } from '../assetLoader.js';
-import { DIFFICULTY_STORAGE_KEY, setWorldDifficulty } from '../world.js';
+import { DIFFICULTY_STORAGE_KEY, TUTORIAL_ENABLED_STORAGE_KEY, setWorldDifficulty } from '../world.js';
 
 const LEARN_ILLUSTRATIONS = [
   './assets/2x/01card.png',
@@ -34,6 +34,7 @@ export function createScreens(eventBus, world) {
   const difficultyButtons = Array.from(document.querySelectorAll('.difficulty-btn'));
   const audienceRow = document.getElementById('audience-toggle-row');
   const audienceButtons = Array.from(document.querySelectorAll('.audience-btn'));
+  const tutorialToggle = document.getElementById('tutorial-toggle');
   const learnIllust = document.getElementById('learn-illust');
 
   show(menu); hide(death); hide(modal);
@@ -51,6 +52,7 @@ export function createScreens(eventBus, world) {
     document.getElementById('menu-lab').textContent = t('ui.lab');
     renderDifficultyButtons();
     renderAudienceButtons();
+    renderTutorialToggle();
     document.getElementById('death-restart').textContent = t('ui.restartHint');
     document.getElementById('death-learnmore').textContent = t('ui.btnLearnMore');
     document.getElementById('learn-prev').textContent = t('ui.btnPrev');
@@ -90,6 +92,13 @@ export function createScreens(eventBus, world) {
       button.classList.toggle('active', audience === getAudience());
       button.setAttribute('aria-pressed', String(audience === getAudience()));
     }
+  }
+
+  function renderTutorialToggle() {
+    tutorialToggle.textContent = world.tutorialEnabled ? t('tutorialToggle.on') : t('tutorialToggle.off');
+    tutorialToggle.classList.toggle('active', world.tutorialEnabled);
+    tutorialToggle.classList.toggle('inactive', !world.tutorialEnabled);
+    tutorialToggle.setAttribute('aria-pressed', String(world.tutorialEnabled));
   }
 
   function showDeathCard() {
@@ -184,6 +193,13 @@ export function createScreens(eventBus, world) {
     });
     allowSpaceStartFromFocusedButton(button);
   }
+
+  tutorialToggle.addEventListener('click', () => {
+    world.tutorialEnabled = !world.tutorialEnabled;
+    window.localStorage?.setItem(TUTORIAL_ENABLED_STORAGE_KEY, String(world.tutorialEnabled));
+    renderTutorialToggle();
+  });
+  allowSpaceStartFromFocusedButton(tutorialToggle);
 
   document.getElementById('death-learnmore-btn').addEventListener('click', () => {
     learnIdx = 0;

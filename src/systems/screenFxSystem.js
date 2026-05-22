@@ -135,6 +135,11 @@ function updateFusionImpactParticles(fx, dt) {
 }
 
 function updateTimeScale(world) {
+  if (world.tutorialPaused) {
+    world.timeScale = 0;
+    return;
+  }
+
   const fx = world.screenFx;
   if (fx.selfSustainBurstT > 0) {
     world.timeScale = CONFIG.ignitionPhase.selfSustainSlowTimeScale;
@@ -209,6 +214,11 @@ export function createScreenFxSystem(eventBus, world) {
 
   return {
     update(dt) {
+      if (world.tutorialPaused) {
+        world.timeScale = 0;
+        return;
+      }
+
       fxElapsed += dt;
       const fx = world.screenFx;
       fx.phaseGlow.t = Math.min(1, fx.phaseGlow.t + dt / fx.phaseGlow.duration);

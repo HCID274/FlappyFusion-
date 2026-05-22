@@ -409,7 +409,8 @@
       width: 100%;
     }
     .difficulty-btn,
-    .audience-btn {
+    .audience-btn,
+    .tutorial-toggle-btn {
       min-width: 92px;
       min-height: 34px;
       padding: 7px 14px;
@@ -426,8 +427,14 @@
       min-width: 112px;
       text-transform: none;
     }
+    .tutorial-toggle-btn {
+      min-width: 146px;
+      text-transform: none;
+      border-color: rgba(255, 255, 255, 0.28);
+    }
     .difficulty-btn:hover,
-    .audience-btn:hover {
+    .audience-btn:hover,
+    .tutorial-toggle-btn:hover {
       transform: translateY(-1px);
       border-color: rgba(68, 221, 255, 0.72);
       color: #fff;
@@ -440,8 +447,21 @@
       color: #fff;
       box-shadow: 0 0 0 1px rgba(68, 221, 255, 0.24), 0 0 18px rgba(68, 221, 255, 0.22);
     }
+    .tutorial-toggle-btn.active {
+      border-color: #66ff99;
+      background: rgba(39, 190, 98, 0.36);
+      color: #fff;
+      box-shadow: 0 0 0 1px rgba(102, 255, 153, 0.24), 0 0 18px rgba(102, 255, 153, 0.18);
+    }
+    .tutorial-toggle-btn.inactive {
+      border-color: rgba(255, 255, 255, 0.24);
+      background: rgba(150, 156, 170, 0.24);
+      color: rgba(255, 255, 255, 0.66);
+      box-shadow: none;
+    }
     .difficulty-btn:focus-visible,
-    .audience-btn:focus-visible {
+    .audience-btn:focus-visible,
+    .tutorial-toggle-btn:focus-visible {
       outline: 2px solid #ff88cc;
       outline-offset: 3px;
     }
@@ -528,6 +548,98 @@
       object-fit: contain;
       margin: 0 0 0.8rem;
     }
+    #screen-tutorial {
+      padding: 0;
+      overflow: hidden;
+      display: none;
+      background: transparent;
+      text-align: center;
+      backdrop-filter: none;
+    }
+    .tutorial-dim,
+    .tutorial-focus-ring,
+    .tutorial-card-content {
+      position: absolute;
+      pointer-events: none;
+    }
+    .tutorial-dim {
+      background: rgba(2, 5, 18, 0.62);
+      backdrop-filter: blur(1px);
+      animation: tutorial-dim-in 0.18s ease-out both;
+    }
+    .tutorial-focus-ring {
+      border: 2px solid rgba(68, 221, 255, 0.95);
+      border-radius: 16px;
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.2),
+        0 0 18px rgba(68, 221, 255, 0.55),
+        inset 0 0 18px rgba(255, 136, 204, 0.16);
+      animation: tutorial-focus-pulse 1.45s ease-in-out infinite;
+    }
+    .tutorial-card-content {
+      left: 50%;
+      width: min(420px, calc(100% - 32px));
+      max-height: min(76vh, 430px);
+      padding: 14px 16px 16px;
+      overflow: hidden;
+      transform: translateX(-50%);
+      border-radius: 8px;
+      border: 1px solid rgba(68, 221, 255, 0.62);
+      background: rgba(5, 10, 31, 0.9);
+      box-shadow:
+        0 0 0 1px rgba(255, 136, 204, 0.16),
+        0 16px 42px rgba(0, 0, 0, 0.48),
+        0 0 28px rgba(68, 221, 255, 0.18);
+      animation: tutorial-card-in 0.22s ease-out both;
+      pointer-events: none;
+    }
+    .tutorial-card-content h2 {
+      margin-bottom: 0.45rem;
+      font-size: 19px;
+      line-height: 1.25;
+    }
+    .tutorial-card-content .body {
+      max-width: none;
+      margin-bottom: 0;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .tutorial-illust {
+      display: block;
+      width: 100%;
+      height: 154px;
+      object-fit: contain;
+      margin: 0 auto 0.65rem;
+    }
+    .tutorial-hint {
+      margin-top: 0.8rem;
+      color: #66ff99;
+      font-size: 14px;
+      font-weight: 700;
+      text-shadow: 0 0 10px rgba(102, 255, 153, 0.36);
+    }
+    @keyframes tutorial-dim-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes tutorial-card-in {
+      from { opacity: 0; transform: translate(-50%, -8px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+    @keyframes tutorial-focus-pulse {
+      0%, 100% {
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.2),
+          0 0 14px rgba(68, 221, 255, 0.45),
+          inset 0 0 14px rgba(255, 136, 204, 0.12);
+      }
+      50% {
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.26),
+          0 0 26px rgba(68, 221, 255, 0.72),
+          inset 0 0 22px rgba(255, 136, 204, 0.2);
+      }
+    }
     .modal-nav {
       width: min(380px, 100%);
       display: grid;
@@ -596,7 +708,8 @@
         gap: 6px;
       }
       .difficulty-btn,
-      .audience-btn {
+      .audience-btn,
+      .tutorial-toggle-btn {
         min-width: 76px;
         min-height: 32px;
         padding-inline: 10px;
@@ -605,8 +718,14 @@
       .audience-btn {
         min-width: 94px;
       }
+      .tutorial-toggle-btn {
+        min-width: 126px;
+      }
       .learn-illust {
         height: 150px;
+      }
+      .tutorial-illust {
+        height: 118px;
       }
       .lang-switch {
         right: 8px;
@@ -664,6 +783,9 @@
           <button class="audience-btn" type="button" data-audience="kid" id="audience-kid"></button>
           <button class="audience-btn" type="button" data-audience="teen" id="audience-teen"></button>
         </div>
+        <div class="menu-toggle-row" id="tutorial-toggle-row">
+          <button class="tutorial-toggle-btn" type="button" id="tutorial-toggle"></button>
+        </div>
       </div>
       <div class="start-hint" id="menu-start"></div>
       <div class="lab" id="menu-lab"></div>
@@ -691,6 +813,20 @@
           <button class="btn" id="learn-next"></button>
         </div>
         <button class="btn btn-primary" id="learn-close-btn" style="margin-top: 1rem;"><span id="learn-close"></span></button>
+      </div>
+    </div>
+
+    <div class="overlay" id="screen-tutorial" style="display:none">
+      <div class="tutorial-dim" id="tutorial-dim-top"></div>
+      <div class="tutorial-dim" id="tutorial-dim-right"></div>
+      <div class="tutorial-dim" id="tutorial-dim-bottom"></div>
+      <div class="tutorial-dim" id="tutorial-dim-left"></div>
+      <div class="tutorial-focus-ring" id="tutorial-focus-ring"></div>
+      <div class="tutorial-card-content" id="tutorial-card">
+        <img class="tutorial-illust" id="tutorial-illust" alt="">
+        <h2 id="tutorial-title"></h2>
+        <div class="body" id="tutorial-body"></div>
+        <div class="tutorial-hint" id="tutorial-hint"></div>
       </div>
     </div>
   </div>

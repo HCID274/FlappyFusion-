@@ -24,10 +24,13 @@ import { createDifficultySystem } from './systems/difficultySystem.js';
 import { createParticleSystem } from './systems/particleSystem.js';
 import { createCleanupSystem } from './systems/cleanupSystem.js';
 import { createScreenFxSystem } from './systems/screenFxSystem.js';
+import { createTutorialSystem } from './systems/tutorialSystem.js';
+import { createIdleResetSystem } from './systems/idleResetSystem.js';
 
 import { createRenderer } from './presentation/renderer.js';
 import { createHUD } from './presentation/hud.js';
 import { createScreens } from './presentation/screens.js';
+import { createTutorialScreen } from './presentation/tutorialScreen.js';
 
 const canvas = document.getElementById('game');
 const stage = canvas.closest('.game-wrap');
@@ -125,6 +128,8 @@ const systems = [
   createPhaseSystem(eventBus, world),
   createIgnitionPhaseSystem(eventBus, world),
   createDifficultySystem(eventBus, world),
+  createTutorialSystem(eventBus, world),
+  createIdleResetSystem(eventBus, world),
   createParticleSystem(eventBus, world),
   createCleanupSystem(eventBus, world),
 ];
@@ -133,11 +138,12 @@ const stateMachine = createStateMachine(eventBus, world);
 const renderer = createRenderer(ctx, world);
 const hud = createHUD(eventBus, world);
 createScreens(eventBus, world);
+createTutorialScreen(eventBus, world);
 
 const loop = createGameLoop({
   update: (dt) => {
     screenFxSystem.update(dt);
-    const gameDt = dt * (world.timeScale || 1);
+    const gameDt = dt * (world.timeScale ?? 1);
     if (world.status === 'playing') world.elapsed += gameDt;
     for (const s of systems) s.update(gameDt);
     stateMachine.update(gameDt);

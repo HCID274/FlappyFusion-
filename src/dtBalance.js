@@ -85,10 +85,11 @@ export function createFuelTypePicker() {
     reset() {
       dtPicker.reset();
     },
-    pick({ collectedD = 0, collectedT = 0 } = {}) {
+    pick({ collectedD = 0, collectedT = 0, allowLi6 = true } = {}) {
       const weights = CONFIG.collectible.typeWeights;
       const dtWeight = weights.D + weights.T;
-      const total = dtWeight + weights.Li6;
+      const liWeight = allowLi6 ? weights.Li6 : 0;
+      const total = dtWeight + liWeight;
       const roll = Math.random() * total;
       if (roll >= dtWeight) return 'Li6';
 
