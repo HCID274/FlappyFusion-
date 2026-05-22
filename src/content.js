@@ -45,7 +45,7 @@ export const CONTENT = {
       languageLabel: '语言',
       languageIcon: '语',
       languageToggleLabel: '切换语言: 当前 {current}, 点击切换到 {next}',
-      tutorialContinueHint: '按 [空格] 继续',
+      tutorialContinueHint: '点击关闭按钮继续',
     },
     language: {
       zh: '中文',
@@ -196,7 +196,7 @@ export const CONTENT = {
       languageLabel: '言語',
       languageIcon: '语',
       languageToggleLabel: '言語を切り替え: 現在 {current}, クリックで {next} へ',
-      tutorialContinueHint: '[スペース] で続ける',
+      tutorialContinueHint: '閉じるボタンで続ける',
     },
     language: {
       zh: '中国語',

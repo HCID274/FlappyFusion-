@@ -24,7 +24,7 @@ import { createDifficultySystem } from './systems/difficultySystem.js';
 import { createParticleSystem } from './systems/particleSystem.js';
 import { createCleanupSystem } from './systems/cleanupSystem.js';
 import { createScreenFxSystem } from './systems/screenFxSystem.js';
-import { createTutorialSystem } from './systems/tutorialSystem.js';
+import { clearSeenTutorials, createTutorialSystem } from './systems/tutorialSystem.js';
 import { createIdleResetSystem } from './systems/idleResetSystem.js';
 
 import { createRenderer } from './presentation/renderer.js';
@@ -103,6 +103,10 @@ syncCanvasToStage();
 const eventBus = createEventBus();
 const world = createWorld();
 const screenFxSystem = createScreenFxSystem(eventBus, world);
+
+// A page refresh is an operator reset at the booth. Keep language/difficulty
+// preferences in localStorage, but never carry viewed tutorial cards into it.
+clearSeenTutorials();
 
 function resizeGame() {
   syncCanvasToStage();

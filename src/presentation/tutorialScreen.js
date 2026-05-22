@@ -24,6 +24,7 @@ export function createTutorialScreen(eventBus, world) {
   const title = document.getElementById('tutorial-title');
   const body = document.getElementById('tutorial-body');
   const hint = document.getElementById('tutorial-hint');
+  const closeButton = document.getElementById('tutorial-close-btn');
 
   let activeId = null;
   let activeTarget = null;
@@ -36,6 +37,7 @@ export function createTutorialScreen(eventBus, world) {
     title.textContent = t(`tutorial.${activeId}.title`);
     body.innerText = t(`tutorial.${activeId}.body`);
     hint.textContent = t('ui.tutorialContinueHint');
+    closeButton.textContent = t('ui.btnClose');
   }
 
   async function renderImage() {
@@ -91,11 +93,16 @@ export function createTutorialScreen(eventBus, world) {
     }
   });
 
-  window.addEventListener('keydown', (event) => {
-    if (!activeId || event.code !== 'Space') return;
+  closeButton.addEventListener('click', (event) => {
     event.preventDefault();
     event.stopPropagation();
     closeTutorial();
+  });
+
+  closeButton.addEventListener('keydown', (event) => {
+    if (event.code !== 'Space') return;
+    event.preventDefault();
+    event.stopPropagation();
   });
 
   onLocaleChange(renderText);
