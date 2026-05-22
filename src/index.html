@@ -583,6 +583,10 @@
       white-space: pre-line;
       margin: 0 auto 0.7rem;
     }
+    .body.learn-body-compact {
+      line-height: 1.38;
+      margin-bottom: 0.35rem;
+    }
     .footer {
       max-width: 460px;
       font-size: 12px;
@@ -627,6 +631,17 @@
       height: 200px;
       object-fit: contain;
       margin: 0 0 0.8rem;
+    }
+    .learn-qr {
+      display: block;
+      width: 132px;
+      height: 132px;
+      object-fit: contain;
+      margin: 0.8rem auto 0;
+      padding: 4px;
+      border-radius: 6px;
+      background: #fff;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16), 0 0 20px rgba(68, 221, 255, 0.14);
     }
     #screen-tutorial {
       padding: 0;
@@ -822,6 +837,12 @@
       .learn-illust {
         height: 150px;
       }
+      .learn-qr {
+        width: 112px;
+        height: 112px;
+        margin-top: 0.65rem;
+        padding: 4px;
+      }
       .tutorial-illust {
         height: 118px;
       }
@@ -922,6 +943,7 @@
         <img class="learn-illust" id="learn-illust" alt="">
         <h2 id="learn-heading"></h2>
         <div class="body" id="learn-body"></div>
+        <img class="learn-qr" id="learn-qr" alt="" style="display:none">
         <div class="modal-nav">
           <button class="btn" id="learn-prev"></button>
           <span class="page-indicator" id="learn-page"></span>

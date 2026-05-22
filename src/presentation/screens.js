@@ -24,6 +24,8 @@ const LEARN_ILLUSTRATIONS = [
   './assets/2x/02card.png',
   './assets/2x/03card.png',
 ];
+const LAB_QR_PATH = './assets/2x/lab_qr.png';
+const LAB_QR_LEARN_INDEX = 2;
 
 export function createScreens(eventBus, world) {
   const menu = document.getElementById('screen-menu');
@@ -38,12 +40,15 @@ export function createScreens(eventBus, world) {
   const audienceButtons = Array.from(document.querySelectorAll('.audience-btn'));
   const tutorialToggle = document.getElementById('tutorial-toggle');
   const learnIllust = document.getElementById('learn-illust');
+  const learnQr = document.getElementById('learn-qr');
+  const learnBody = document.getElementById('learn-body');
 
   show(menu); hide(death); hide(modal);
 
   let deathTimer = null;
   let learnIdx = 0;
   let learnIllustrationRequest = 0;
+  let learnQrRequest = 0;
 
   function renderStaticText() {
     document.title = t('ui.pageTitle');
@@ -148,8 +153,10 @@ export function createScreens(eventBus, world) {
     const learnMore = getLearnMorePages();
     const page = learnMore[learnIdx];
     renderLearnIllustration();
+    renderLearnQr();
     document.getElementById('learn-heading').textContent = page.heading;
-    document.getElementById('learn-body').innerText = page.body;
+    learnBody.innerText = page.body;
+    learnBody.classList.toggle('learn-body-compact', learnIdx === LAB_QR_LEARN_INDEX);
     document.getElementById('learn-prev').disabled = learnIdx === 0;
     document.getElementById('learn-next').disabled = learnIdx === learnMore.length - 1;
     document.getElementById('learn-page').textContent = `${learnIdx + 1} / ${learnMore.length}`;
@@ -174,6 +181,24 @@ export function createScreens(eventBus, world) {
       return;
     }
     learnIllust.src = src;
+  }
+
+  async function renderLearnQr() {
+    const requestId = ++learnQrRequest;
+    learnQr.style.display = 'none';
+    learnQr.removeAttribute('src');
+    learnQr.onload = () => {
+      learnQr.style.display = learnIdx === LAB_QR_LEARN_INDEX ? '' : 'none';
+    };
+    learnQr.onerror = () => {
+      learnQr.style.display = 'none';
+    };
+
+    if (learnIdx !== LAB_QR_LEARN_INDEX) return;
+    const src = await getAssetUrl(LAB_QR_PATH);
+    if (requestId !== learnQrRequest) return;
+    if (!src) return;
+    learnQr.src = src;
   }
 
   eventBus.on(EV.STATE_CHANGED, ({ to }) => {
