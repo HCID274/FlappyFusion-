@@ -9,6 +9,7 @@ import { applyDocumentFonts } from './theme.js';
 import { createEventBus } from './engine/eventBus.js';
 import { createGameLoop } from './engine/gameLoop.js';
 import { createStateMachine } from './engine/stateMachine.js';
+import { EV } from './engine/events.js';
 
 import { createInputSystem } from './systems/inputSystem.js';
 import { createSpawnSystem } from './systems/spawnSystem.js';
@@ -26,6 +27,7 @@ import { createCleanupSystem } from './systems/cleanupSystem.js';
 import { createScreenFxSystem } from './systems/screenFxSystem.js';
 import { clearSeenTutorials, createTutorialSystem } from './systems/tutorialSystem.js';
 import { createIdleResetSystem } from './systems/idleResetSystem.js';
+import { createFullscreenSystem } from './systems/fullscreenSystem.js';
 
 import { createRenderer } from './presentation/renderer.js';
 import { createHUD } from './presentation/hud.js';
@@ -102,7 +104,10 @@ syncCanvasToStage();
 
 const eventBus = createEventBus();
 const world = createWorld();
+clampWorldToStage(world);
 const screenFxSystem = createScreenFxSystem(eventBus, world);
+createFullscreenSystem(eventBus, world, stage);
+eventBus.on(EV.GAME_RESET, () => clampWorldToStage(world));
 
 // A page refresh is an operator reset at the booth. Keep language/difficulty
 // preferences in localStorage, but never carry viewed tutorial cards into it.

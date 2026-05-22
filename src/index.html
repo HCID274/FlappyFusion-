@@ -2,7 +2,7 @@
 <html lang="ja-JP">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title></title>
   <style>
     :root {
@@ -17,6 +17,7 @@
       font-family: var(--font-app);
       color: #fff;
       overflow: hidden;
+      overscroll-behavior: none;
     }
     body {
       display: grid;
@@ -29,6 +30,7 @@
       aspect-ratio: 4 / 3;
       overflow: hidden;
       background: #0a0e27;
+      touch-action: none;
     }
     @supports (height: 100dvh) {
       .game-wrap {
@@ -42,6 +44,19 @@
       height: 100%;
       background: #0a0e27;
       outline: none;
+      touch-action: none;
+      user-select: none;
+    }
+    .game-wrap:fullscreen {
+      width: 100dvw;
+      height: 100dvh;
+      max-width: none;
+      max-height: none;
+      aspect-ratio: auto;
+    }
+    .game-wrap:fullscreen #game {
+      width: 100%;
+      height: 100%;
     }
 
     /* HUD */
@@ -357,6 +372,51 @@
       outline: 2px solid #44ddff;
       outline-offset: 3px;
     }
+    .view-controls {
+      position: absolute;
+      left: max(12px, env(safe-area-inset-left));
+      bottom: max(12px, env(safe-area-inset-bottom));
+      z-index: 6;
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .fullscreen-btn {
+      min-width: 72px;
+      min-height: 38px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(68, 221, 255, 0.68);
+      background: rgba(0, 0, 0, 0.5);
+      color: #fff;
+      font: 800 12px/1 var(--font-app);
+      cursor: pointer;
+      pointer-events: auto;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 0 18px rgba(68, 221, 255, 0.16);
+      transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+    }
+    .fullscreen-btn:hover {
+      transform: translateY(-1px);
+      background: rgba(68, 221, 255, 0.16);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14), 0 0 22px rgba(68, 221, 255, 0.26);
+    }
+    .fullscreen-btn:focus-visible {
+      outline: 2px solid #ff88cc;
+      outline-offset: 3px;
+    }
+    .fullscreen-hint {
+      max-width: min(280px, 52vw);
+      padding: 8px 11px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 204, 68, 0.5);
+      background: rgba(0, 0, 0, 0.68);
+      color: #ffe18a;
+      font: 800 12px/1.35 var(--font-app);
+      text-align: left;
+      pointer-events: none;
+      box-shadow: 0 0 20px rgba(255, 204, 68, 0.12);
+    }
 
     /* Overlays */
     .overlay {
@@ -474,10 +534,30 @@
       font-family: var(--font-app);
     }
     .start-hint {
+      display: inline-grid;
+      place-items: center;
       font-size: 16px;
+      font-family: var(--font-app);
+      font-weight: 800;
+      line-height: 1;
       color: #ff88cc;
       margin-top: 0.5rem;
       animation: blink 1.4s ease-in-out infinite;
+      min-width: 120px;
+      min-height: 40px;
+      padding: 8px 18px;
+      border: 1px solid rgba(255, 136, 204, 0.62);
+      border-radius: 999px;
+      background: rgba(255, 136, 204, 0.1);
+      cursor: pointer;
+      appearance: none;
+    }
+    .start-hint:hover {
+      background: rgba(255, 136, 204, 0.18);
+    }
+    .start-hint:focus-visible {
+      outline: 2px solid #44ddff;
+      outline-offset: 3px;
     }
     @keyframes blink { 50% { opacity: 0.5; } }
     .lab {
@@ -749,6 +829,19 @@
         right: 8px;
         bottom: 8px;
       }
+      .view-controls {
+        left: max(8px, env(safe-area-inset-left));
+        bottom: max(8px, env(safe-area-inset-bottom));
+      }
+      .fullscreen-btn {
+        min-width: 68px;
+        min-height: 36px;
+        padding-inline: 12px;
+      }
+      .fullscreen-hint {
+        max-width: min(240px, 58vw);
+        font-size: 11px;
+      }
     }
   </style>
 </head>
@@ -774,6 +867,10 @@
     </div>
     <div class="lang-switch" id="language-switch">
       <button class="lang-btn" id="lang-toggle" type="button"></button>
+    </div>
+    <div class="view-controls" id="view-controls">
+      <button class="fullscreen-btn" id="fullscreen-toggle" type="button"></button>
+      <div class="fullscreen-hint" id="fullscreen-hint" style="display:none"></div>
     </div>
 
     <div class="hud">
@@ -805,7 +902,7 @@
           <button class="tutorial-toggle-btn" type="button" id="tutorial-toggle"></button>
         </div>
       </div>
-      <div class="start-hint" id="menu-start"></div>
+      <button class="start-hint" id="menu-start" type="button"></button>
       <div class="lab" id="menu-lab"></div>
     </div>
 
@@ -815,7 +912,7 @@
       <div class="body" id="death-body"></div>
       <div class="footer" id="death-footer"></div>
       <div class="actions">
-        <div class="start-hint" id="death-restart"></div>
+        <button class="start-hint" id="death-restart" type="button"></button>
         <button class="btn" id="death-learnmore-btn"><span id="death-learnmore"></span></button>
       </div>
     </div>

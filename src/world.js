@@ -100,12 +100,28 @@ export function resetWorld(world) {
   if (world.inputBlocked === undefined) world.inputBlocked = false;
 
   world.plasma = createPlasma();
+  fitPlasmaStartToCanvas(world.plasma);
   world.obstacles = [];
   world.hazards = [];
   world.collectibles = [];
   world.particleStream = [];
   world.boosts = [];
   world.particles = [];
+}
+
+function fitPlasmaStartToCanvas(plasma) {
+  const margin = CONFIG.obstacle.wallMargin;
+  const minX = plasma.radius;
+  const maxX = Math.max(minX, CONFIG.canvas.width - plasma.radius);
+  const minY = margin + plasma.radius + 1;
+  const maxY = Math.max(minY, CONFIG.canvas.height - margin - plasma.radius - 1);
+
+  if (plasma.pos.x < minX || plasma.pos.x > maxX) {
+    plasma.pos.x = (minX + maxX) / 2;
+  }
+  if (plasma.pos.y < minY || plasma.pos.y > maxY) {
+    plasma.pos.y = (minY + maxY) / 2;
+  }
 }
 
 function applyDifficultyPreset(world) {

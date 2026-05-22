@@ -19,6 +19,8 @@ export const EV = {
   SCORE_CHANGED: 'score:changed',
   STATE_CHANGED: 'state:changed',
   GAME_RESET: 'game:reset',
+  FULLSCREEN_TOGGLE_REQUESTED: 'fullscreen:toggle-requested',
+  FULLSCREEN_CHANGED: 'fullscreen:changed',
   INSTABILITY_SPAWNED: 'instability:spawned',
   ENTITY_SPAWNED: 'entity:spawned',
   TUTORIAL_REQUESTED: 'tutorial:requested',

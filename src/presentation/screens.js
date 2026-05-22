@@ -31,6 +31,8 @@ export function createScreens(eventBus, world) {
   const modal = document.getElementById('screen-learn');
   const languageSwitch = document.getElementById('language-switch');
   const languageButton = document.getElementById('lang-toggle');
+  const fullscreenButton = document.getElementById('fullscreen-toggle');
+  const fullscreenHint = document.getElementById('fullscreen-hint');
   const difficultyButtons = Array.from(document.querySelectorAll('.difficulty-btn'));
   const audienceRow = document.getElementById('audience-toggle-row');
   const audienceButtons = Array.from(document.querySelectorAll('.audience-btn'));
@@ -48,12 +50,13 @@ export function createScreens(eventBus, world) {
     document.getElementById('menu-title').textContent = t('ui.title');
     document.getElementById('menu-subtitle').textContent = t('ui.subtitle');
     document.getElementById('menu-tutorial').innerText = t('tutorial.menu');
-    document.getElementById('menu-start').textContent = t('ui.startHint');
+    document.getElementById('menu-start').textContent = t('ui.btnStart');
     document.getElementById('menu-lab').textContent = t('ui.lab');
     renderDifficultyButtons();
     renderAudienceButtons();
     renderTutorialToggle();
-    document.getElementById('death-restart').textContent = t('ui.restartHint');
+    renderFullscreenButton();
+    document.getElementById('death-restart').textContent = t('ui.btnRestart');
     document.getElementById('death-learnmore').textContent = t('ui.btnLearnMore');
     document.getElementById('learn-prev').textContent = t('ui.btnPrev');
     document.getElementById('learn-next').textContent = t('ui.btnNext');
@@ -99,6 +102,14 @@ export function createScreens(eventBus, world) {
     tutorialToggle.classList.toggle('active', world.tutorialEnabled);
     tutorialToggle.classList.toggle('inactive', !world.tutorialEnabled);
     tutorialToggle.setAttribute('aria-pressed', String(world.tutorialEnabled));
+  }
+
+  function renderFullscreenButton() {
+    fullscreenButton.textContent = world.isFullscreen ? t('ui.exitFullscreen') : t('ui.enterFullscreen');
+    fullscreenButton.setAttribute('aria-pressed', String(Boolean(world.isFullscreen)));
+    fullscreenButton.setAttribute('aria-label', fullscreenButton.textContent);
+    fullscreenHint.textContent = t('ui.fullscreenHint');
+    fullscreenHint.style.display = world.fullscreenHintVisible ? '' : 'none';
   }
 
   function showDeathCard() {
@@ -176,7 +187,24 @@ export function createScreens(eventBus, world) {
     }
   });
 
+  eventBus.on(EV.FULLSCREEN_CHANGED, renderFullscreenButton);
+
   languageButton.addEventListener('click', () => setLocale(getNextLocale()));
+  fullscreenButton.addEventListener('click', () => eventBus.emit(EV.FULLSCREEN_TOGGLE_REQUESTED));
+  fullscreenButton.addEventListener('keydown', (e) => {
+    if (e.code !== 'Space') return;
+    e.preventDefault();
+    e.stopPropagation();
+  });
+  fullscreenButton.addEventListener('keyup', (e) => {
+    if (e.code !== 'Space') return;
+    e.preventDefault();
+    e.stopPropagation();
+    eventBus.emit(EV.FULLSCREEN_TOGGLE_REQUESTED);
+  });
+
+  document.getElementById('menu-start').addEventListener('click', () => eventBus.emit(EV.INPUT_PULSE));
+  document.getElementById('death-restart').addEventListener('click', () => eventBus.emit(EV.INPUT_PULSE));
 
   for (const button of difficultyButtons) {
     button.addEventListener('click', () => {

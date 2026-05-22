@@ -6,6 +6,7 @@ import { EV } from '../engine/events.js';
 
 export function createInputSystem(eventBus, world) {
   let queued = false;
+  const canvas = document.getElementById('game');
 
   window.addEventListener('keydown', (e) => {
     if (e.code === 'Space') {
@@ -14,6 +15,13 @@ export function createInputSystem(eventBus, world) {
       queued = true;
     }
   });
+
+  canvas?.addEventListener('pointerdown', (e) => {
+    if (world.inputBlocked) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    queued = true;
+  }, { passive: false });
 
   return {
     update(_dt) {
