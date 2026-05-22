@@ -34,6 +34,20 @@ const LOOPS = {
   success: { volume: 0.28 },
 };
 
+const VOICE_MODULES = import.meta.glob('../assets/audio/voice/ja/*.mp3', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+});
+
+const VOICE = Object.fromEntries(
+  Object.entries(VOICE_MODULES).map(([path, url]) => [path.split('/').pop().replace(/\.mp3$/, ''), url]),
+);
+
+const VOICE_VOLUME = 0.86;
+const VOICE_DUCK_MUL = 0.35;
+const VOICE_MIN_INTERVAL_MS = 900;
+
 export function createAudioSystem(eventBus, world) {
   if (typeof Audio === 'undefined') return { update(_dt) {} };
 
@@ -44,6 +58,9 @@ export function createAudioSystem(eventBus, world) {
   let desiredLoop = world.status === 'playing' ? 'game' : 'menu';
   let activeLoop = null;
   let fadeFrame = 0;
+  let voiceAudio = null;
+  let voiceDuckUntil = 0;
+  let lastVoiceAt = 0;
 
   for (const [name, cfg] of Object.entries(SFX)) {
     pools.set(name, Array.from({ length: cfg.pool }, () => createAudio(AUDIO[name], false)));
@@ -94,6 +111,35 @@ export function createAudioSystem(eventBus, world) {
     audio.play().catch(() => {});
   }
 
+  function playVoice(id) {
+    if (!canPlay()) return;
+    const src = VOICE[id];
+    if (!src) return;
+
+    const now = performance.now();
+    if (now - lastVoiceAt < VOICE_MIN_INTERVAL_MS) return;
+    lastVoiceAt = now;
+
+    if (!voiceAudio) {
+      voiceAudio = createAudio(src, false);
+    } else {
+      voiceAudio.pause();
+      voiceAudio.src = src;
+    }
+
+    voiceAudio.currentTime = 0;
+    voiceAudio.volume = VOICE_VOLUME;
+    voiceDuckUntil = now + 2600;
+    voiceAudio.onloadedmetadata = () => {
+      if (!Number.isFinite(voiceAudio.duration)) return;
+      voiceDuckUntil = Math.max(voiceDuckUntil, performance.now() + voiceAudio.duration * 1000 + 250);
+    };
+    voiceAudio.onended = () => {
+      voiceDuckUntil = Math.max(voiceDuckUntil, performance.now() + 250);
+    };
+    voiceAudio.play().catch(() => {});
+  }
+
   function stopLoops() {
     desiredLoop = null;
     activeLoop = null;
@@ -125,7 +171,8 @@ export function createAudioSystem(eventBus, world) {
     function step(now) {
       const t = Math.min(1, (now - startedAt) / duration);
       for (const [loopName, audio] of Object.entries(loops)) {
-        const target = loopName === name ? LOOPS[loopName].volume : 0;
+        const duckMul = now < voiceDuckUntil ? VOICE_DUCK_MUL : 1;
+        const target = loopName === name ? LOOPS[loopName].volume * duckMul : 0;
         const current = Number.isFinite(audio.volume) ? audio.volume : 0;
         audio.volume = current + (target - current) * Math.min(1, t + 0.16);
         if (loopName !== name && t >= 1) audio.pause();
@@ -181,8 +228,18 @@ export function createAudioSystem(eventBus, world) {
   eventBus.on(EV.PLASMA_DEAD, () => playSfx('death'));
   eventBus.on(EV.TUTORIAL_REQUESTED, () => playSfx('ui'));
   eventBus.on(EV.TUTORIAL_DISMISSED, () => playSfx('ui'));
+  eventBus.on(EV.VOICE_CUE, ({ id } = {}) => playVoice(id));
 
-  return { update(_dt) {} };
+  return {
+    update(_dt) {
+      if (!activeLoop) return;
+      const audio = loops[activeLoop];
+      if (!audio || audio.paused) return;
+      const duckMul = performance.now() < voiceDuckUntil ? VOICE_DUCK_MUL : 1;
+      const target = LOOPS[activeLoop].volume * duckMul;
+      audio.volume += (target - audio.volume) * 0.12;
+    },
+  };
 
   function loopForWorld() {
     if (world.selfSustained) return 'success';

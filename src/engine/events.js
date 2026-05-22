@@ -22,6 +22,7 @@ export const EV = {
   FULLSCREEN_TOGGLE_REQUESTED: 'fullscreen:toggle-requested',
   FULLSCREEN_CHANGED: 'fullscreen:changed',
   AUDIO_CHANGED: 'audio:changed',
+  VOICE_CUE: 'voice:cue',
   INSTABILITY_SPAWNED: 'instability:spawned',
   ENTITY_SPAWNED: 'entity:spawned',
   TUTORIAL_REQUESTED: 'tutorial:requested',

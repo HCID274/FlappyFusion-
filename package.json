@@ -6,6 +6,8 @@
   "packageManager": "pnpm@11.1.1",
   "scripts": {
     "dev": "vite",
+    "generate:voice": "node scripts/generate-google-voice.mjs",
+    "generate:voice:ja": "node scripts/generate-google-voice.mjs --locale=ja",
     "check:i18n": "node scripts/check-i18n.mjs",
     "build": "node scripts/check-i18n.mjs && vite build",
     "preview": "vite preview"

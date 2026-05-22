@@ -30,3 +30,8 @@ All audio files in this folder are from CC0 / public-domain asset packs.
   - Source: cynicmusic, "Victory Theme for RPG"
   - License: CC0
   - https://opengameart.org/content/victory-theme-for-rpg
+
+Optional generated narration files under `voice/ja/` are produced with Google
+Cloud Text-to-Speech from the local generation script. The same Japanese
+narration is used for all UI languages. Keep the API key outside the repository
+and follow the Google Cloud service terms for generated audio.
