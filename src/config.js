@@ -198,6 +198,10 @@ export const CONFIG = {
 
   deathCardDelaySec: 0.6,
 
+  leaderboard: {
+    protectedScoreMin: 1000,
+  },
+
   difficulty: {
     default: 'easy',
     presets: {

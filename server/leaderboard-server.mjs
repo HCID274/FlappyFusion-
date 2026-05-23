@@ -64,10 +64,28 @@ const latestScore = db.prepare(`
   WHERE id = ?
 `);
 const topScores = db.prepare(`
+  WITH ranked AS (
+    SELECT
+      id,
+      name,
+      score,
+      duration,
+      max_temp,
+      fusion_count,
+      max_combo,
+      locale,
+      created_at,
+      ROW_NUMBER() OVER (
+        PARTITION BY name_key
+        ORDER BY score DESC, created_at ASC, id ASC
+      ) AS rank_in_name
+    FROM scores
+    WHERE (? = '' OR name_key LIKE ? ESCAPE '\\')
+  )
   SELECT id, name, score, duration, max_temp, fusion_count, max_combo, locale, created_at
-  FROM scores
-  WHERE (? = '' OR name_key LIKE ? ESCAPE '\\')
-  ORDER BY score DESC, created_at ASC
+  FROM ranked
+  WHERE rank_in_name = 1
+  ORDER BY score DESC, created_at ASC, id ASC
   LIMIT ?
 `);
 const recentNames = db.prepare(`

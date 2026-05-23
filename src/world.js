@@ -58,6 +58,8 @@ export function resetWorld(world) {
   world.fusionBurst = { active: false, remaining: 0 };
   world.ignitionPhase = { active: false, elapsed: 0, entered: false, elapsedAtDeath: 0 };
   world.selfSustained = false;
+  world.leaderboardPending = false;
+  world.leaderboardSnapshot = null;
   world.timeScale = 1;
   world.tutorialPaused = false;
   world.screenFx = {

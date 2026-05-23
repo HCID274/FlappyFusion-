@@ -49,7 +49,7 @@ export function createScreens(eventBus, world) {
   const learnIllust = document.getElementById('learn-illust');
   const learnQr = document.getElementById('learn-qr');
   const learnBody = document.getElementById('learn-body');
-  const leaderboardPanel = createLeaderboardPanel(eventBus);
+  const leaderboardPanel = createLeaderboardPanel(eventBus, world);
 
   show(menu); hide(death); hide(modal);
 
@@ -135,25 +135,32 @@ export function createScreens(eventBus, world) {
   }
 
   function showDeathCard() {
-    const seconds = Math.floor(world.elapsed);
-    const cause = world.deathCause || 'wall';
-    const maxTemp = world.maxTemperature;
-    const ignitionSeconds = Math.floor(world.ignitionPhase?.elapsedAtDeath || 0);
+    const snapshot = world.leaderboardSnapshot || captureLeaderboardSnapshot();
+    const {
+      seconds,
+      fusionCount,
+      maxTemp,
+      maxCombo,
+      ignitionSeconds,
+      selfSustained,
+      cause,
+      score,
+    } = snapshot;
     const { body, footer } = getDeathBody({
       seconds,
-      fusionCount: world.fusionCount,
+      fusionCount,
       maxTemp,
-      maxCombo: world.maxCombo,
+      maxCombo,
       ignitionSeconds,
-      selfSustained: world.selfSustained,
+      selfSustained,
     });
 
     document.getElementById('death-title').textContent = '💥 ' + getDeathTitle(cause);
     document.getElementById('death-stats').innerText = getDeathStats({
       seconds,
-      fusionCount: world.fusionCount,
+      fusionCount,
       maxTemp,
-      maxCombo: world.maxCombo,
+      maxCombo,
     });
     document.getElementById('death-body').innerText = body;
     const footEl = document.getElementById('death-footer');
@@ -165,12 +172,25 @@ export function createScreens(eventBus, world) {
     }
     show(death);
     leaderboardPanel.showScore({
-      score: world.score,
+      score,
       duration: seconds,
       maxTemp,
-      fusionCount: world.fusionCount,
-      maxCombo: world.maxCombo,
+      fusionCount,
+      maxCombo,
     });
+  }
+
+  function captureLeaderboardSnapshot() {
+    return {
+      score: world.score,
+      seconds: Math.floor(world.elapsed),
+      fusionCount: world.fusionCount,
+      maxTemp: world.maxTemperature,
+      maxCombo: world.maxCombo,
+      ignitionSeconds: Math.floor(world.ignitionPhase?.elapsedAtDeath || 0),
+      selfSustained: world.selfSustained,
+      cause: world.deathCause || 'wall',
+    };
   }
 
   function renderLearnPage() {
@@ -228,10 +248,16 @@ export function createScreens(eventBus, world) {
   eventBus.on(EV.STATE_CHANGED, ({ to }) => {
     if (deathTimer) { clearTimeout(deathTimer); deathTimer = null; }
     if (to === 'menu') {
+      world.leaderboardPending = false;
+      world.leaderboardSnapshot = null;
       show(menu); hide(death); hide(modal);
     } else if (to === 'playing') {
+      world.leaderboardPending = false;
+      world.leaderboardSnapshot = null;
       hide(menu); hide(death); hide(modal);
     } else if (to === 'dead') {
+      world.leaderboardSnapshot = captureLeaderboardSnapshot();
+      world.leaderboardPending = world.leaderboardSnapshot.score >= CONFIG.leaderboard.protectedScoreMin;
       deathTimer = setTimeout(showDeathCard, CONFIG.deathCardDelaySec * 1000);
     }
   });

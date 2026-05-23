@@ -2,9 +2,9 @@ export const MAX_PLAYER_NAME_CHARS = 24;
 export const MAX_SCORE = 10_000_000;
 export const MAX_RUN_DURATION_SECONDS = 600;
 export const SCORE_FIELD_LIMITS = {
-  score: { min: 0, max: MAX_SCORE },
+  score: { min: 1, max: MAX_SCORE },
   duration: { min: 0, max: MAX_RUN_DURATION_SECONDS },
-  maxTemp: { min: 0, max: 500 },
+  maxTemp: { min: 0, max: 2000 },
   fusionCount: { min: 0, max: 500 },
   maxCombo: { min: 0, max: 99 },
 };

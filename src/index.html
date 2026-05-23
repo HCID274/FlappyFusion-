@@ -708,6 +708,17 @@
       font: 900 12px/1 var(--font-app);
       cursor: pointer;
     }
+    .leaderboard-skip {
+      min-width: 120px;
+      height: 34px;
+      padding: 0 12px;
+      border-radius: 7px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.78);
+      font: 900 12px/1 var(--font-app);
+      cursor: pointer;
+    }
     .leaderboard-submit:disabled {
       cursor: default;
       opacity: 0.55;
@@ -1062,6 +1073,7 @@
         <div class="leaderboard-submit-row">
           <input class="leaderboard-input" id="leaderboard-name" autocomplete="off" maxlength="24">
           <button class="leaderboard-submit" id="leaderboard-submit" type="button"></button>
+          <button class="leaderboard-skip" id="leaderboard-skip" type="button"></button>
         </div>
         <div class="leaderboard-error" id="leaderboard-error"></div>
         <div class="leaderboard-label" id="leaderboard-recent-label"></div>

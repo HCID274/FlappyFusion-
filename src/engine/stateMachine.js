@@ -19,7 +19,7 @@ export function createStateMachine(eventBus, world) {
   }
 
   eventBus.on(EV.INPUT_PULSE, () => {
-    if (world.status === 'menu' || world.status === 'dead') {
+    if (world.status === 'menu' || (world.status === 'dead' && !world.leaderboardPending)) {
       transitionTo('playing');
     }
   });

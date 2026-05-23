@@ -3,13 +3,14 @@ import { EV } from '../engine/events.js';
 import { createRun, fetchRecentNames, fetchTopScores, submitScore } from '../leaderboardApi.js';
 import { MAX_PLAYER_NAME_CHARS, normalizePlayerName, validatePlayerName } from '../leaderboardRules.js';
 
-export function createLeaderboardPanel(eventBus) {
+export function createLeaderboardPanel(eventBus, world) {
   const el = {
     title: document.getElementById('leaderboard-title'),
     current: document.getElementById('leaderboard-current'),
     nameLabel: document.getElementById('leaderboard-name-label'),
     nameInput: document.getElementById('leaderboard-name'),
     submit: document.getElementById('leaderboard-submit'),
+    skip: document.getElementById('leaderboard-skip'),
     error: document.getElementById('leaderboard-error'),
     recentLabel: document.getElementById('leaderboard-recent-label'),
     recentNames: document.getElementById('leaderboard-recent-names'),
@@ -34,6 +35,7 @@ export function createLeaderboardPanel(eventBus) {
   });
 
   el.submit.addEventListener('click', submitCurrentScore);
+  el.skip.addEventListener('click', skipCurrentScore);
   el.nameInput.addEventListener('keydown', (event) => {
     event.stopPropagation();
     if (event.code === 'Enter') {
@@ -76,6 +78,8 @@ export function createLeaderboardPanel(eventBus) {
     el.nameInput.placeholder = t('leaderboard.namePlaceholder');
     el.nameInput.maxLength = String(MAX_PLAYER_NAME_CHARS);
     el.submit.textContent = submitted ? t('leaderboard.submitted') : t('leaderboard.submit');
+    el.skip.textContent = t('leaderboard.skipSave');
+    el.skip.style.display = pendingScore && world.leaderboardPending ? '' : 'none';
     el.recentLabel.textContent = t('leaderboard.recentNames');
     el.topLabel.textContent = t('leaderboard.topScores');
     el.search.placeholder = t('leaderboard.searchPlaceholder');
@@ -216,12 +220,18 @@ export function createLeaderboardPanel(eventBus) {
       });
       submitted = true;
       runToken = null;
-      el.submit.textContent = t('leaderboard.submitted');
+      world.leaderboardPending = false;
+      renderText();
       await refresh();
     } catch (_err) {
       el.submit.disabled = false;
       el.error.textContent = t('leaderboard.submitFailed');
     }
+  }
+
+  function skipCurrentScore() {
+    world.leaderboardPending = false;
+    eventBus.emit(EV.INPUT_PULSE);
   }
 }
 
