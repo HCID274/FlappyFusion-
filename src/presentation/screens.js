@@ -17,6 +17,7 @@ import {
 import { EV } from '../engine/events.js';
 import { CONFIG } from '../config.js';
 import { getAssetUrl } from '../assetLoader.js';
+import { createLeaderboardPanel } from './leaderboardPanel.js';
 import {
   AUDIO_ENABLED_STORAGE_KEY,
   DIFFICULTY_STORAGE_KEY,
@@ -48,6 +49,7 @@ export function createScreens(eventBus, world) {
   const learnIllust = document.getElementById('learn-illust');
   const learnQr = document.getElementById('learn-qr');
   const learnBody = document.getElementById('learn-body');
+  const leaderboardPanel = createLeaderboardPanel(eventBus);
 
   show(menu); hide(death); hide(modal);
 
@@ -73,6 +75,7 @@ export function createScreens(eventBus, world) {
     document.getElementById('learn-prev').textContent = t('ui.btnPrev');
     document.getElementById('learn-next').textContent = t('ui.btnNext');
     document.getElementById('learn-close').textContent = t('ui.btnClose');
+    leaderboardPanel.renderText();
     languageSwitch.setAttribute('aria-label', t('ui.languageLabel'));
     updateLanguageButton();
 
@@ -161,6 +164,13 @@ export function createScreens(eventBus, world) {
       footEl.style.display = 'none';
     }
     show(death);
+    leaderboardPanel.showScore({
+      score: world.score,
+      duration: seconds,
+      maxTemp,
+      fusionCount: world.fusionCount,
+      maxCombo: world.maxCombo,
+    });
   }
 
   function renderLearnPage() {

@@ -8,6 +8,7 @@
     "dev": "vite",
     "generate:voice": "node scripts/generate-google-voice.mjs",
     "generate:voice:ja": "node scripts/generate-google-voice.mjs --locale=ja",
+    "leaderboard:server": "node --no-warnings server/leaderboard-server.mjs",
     "check:i18n": "node scripts/check-i18n.mjs",
     "build": "node scripts/check-i18n.mjs && vite build",
     "preview": "vite preview"

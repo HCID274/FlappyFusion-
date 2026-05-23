@@ -632,6 +632,156 @@
       white-space: pre-line;
       margin-bottom: 1rem;
     }
+    #screen-death {
+      justify-content: flex-start;
+      overflow-y: auto;
+      padding: 18px 24px 22px;
+    }
+    #screen-death h2 {
+      margin-top: 0;
+    }
+    .leaderboard {
+      width: min(100%, 560px);
+      margin: 0.25rem auto 0.9rem;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(68, 221, 255, 0.28);
+      background: rgba(0, 0, 0, 0.24);
+      box-shadow: inset 0 0 18px rgba(68, 221, 255, 0.05);
+      text-align: left;
+    }
+    .leaderboard-head,
+    .leaderboard-submit-row,
+    .leaderboard-search-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .leaderboard-title {
+      color: #44ddff;
+      font: 900 15px/1 var(--font-app);
+      letter-spacing: 0.04em;
+    }
+    .leaderboard-current {
+      color: #ffcc44;
+      font: 900 15px/1 var(--font-app);
+      white-space: nowrap;
+    }
+    .leaderboard-label {
+      display: block;
+      margin: 10px 0 5px;
+      color: rgba(255, 255, 255, 0.68);
+      font: 800 11px/1 var(--font-app);
+    }
+    .leaderboard-input,
+    .leaderboard-search {
+      min-width: 0;
+      height: 34px;
+      border-radius: 7px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(4, 8, 24, 0.78);
+      color: #fff;
+      font: 800 13px/1 var(--font-app);
+      padding: 0 10px;
+      outline: none;
+    }
+    .leaderboard-input {
+      flex: 1;
+    }
+    .leaderboard-search {
+      width: 172px;
+    }
+    .leaderboard-input:focus,
+    .leaderboard-search:focus {
+      border-color: rgba(68, 221, 255, 0.8);
+      box-shadow: 0 0 0 2px rgba(68, 221, 255, 0.15);
+    }
+    .leaderboard-submit {
+      min-width: 92px;
+      height: 34px;
+      padding: 0 12px;
+      border-radius: 7px;
+      border: 1px solid rgba(255, 204, 68, 0.72);
+      background: rgba(255, 204, 68, 0.15);
+      color: #ffe18a;
+      font: 900 12px/1 var(--font-app);
+      cursor: pointer;
+    }
+    .leaderboard-submit:disabled {
+      cursor: default;
+      opacity: 0.55;
+    }
+    .leaderboard-error {
+      min-height: 16px;
+      margin-top: 5px;
+      color: #ff8877;
+      font: 800 11px/1.25 var(--font-app);
+    }
+    .recent-name-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 28px;
+      margin: 7px 0 10px;
+    }
+    .recent-name-chip {
+      max-width: 148px;
+      height: 26px;
+      padding: 0 9px;
+      overflow: hidden;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 136, 204, 0.45);
+      background: rgba(255, 136, 204, 0.1);
+      color: rgba(255, 255, 255, 0.9);
+      font: 800 11px/1 var(--font-app);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .leaderboard-list {
+      max-height: 148px;
+      margin-top: 8px;
+      overflow-y: auto;
+      border-radius: 8px;
+    }
+    .leaderboard-row {
+      display: grid;
+      grid-template-columns: 36px 1fr auto;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 6px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .leaderboard-rank {
+      color: rgba(255, 255, 255, 0.48);
+      font: 900 12px/1 var(--font-app);
+    }
+    .leaderboard-name {
+      overflow: hidden;
+      color: #fff;
+      font: 900 13px/1.2 var(--font-app);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .leaderboard-detail {
+      margin-top: 3px;
+      color: rgba(255, 255, 255, 0.52);
+      font: 700 10px/1.2 var(--font-app);
+    }
+    .leaderboard-score {
+      color: #ffcc44;
+      font: 900 13px/1 var(--font-app);
+      white-space: nowrap;
+    }
+    .leaderboard-empty {
+      padding: 12px;
+      color: rgba(255, 255, 255, 0.52);
+      font: 800 12px/1.35 var(--font-app);
+      text-align: center;
+    }
     .body {
       max-width: 480px;
       font-size: 14px;
@@ -903,6 +1053,25 @@
     <div class="overlay" id="screen-death" style="display:none">
       <h2 id="death-title">💥</h2>
       <div class="stats" id="death-stats"></div>
+      <div class="leaderboard" id="leaderboard-panel">
+        <div class="leaderboard-head">
+          <div class="leaderboard-title" id="leaderboard-title"></div>
+          <div class="leaderboard-current" id="leaderboard-current"></div>
+        </div>
+        <label class="leaderboard-label" for="leaderboard-name" id="leaderboard-name-label"></label>
+        <div class="leaderboard-submit-row">
+          <input class="leaderboard-input" id="leaderboard-name" autocomplete="off" maxlength="24">
+          <button class="leaderboard-submit" id="leaderboard-submit" type="button"></button>
+        </div>
+        <div class="leaderboard-error" id="leaderboard-error"></div>
+        <div class="leaderboard-label" id="leaderboard-recent-label"></div>
+        <div class="recent-name-row" id="leaderboard-recent-names"></div>
+        <div class="leaderboard-search-row">
+          <div class="leaderboard-title" id="leaderboard-top-label"></div>
+          <input class="leaderboard-search" id="leaderboard-search" autocomplete="off">
+        </div>
+        <div class="leaderboard-list" id="leaderboard-list"></div>
+      </div>
       <div class="body" id="death-body"></div>
       <div class="footer" id="death-footer"></div>
       <div class="actions">

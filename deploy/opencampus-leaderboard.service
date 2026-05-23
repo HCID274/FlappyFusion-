@@ -1,0 +1,25 @@
+[Unit]
+Description=OpenCampus game leaderboard API
+After=network.target
+
+[Service]
+Type=simple
+User=opencampus-game
+Group=opencampus-game
+WorkingDirectory=/opt/opencampus-game
+Environment=LEADERBOARD_HOST=127.0.0.1
+Environment=LEADERBOARD_PORT=3001
+Environment=LEADERBOARD_DB=/var/lib/opencampus-game/leaderboard.sqlite
+EnvironmentFile=-/etc/default/opencampus-leaderboard
+StateDirectory=opencampus-game
+ExecStart=/opt/opencampus-game/bin/node --no-warnings /opt/opencampus-game/server/leaderboard-server.mjs
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/opencampus-game
+
+[Install]
+WantedBy=multi-user.target
